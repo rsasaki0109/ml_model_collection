@@ -1,0 +1,64 @@
+# Curated metadata. Measured numbers live in benchmarks.yaml / accuracy.yaml (tool-generated).
+name: sam21_hiera_tiny
+display_name: SAM2.1-Hiera-T
+task: segmentation
+kind: promptable
+prompt_model: dfine_n  # default box prompts (detect, then segment)
+summary: "Meta SAM 2.1 (Hiera-Tiny, 38.9M): promptable image / video segmentation. Prompted here with D-FINE-N boxes."
+
+source:
+  repository: https://github.com/facebookresearch/sam2
+  commit: 2b90b9f5ceec907a1c18123530e92e794ad901a4  # HEAD when added (2026-10-01)
+  paper: https://arxiv.org/abs/2408.00714
+  weights_repository: https://huggingface.co/facebook/sam2.1-hiera-tiny
+  weights_revision: de431c4043854a71d8101e17995dfe596bf101a5
+  onnx_repository: https://huggingface.co/onnx-community/sam2.1-hiera-tiny-ONNX
+  onnx_revision: 814a066640debee5a91e70aa401fb8e17e030503
+
+license:
+  code:
+    spdx: Apache-2.0
+    status: explicit
+    evidence: https://github.com/facebookresearch/sam2/blob/2b90b9f5ceec907a1c18123530e92e794ad901a4/README.md
+  weights:
+    spdx: Apache-2.0
+    status: explicit
+    evidence: https://github.com/facebookresearch/sam2/blob/2b90b9f5ceec907a1c18123530e92e794ad901a4/README.md
+    note: >-
+      README - "The SAM 2 model checkpoints, SAM 2 demo code (front-end and back-end), and SAM 2 training code are licensed under Apache 2.0" (demo fonts are OFL-1.1; an optional post-processing op is under LICENSE_cctorch). The ONNX conversion is by onnx-community
+      (onnx-community/sam2.1-hiera-tiny-ONNX), which states no export script or license tag; the
+      files are pinned by SHA-256 and checked against transformers (see the
+      segmentation README).
+  dataset:
+    name: SA-1B / SA-V (and others per the paper)
+    note: SA-1B and SA-V have their own terms of use; not restated here.
+
+artifacts:
+  onnx:
+    file: vision_encoder.onnx
+    fetch: download_files
+    files:
+      - path: vision_encoder.onnx
+        url: https://huggingface.co/onnx-community/sam2.1-hiera-tiny-ONNX/resolve/814a066640debee5a91e70aa401fb8e17e030503/onnx/vision_encoder.onnx
+        sha256: 4f30aacd3aaefbca81a0b7fe4c1fc96345570ea0a6f80ced599493d1b3be2e8c
+      - path: vision_encoder.onnx_data
+        url: https://huggingface.co/onnx-community/sam2.1-hiera-tiny-ONNX/resolve/814a066640debee5a91e70aa401fb8e17e030503/onnx/vision_encoder.onnx_data
+        sha256: e83df9866a5afe68ea7f0f721f18f65137fc3acbf0da1c74e946d363e09c69cc
+      - path: prompt_encoder_mask_decoder.onnx
+        url: https://huggingface.co/onnx-community/sam2.1-hiera-tiny-ONNX/resolve/814a066640debee5a91e70aa401fb8e17e030503/onnx/prompt_encoder_mask_decoder.onnx
+        sha256: 874414704c5d686db7d206a35f6e15d26563d50c8c4468fccc6739bd7e491dcf
+      - path: prompt_encoder_mask_decoder.onnx_data
+        url: https://huggingface.co/onnx-community/sam2.1-hiera-tiny-ONNX/resolve/814a066640debee5a91e70aa401fb8e17e030503/onnx/prompt_encoder_mask_decoder.onnx_data
+        sha256: e9874d900dd4134ed60eab1e97910327c2419e0b2954485d8fd6e7f1a1470f47
+    input_shape: [1, 3, 1024, 1024]
+    input_format: RGB, resize to 1024x1024 (no padding), ImageNet mean/std; prompts in the 1024x1024 frame
+    output: "encoder -> image_embeddings.0/1/2; decoder -> iou_scores [1,nb,3], pred_masks [1,nb,3,256,256]"
+
+runtimes:
+  onnxruntime: verified
+
+reported_accuracy:
+  - metric: SA-V test J&F (video, upstream)
+    value: 76.5
+    input_size: 1024
+    source: https://github.com/facebookresearch/sam2/blob/2b90b9f5ceec907a1c18123530e92e794ad901a4/README.md

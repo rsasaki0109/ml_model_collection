@@ -91,6 +91,19 @@ def fetch(model: Model, python: str, force: bool, update_hash: bool):
         prov["script"] = str(script.relative_to(model.dir.parents[1])).replace("\\", "/")
         prov["packages"] = package_versions(python)
         prov["python"] = platform.python_version()
+    elif art["fetch"] == "download_files":
+        # Several files (e.g. encoder / decoder graphs + external weights),
+        # each pinned by URL and SHA-256.
+        prov["files"] = {}
+        for f in art["files"]:
+            dest = out.parent / f["path"]
+            print(f"[{model.name}] downloading {f['url']}")
+            urllib.request.urlretrieve(f["url"], dest)
+            digest = sha256(dest)
+            if digest != f["sha256"]:
+                dest.unlink()
+                raise SystemExit(f"[{model.name}] sha256 mismatch for {f['path']}: {digest}")
+            prov["files"][f["path"]] = {"url": f["url"], "sha256": digest}
     else:
         raise SystemExit(f"unknown fetch method {art['fetch']!r}")
 

@@ -2,10 +2,19 @@
 
     python tools/evaluate.py --model yolox_s --coco-root /data/coco
     python tools/evaluate.py --task object_detection --coco-root /data/coco
+    python tools/evaluate.py --model rfdetr_seg_n --coco-root /data/coco
+    python tools/evaluate.py --model mask2former_swin_t_ade --ade-root /data/ADEChallengeData2016
 
-Object detection: COCO val2017 box AP (pycocotools), using exactly the ONNX
-file and ``detector.py`` of the collection — so the number checks the export
-and our pre/post-processing, not the upstream PyTorch model.
+Always uses exactly the ONNX file and runner (``detector.py`` /
+``segmenter.py``) of the collection — so the number checks the export and
+our pre/post-processing, not the upstream PyTorch model.
+
+* Object detection: COCO val2017 box AP (pycocotools).
+* Instance / promptable segmentation: COCO val2017 mask AP (segm) plus box AP.
+  Promptable models use their default prompt detector's boxes.
+* Semantic segmentation: ADE20K val mIoU (150 classes, label 0 ignored),
+  ``--ade-root`` = the extracted ADEChallengeData2016 directory
+  (http://data.csail.mit.edu/places/ADEchallenge/ADEChallengeData2016.zip).
 
 ``--coco-root`` must contain ``val2017/`` and
 ``annotations/instances_val2017.json`` (download:
@@ -61,38 +70,88 @@ def eval_coco_detection(model: Model, coco_root: Path, provider: str,
     if "iou_thr" in params:
         kwargs["iou_thr"] = NMS_IOU
     det = model.load_runner(**kwargs)
+    from pycocotools import mask as mask_utils
 
-    results, t0 = [], time.perf_counter()
+    from tools.mlmc.segmentation import InstanceMasks
+
+    results, t0, has_masks = [], time.perf_counter(), False
     for k, img_id in enumerate(img_ids):
         info = gt.loadImgs(img_id)[0]
         img = cv2.imread(str(coco_root / "val2017" / info["file_name"]))
         d = det(img)
+        masks = d.masks if isinstance(d, InstanceMasks) else None
+        has_masks = has_masks or masks is not None
         order = np.argsort(-d.scores)[:MAX_DETS]
         for i in order:
             x1, y1, x2, y2 = (float(v) for v in d.boxes[i])
-            results.append({"image_id": img_id, "category_id": NAME_TO_CAT[d.labels[i]],
-                            "bbox": [round(x1, 2), round(y1, 2),
-                                     round(x2 - x1, 2), round(y2 - y1, 2)],
-                            "score": round(float(d.scores[i]), 5)})
+            r = {"image_id": img_id, "category_id": NAME_TO_CAT[d.labels[i]],
+                 "bbox": [round(x1, 2), round(y1, 2), round(x2 - x1, 2), round(y2 - y1, 2)],
+                 "score": round(float(d.scores[i]), 5)}
+            if masks is not None:
+                rle = mask_utils.encode(np.asfortranarray(masks[i].astype(np.uint8)))
+                rle["counts"] = rle["counts"].decode("ascii")
+                r["segmentation"] = rle
+            results.append(r)
         if (k + 1) % 1000 == 0:
             print(f"  {k + 1}/{len(img_ids)} images", flush=True)
     elapsed = time.perf_counter() - t0
 
     if not results:
         raise SystemExit("no detections")
-    ev = COCOeval(gt, gt.loadRes(results), "bbox")
-    ev.params.imgIds = img_ids
-    ev.evaluate(); ev.accumulate(); ev.summarize()
-    s = ev.stats
     names = ["AP", "AP50", "AP75", "AP_small", "AP_medium", "AP_large"]
-    return {
+    dt_ = gt.loadRes(results)
+    stats = {}
+    for iou_type in (["segm", "bbox"] if has_masks else ["bbox"]):
+        ev = COCOeval(gt, dt_, iou_type)
+        ev.params.imgIds = img_ids
+        ev.evaluate(); ev.accumulate(); ev.summarize()
+        stats[iou_type] = {n: round(float(v) * 100, 1) for n, v in zip(names, ev.stats[:6])}
+    out = {
         "dataset": "COCO val2017" + (f" (first {limit} images)" if limit else ""),
         "images": len(img_ids),
-        "metrics": {n: round(float(v) * 100, 1) for n, v in zip(names, s[:6])},
+        "metrics": stats["segm"] if has_masks else stats["bbox"],
+    }
+    if has_masks:
+        out["box_metrics"] = stats["bbox"]
+    out.update({
         "settings": {"score_threshold": SCORE_THR, "max_dets": MAX_DETS,
                      "nms_iou": NMS_IOU if "iou_thr" in params else None,
-                     "evaluator": "pycocotools COCOeval (bbox)"},
+                     "evaluator": "pycocotools COCOeval (" + ("segm" if has_masks else "bbox") + ")"},
         "wall_time_s": round(elapsed, 1),
+    })
+    if model.meta.get("prompt_model"):
+        out["settings"]["prompts"] = f"boxes from {model.meta['prompt_model']}"
+    return out
+
+
+def eval_ade20k(model: Model, ade_root: Path, provider: str, limit: int | None) -> dict:
+    """ADE20K val mIoU: 150 classes, label 0 (other / unlabelled) ignored."""
+    seg = model.load_runner(provider=provider)
+    imgs = sorted((ade_root / "images" / "validation").glob("*.jpg"))[:limit] if limit else \
+        sorted((ade_root / "images" / "validation").glob("*.jpg"))
+    n = 150
+    conf = np.zeros((n, n), np.int64)
+    t0 = time.perf_counter()
+    for k, p in enumerate(imgs):
+        gt = cv2.imread(str(ade_root / "annotations" / "validation" / (p.stem + ".png")),
+                        cv2.IMREAD_GRAYSCALE).astype(np.int64)
+        pred = seg(cv2.imread(str(p))).classes.astype(np.int64) + 1   # 0..149 -> 1..150
+        valid = gt > 0
+        conf += np.bincount((gt[valid] - 1) * n + (pred[valid] - 1),
+                            minlength=n * n).reshape(n, n)
+        if (k + 1) % 500 == 0:
+            print(f"  {k + 1}/{len(imgs)} images", flush=True)
+    inter = np.diag(conf)
+    union = conf.sum(0) + conf.sum(1) - inter
+    iou = inter[union > 0] / union[union > 0]
+    return {
+        "dataset": "ADE20K val" + (f" (first {limit} images)" if limit else ""),
+        "images": len(imgs),
+        "metrics": {"mIoU": round(float(iou.mean()) * 100, 1),
+                    "aAcc": round(float(inter.sum() / conf.sum()) * 100, 1)},
+        "settings": {"classes": n, "ignore_label": 0,
+                     "evaluator": "confusion matrix over all pixels (mmseg-style mIoU)"},
+        "wall_time_s": round(time.perf_counter() - t0, 1),
     }
 
 
@@ -131,7 +190,8 @@ def main():
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--model")
     ap.add_argument("--task", default="object_detection")
-    ap.add_argument("--coco-root", type=Path, required=True)
+    ap.add_argument("--coco-root", type=Path)
+    ap.add_argument("--ade-root", type=Path)
     ap.add_argument("--provider", default="cuda", choices=list(PROVIDERS))
     ap.add_argument("--limit", type=int, help="evaluate only the first N images (smoke test)")
     args = ap.parse_args()
@@ -140,21 +200,32 @@ def main():
         for m in all_models(args.task):
             if m.artifact_path("onnx").exists():
                 print(f"== {m.name}", flush=True)
-                subprocess.run([sys.executable, __file__, "--model", m.name,
-                                "--coco-root", str(args.coco_root), "--provider", args.provider]
+                roots = (["--coco-root", str(args.coco_root)] if args.coco_root else []) + \
+                    (["--ade-root", str(args.ade_root)] if args.ade_root else [])
+                subprocess.run([sys.executable, __file__, "--model", m.name, *roots,
+                                "--provider", args.provider]
                                + (["--limit", str(args.limit)] if args.limit else []))
         return
 
     model = get_model(args.model)
-    if model.task != "object_detection":
+    if model.task == "segmentation" and model.meta.get("kind") == "semantic":
+        if not args.ade_root:
+            raise SystemExit("--ade-root is required for semantic segmentation")
+        res = eval_ade20k(model, args.ade_root, args.provider, args.limit)
+        ds_id = "ade20k-val"
+    elif model.task in ("object_detection", "segmentation"):
+        if not args.coco_root:
+            raise SystemExit("--coco-root is required")
+        res = eval_coco_detection(model, args.coco_root, args.provider, args.limit)
+        ds_id = "coco-val2017"
+    else:
         raise SystemExit(f"no evaluator for task {model.task!r} yet")
-    res = eval_coco_detection(model, args.coco_root, args.provider, args.limit)
     prov_file = model.weights_dir / "provenance.json"
     sha = json.loads(prov_file.read_text()).get("sha256") if prov_file.exists() else None
     runtime = "onnxruntime-" + args.provider.split("-")[0]
     precision = provider_precision(args.provider)
     rec = {
-        "id": f"coco-val2017{'-limit' + str(args.limit) if args.limit else ''}_{runtime}_{precision}",
+        "id": f"{ds_id}{'-limit' + str(args.limit) if args.limit else ''}_{runtime}_{precision}",
         "date": dt.date.today().isoformat(),
         **res,
         "runtime": runtime,

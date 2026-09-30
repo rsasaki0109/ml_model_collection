@@ -60,6 +60,17 @@ def measured_coco(model: Model) -> str:
     return f"**{r['metrics']['AP']}**"
 
 
+def measured_seg(model: Model) -> str:
+    """COCO mask AP (instance / promptable) or ADE20K mIoU (semantic), measured on the artifact."""
+    for r in model.accuracy:
+        if r.get("dataset") == "COCO val2017":
+            extra = f" ({r['settings']['prompts']})" if r["settings"].get("prompts") else ""
+            return f"**{r['metrics']['AP']}** COCO mask AP{extra}"
+        if r.get("dataset") == "ADE20K val":
+            return f"**{r['metrics']['mIoU']}** ADE20K mIoU"
+    return "–"
+
+
 def vram_cell(m: Model) -> str:
     vram = [b for b in m.benchmarks if b.get("peak_vram_mb") is not None]
     short = {"onnxruntime-cuda": "CUDA", "onnxruntime-tensorrt": "TRT", "onnxruntime-cpu": "CPU"}
@@ -131,6 +142,8 @@ def provenance_table(models: list[Model], start: Path) -> str:
         art = m.meta["artifacts"]["onnx"]
         how = (f"download `{art['url'].rsplit('/', 1)[-1]}` (sha256 pinned)"
                if art["fetch"] == "download"
+               else f"download {len(art['files'])} files (sha256 pinned)"
+               if art["fetch"] == "download_files"
                else f"[`{art['script']}`]({rel(m, start)}/{art['script']})")
         lines.append(f"| {m.display_name} | [{repo.split('github.com/')[-1]}@{commit[:7]}]"
                      f"({repo}/tree/{commit}) | `{art['file']}` | {how} |")
@@ -140,7 +153,7 @@ def provenance_table(models: list[Model], start: Path) -> str:
 def segmentation_table(models: list[Model], start: Path) -> str:
     cols = bench_columns(models)
     head = ["Model", "Kind", "Code license", "Weights license", "Input",
-            "Accuracy (reported)", "Peak VRAM<br>(measured)"] + bench_head(cols)
+            "Accuracy (reported)", "Accuracy<br>(measured, ONNX)", "Peak VRAM<br>(measured)"] + bench_head(cols)
     lines = ["| " + " | ".join(head) + " |", "|" + "---|" * len(head)]
     for m in models:
         lic = m.meta.get("license", {})
@@ -149,7 +162,7 @@ def segmentation_table(models: list[Model], start: Path) -> str:
         acc_cell = f"[{acc['value']}]({acc['source']}) {acc['metric'].split(' (')[0]}" if acc else "–"
         row = [f"[{m.display_name}]({rel(m, start)})", m.meta.get("kind", "?"),
                licenses.describe(lic.get("code")), licenses.describe(lic.get("weights")),
-               f"{shape[-2]}×{shape[-1]}", acc_cell, vram_cell(m)]
+               f"{shape[-2]}×{shape[-1]}", acc_cell, measured_seg(m), vram_cell(m)]
         lines.append("| " + " | ".join(row + bench_cells(m, cols)) + " |")
     return "\n".join(lines)
 

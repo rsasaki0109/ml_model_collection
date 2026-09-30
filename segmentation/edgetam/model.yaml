@@ -1,0 +1,64 @@
+# Curated metadata. Measured numbers live in benchmarks.yaml / accuracy.yaml (tool-generated).
+name: edgetam
+display_name: EdgeTAM
+task: segmentation
+kind: promptable
+prompt_model: dfine_n  # default box prompts (detect, then segment)
+summary: "Meta EdgeTAM: on-device SAM 2 variant (promptable image / video segmentation). Prompted here with D-FINE-N boxes."
+
+source:
+  repository: https://github.com/facebookresearch/EdgeTAM
+  commit: 7711e012a30a2402c4eaab637bdb00a521302c91  # HEAD when added (2026-10-01)
+  paper: https://arxiv.org/abs/2501.07256
+  weights_repository: https://huggingface.co/facebook/EdgeTAM
+  weights_revision: 14d7ecc48c656b94e5184519f698cd5386c5a2bf
+  onnx_repository: https://huggingface.co/onnx-community/EdgeTAM-ONNX
+  onnx_revision: 9c77c7bff7fd0f3079585fa17af7f730ddc531ed
+
+license:
+  code:
+    spdx: Apache-2.0
+    status: explicit
+    evidence: https://github.com/facebookresearch/EdgeTAM/blob/7711e012a30a2402c4eaab637bdb00a521302c91/README.md
+  weights:
+    spdx: Apache-2.0
+    status: explicit
+    evidence: https://github.com/facebookresearch/EdgeTAM/blob/7711e012a30a2402c4eaab637bdb00a521302c91/README.md
+    note: >-
+      README - "The EdgeTAM model checkpoints and code are licensed under Apache 2.0." The ONNX conversion is by onnx-community
+      (onnx-community/EdgeTAM-ONNX), which states no export script or license tag; the
+      files are pinned by SHA-256 and checked against transformers (see the
+      segmentation README).
+  dataset:
+    name: SA-1B / SA-V (and others per the paper)
+    note: SA-1B and SA-V have their own terms of use; not restated here.
+
+artifacts:
+  onnx:
+    file: vision_encoder.onnx
+    fetch: download_files
+    files:
+      - path: vision_encoder.onnx
+        url: https://huggingface.co/onnx-community/EdgeTAM-ONNX/resolve/9c77c7bff7fd0f3079585fa17af7f730ddc531ed/onnx/vision_encoder.onnx
+        sha256: ed068218eba96760fe02d04ce899c449660ac813a088d80ed7f42c8bb01e7cec
+      - path: vision_encoder.onnx_data
+        url: https://huggingface.co/onnx-community/EdgeTAM-ONNX/resolve/9c77c7bff7fd0f3079585fa17af7f730ddc531ed/onnx/vision_encoder.onnx_data
+        sha256: 21e75dba7077dfcb53e8c9a6e99977156f2240ff3f1f9cddc43d66aa1ecb528e
+      - path: prompt_encoder_mask_decoder.onnx
+        url: https://huggingface.co/onnx-community/EdgeTAM-ONNX/resolve/9c77c7bff7fd0f3079585fa17af7f730ddc531ed/onnx/prompt_encoder_mask_decoder.onnx
+        sha256: d3668299ec3edf70fbb139ec642b54bf3d4be453fd1b688a6b5938e0856fe546
+      - path: prompt_encoder_mask_decoder.onnx_data
+        url: https://huggingface.co/onnx-community/EdgeTAM-ONNX/resolve/9c77c7bff7fd0f3079585fa17af7f730ddc531ed/onnx/prompt_encoder_mask_decoder.onnx_data
+        sha256: dfa2125e30d08d388732f20c18fb63ab0f0f590cd270eb307f0c2b65919d1be8
+    input_shape: [1, 3, 1024, 1024]
+    input_format: RGB, resize to 1024x1024 (no padding), ImageNet mean/std; prompts in the 1024x1024 frame
+    output: "encoder -> image_embeddings.0/1/2; decoder -> iou_scores [1,nb,3], pred_masks [1,nb,3,256,256]"
+
+runtimes:
+  onnxruntime: verified
+
+reported_accuracy:
+  - metric: SA-V test J&F (video, upstream)
+    value: 71.7
+    input_size: 1024
+    source: https://github.com/facebookresearch/EdgeTAM/blob/7711e012a30a2402c4eaab637bdb00a521302c91/README.md

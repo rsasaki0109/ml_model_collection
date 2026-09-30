@@ -60,5 +60,5 @@ source.
 | RF-DETR-Seg-N | **added** | strongest permissive real-time instance segmentation, official exporter |
 | Mask2Former Swin-T ADE | **added** | permissive (MIT) semantic segmentation baseline |
 | SegFormer-B0 ADE | **added (non-commercial)** | license-trap example |
-| EdgeTAM / SAM 2.1-tiny | next | Apache promptable segmentation; needs a point/box prompt interface |
+| EdgeTAM / SAM 2.1-tiny | **added** | Apache promptable segmentation; prompted with D-FINE-N boxes by default |
 | ECSeg, EdgeSAM, SAM 3 | not planned | non-commercial / custom licenses |

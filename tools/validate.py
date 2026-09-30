@@ -60,6 +60,12 @@ def check_model(m) -> list[str]:
             errs.append("artifacts.onnx.script does not exist")
         if art.get("fetch") == "download" and not art.get("sha256"):
             errs.append("artifacts.onnx.sha256 missing for a download")
+        if art.get("fetch") == "download_files":
+            files = art.get("files") or []
+            if not files or any(not (f.get("url") and f.get("sha256") and f.get("path")) for f in files):
+                errs.append("artifacts.onnx.files needs url, sha256 and path for every file")
+            elif art["file"] not in {f["path"] for f in files}:
+                errs.append("artifacts.onnx.file must be one of artifacts.onnx.files")
     runner = RUNNERS.get(meta["task"], (None,))[0]
     if runner and not (m.dir / runner).is_file():
         errs.append(f"{runner} missing")
