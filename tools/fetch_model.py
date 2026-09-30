@@ -53,7 +53,7 @@ def write_hash_into_yaml(model: Model, digest: str):
     path = model.dir / "model.yaml"
     text = path.read_text(encoding="utf-8")
     new = re.sub(r"(?m)^(\s*sha256:)\s*null.*$", rf"\1 {digest}", text, count=1)
-    path.write_text(new, encoding="utf-8")
+    path.write_text(new, encoding="utf-8", newline="\n")
 
 
 def fetch(model: Model, python: str, force: bool, update_hash: bool):
@@ -95,7 +95,7 @@ def fetch(model: Model, python: str, force: bool, update_hash: bool):
         raise SystemExit(f"unknown fetch method {art['fetch']!r}")
 
     prov["sha256"] = sha256(out)
-    (out.parent / "provenance.json").write_text(json.dumps(prov, indent=2))
+    (out.parent / "provenance.json").write_text(json.dumps(prov, indent=2), newline="\n")
     print(f"[{model.name}] ok -> {out} ({out.stat().st_size / 2**20:.1f} MB)")
 
 

@@ -1,8 +1,9 @@
 # Default line-up and layout for tools/make_comparison.py --task depth_estimation.
 models:
   - depth_anything_3_small
+  - moge2_vits
   - depth_anything_v2_small
   - depth_anything_v2_base
-cols: 3
-tile_width: 400
+cols: 2
+tile_width: 480
 fps: 5

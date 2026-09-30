@@ -44,6 +44,11 @@ artifacts:
 runtimes:
   onnxruntime: verified
 
+notes: >-
+  COCO val2017 evaluation is pending: the first run hit portrait images that
+  did not fit the landscape 800x1333 canvas (fixed in detector.py by fitting
+  them inside the canvas, i.e. smaller than upstream sizing for portrait).
+
 reported_accuracy:
   - metric: LVIS minival AP (fixed AP, zero-shot)
     value: 44.7

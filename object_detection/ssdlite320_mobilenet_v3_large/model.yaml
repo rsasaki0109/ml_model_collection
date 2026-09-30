@@ -41,6 +41,10 @@ artifacts:
 
 runtimes:
   onnxruntime: verified
+  onnxruntime-tensorrt: >-
+    fails on TensorRT 10.9 (Colab T4, 2026-09-30): engine build aborts with an
+    internal Myelin assertion on the in-graph NMS loop
+    ("DeviceToShapeHostNode should not have been inserted into a scope")
 
 reported_accuracy:
   - metric: COCO val2017 box mAP

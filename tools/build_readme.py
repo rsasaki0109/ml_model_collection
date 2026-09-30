@@ -60,7 +60,10 @@ def measured_coco(model: Model) -> str:
 
 def vram_cell(m: Model) -> str:
     vram = [b for b in m.benchmarks if b.get("peak_vram_mb") is not None]
-    cells = [f"{b['peak_vram_mb']} MB ({b['vram_tier']})" for b in vram]
+    short = {"onnxruntime-cuda": "CUDA", "onnxruntime-tensorrt": "TRT", "onnxruntime-cpu": "CPU"}
+    cells = [f"{b['peak_vram_mb']} MB ({b['vram_tier']}, "
+             f"{short.get(b['runtime'], b['runtime'])} {b.get('precision', 'fp32').upper()})"
+             for b in vram]
     return "<br>".join(cells) or "not measured"
 
 
@@ -162,7 +165,7 @@ def main():
         if new != path.read_text(encoding="utf-8"):
             stale.append(path)
             if not args.check:
-                path.write_text(new, encoding="utf-8")
+                path.write_text(new, encoding="utf-8", newline="\n")
     if args.check and stale:
         print("out of date:", *[p.relative_to(REPO_ROOT) for p in stale])
         sys.exit(1)

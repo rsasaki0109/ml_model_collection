@@ -1,0 +1,58 @@
+# Curated metadata. Measured numbers live in benchmarks.yaml (tool-generated).
+name: moge2_vits
+display_name: MoGe-2-S
+task: depth_estimation
+output: metric_depth_m
+summary: "Microsoft MoGe-2 (ViT-S, 35M, with normals): metric point map, depth, normals and camera FOV from one image. Official author ONNX."
+
+source:
+  repository: https://github.com/microsoft/MoGe
+  commit: 74fbce054ebed49800de42d0ad0e83495065719a  # HEAD when added (2026-09-30)
+  paper: https://arxiv.org/abs/2507.02546
+  weights_repository: https://huggingface.co/Ruicheng/moge-2-vits-normal
+  weights_revision: 26b477f41595707c5db6770294c0d1721e8ed4ed
+
+license:
+  code:
+    spdx: MIT
+    status: explicit
+    evidence: https://github.com/microsoft/MoGe/blob/74fbce054ebed49800de42d0ad0e83495065719a/README.md
+    note: >-
+      README - "MoGe code is released under the MIT license, except for
+      DINOv2 code in moge/model/modules/dinov2 which is released by Meta AI
+      under the Apache 2.0 license."
+  weights:
+    spdx: MIT
+    status: explicit
+    evidence: https://huggingface.co/Ruicheng/moge-2-vits-normal/blob/26b477f41595707c5db6770294c0d1721e8ed4ed/README.md
+    note: >-
+      The PyTorch checkpoint's model card declares license mit. The ONNX
+      repository (Ruicheng/moge-2-vits-normal-onnx, same author, linked from
+      the upstream docs/onnx.md) carries no license tag; the license is taken
+      from the checkpoint it was exported from.
+  dataset:
+    name: See the paper (synthetic + real data with metric supervision)
+    note: Individual dataset terms are not restated upstream.
+
+artifacts:
+  onnx:
+    file: moge2_vits.onnx
+    fetch: download
+    url: https://huggingface.co/Ruicheng/moge-2-vits-normal-onnx/resolve/e50ffda41565591092adea54c6ac83d6212e1e23/model.onnx
+    sha256: 24eacb5dc7a2c54c7bc98f7de085ffbed79ad006ea5b664c2c2cdc02ff3a52f0
+    input_shape: [1, 3, 720, 1280]  # dynamic H/W; the value recorded is for the demo clip
+    input_format: "RGB in [0, 1] at any resolution (normalisation is inside the graph); num_tokens (int64 scalar) = 1800"
+    output: "points [1,H,W,3] affine point map, normal [1,H,W,3], mask [1,H,W] (sigmoid), scale [1] metric scale"
+
+runtimes:
+  onnxruntime: verified
+
+notes: >-
+  The official ONNX equals upstream PyTorch in `onnx_compatible_mode`
+  (point-map relative difference 2e-6 on the demo frame). That mode itself
+  differs from default PyTorch inference by about 2% in the point map and
+  1% in metric scale (upstream replaces non-exportable resize ops), so
+  metric depth from this artifact is ~3% off `MoGeModel.infer()` on the same
+  frame.
+
+reported_accuracy: []

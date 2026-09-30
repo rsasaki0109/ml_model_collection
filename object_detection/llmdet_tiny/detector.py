@@ -35,7 +35,10 @@ class Detector:
 
     def preprocess(self, frame_bgr):
         h, w = frame_bgr.shape[:2]
-        r = min(H / min(h, w), W / max(h, w))
+        # Upstream: shortest edge 800, longest <= 1333. The static canvas is
+        # landscape (800x1333), so portrait images are fit inside it instead
+        # (height capped at 800), which makes them smaller than upstream.
+        r = min(H / min(h, w), W / max(h, w), H / h, W / w)
         nh, nw = int(round(h * r)), int(round(w * r))
         img = cv2.resize(cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2RGB), (nw, nh),
                          interpolation=cv2.INTER_LINEAR).astype(np.float32) / 255.0
