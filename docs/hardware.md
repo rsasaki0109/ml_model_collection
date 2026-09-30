@@ -37,9 +37,11 @@ Set by the person running the benchmark with `--hardware-class`. Guidelines:
 | `workstation` | RTX A-series / data-center GPUs |
 | `cpu_only` | Records measured on the CPU execution provider |
 
-The first records in this repo were measured on a laptop with an
-NVIDIA GeForce GTX 1660 Ti (6 GB) and an Intel Core i7-9750H, Windows 11,
-labelled `gaming_laptop` (GPU) and `cpu_only` (CPU).
+Current records: NVIDIA Tesla T4 on Google Colab (`workstation`), measured
+with `tools/colab_benchmark.ipynb`. Records for a GTX 1660 Ti laptop
+(`gaming_laptop`) and its Core i7-9750H CPU (`cpu_only`) are pending: the
+first attempt was discarded because other workloads were running on the
+machine (see the idle guard in `tools/benchmark.py`).
 
 ## How VRAM is measured
 

@@ -9,7 +9,7 @@ nvidia-ml-py            # VRAM measurement (tools/benchmark.py)
 torch
 torchvision
 transformers
-onnx
+onnx                    # required by torch.onnx.export
 # ultralytics (AGPL-3.0) is needed only to export yolo11n / yolo26n; install it in a
 # separate virtualenv, see README.
 gdown                   # Google Drive checkpoints (deim_dfine_s, rtdetrv4_*)

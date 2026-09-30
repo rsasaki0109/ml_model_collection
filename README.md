@@ -13,25 +13,26 @@ Video: "Road traffic on Stritarjeva street" by Sounds of Changes, [CC BY 3.0](ht
 ## Object detection
 
 <!-- BEGIN:object_detection_table -->
-| Model | Code license | Weights license | Input | COCO mAP<br>(reported) | Peak VRAM<br>(measured) |
-|---|---|---|---|---|---|
-| [DEIM-D-FINE-S](object_detection/deim_dfine_s) | 🟢 Apache-2.0 | 🟢 Apache-2.0* | 640×640 | [49.0](https://github.com/Intellindust-AI-Lab/DEIM/blob/09d35d53d39ee3145a1e61e3a989b28b9468d1dd/README.md) | not measured |
-| [D-FINE-N](object_detection/dfine_n) | 🟢 Apache-2.0 | 🟢 Apache-2.0 | 640×640 | [42.8](https://github.com/Peterande/D-FINE/blob/956d1709314c2c6a4df6f34de232054578a7449f/README.md) | not measured |
-| [D-FINE-S](object_detection/dfine_s) | 🟢 Apache-2.0 | 🟢 Apache-2.0 | 640×640 | [48.5](https://github.com/Peterande/D-FINE/blob/956d1709314c2c6a4df6f34de232054578a7449f/README.md) | not measured |
-| [RF-DETR-N](object_detection/rfdetr_n) | 🟢 Apache-2.0 | 🟢 Apache-2.0 | 384×384 | [48.4](https://github.com/roboflow/rf-detr/blob/5f441831aaf23a68f40128ad0a2e27cb44e52640/README.md) | not measured |
-| [RF-DETR-S](object_detection/rfdetr_s) | 🟢 Apache-2.0 | 🟢 Apache-2.0 | 512×512 | [53.0](https://github.com/roboflow/rf-detr/blob/5f441831aaf23a68f40128ad0a2e27cb44e52640/README.md) | not measured |
-| [RT-DETR-R18](object_detection/rtdetr_r18vd) | 🟢 Apache-2.0 | 🟢 Apache-2.0 | 640×640 | [46.5](https://huggingface.co/PekingU/rtdetr_r18vd/blob/ac77a11ff0170a41b771c03264987f8ce2b0d753/README.md) | not measured |
-| [RT-DETRv4-M](object_detection/rtdetrv4_m) | 🟢 Apache-2.0 | 🟢 Apache-2.0* | 640×640 | [53.7](https://github.com/RT-DETRs/RT-DETRv4/blob/55fefaaed7efe2a5f72d0a18fd4e05965e35c292/README.md) | not measured |
-| [RT-DETRv4-S](object_detection/rtdetrv4_s) | 🟢 Apache-2.0 | 🟢 Apache-2.0* | 640×640 | [49.8](https://github.com/RT-DETRs/RT-DETRv4/blob/55fefaaed7efe2a5f72d0a18fd4e05965e35c292/README.md) | not measured |
-| [SSDLite320-MobileNetV3](object_detection/ssdlite320_mobilenet_v3_large) | 🟢 BSD-3-Clause | ⚪ unknown | 320×320 | [21.3](https://github.com/pytorch/vision/blob/6da25ff876100d36f23472f5762d5f306c47d735/torchvision/models/detection/ssdlite.py) | not measured |
-| [YOLO11n](object_detection/yolo11n) | 🟡 AGPL-3.0 | 🟡 AGPL-3.0* | 640×640 | [39.5](https://github.com/ultralytics/ultralytics/blob/50ca85e03bc669c694c474ab91168f9b5425d9a8/docs/en/models/yolo11.md) | not measured |
-| [YOLO26n](object_detection/yolo26n) | 🟡 AGPL-3.0 | 🟡 AGPL-3.0 | 640×640 | [40.1](https://github.com/ultralytics/ultralytics/blob/50ca85e03bc669c694c474ab91168f9b5425d9a8/README.md) | not measured |
-| [YOLOX-S](object_detection/yolox_s) | 🟢 Apache-2.0 | 🟢 Apache-2.0* | 640×640 | [40.5](https://github.com/Megvii-BaseDetection/YOLOX/blob/6ddff4824372906469a7fae2dc3206c7aa4bbaee/README.md) | not measured |
+| Model | Code license | Weights license | Input | COCO mAP<br>(reported) | Peak VRAM<br>(measured) | Tesla T4 (Colab)<br>onnxruntime-cuda · ms / FPS |
+|---|---|---|---|---|---|---|
+| [DEIM-D-FINE-S](object_detection/deim_dfine_s) | 🟢 Apache-2.0 | 🟢 Apache-2.0* | 640×640 | [49.0](https://github.com/Intellindust-AI-Lab/DEIM/blob/09d35d53d39ee3145a1e61e3a989b28b9468d1dd/README.md) | 335 MB (Tiny) | 16.7 / 60 |
+| [D-FINE-N](object_detection/dfine_n) | 🟢 Apache-2.0 | 🟢 Apache-2.0 | 640×640 | [42.8](https://github.com/Peterande/D-FINE/blob/956d1709314c2c6a4df6f34de232054578a7449f/README.md) | 219 MB (Tiny) | 9.8 / 102 |
+| [D-FINE-S](object_detection/dfine_s) | 🟢 Apache-2.0 | 🟢 Apache-2.0 | 640×640 | [48.5](https://github.com/Peterande/D-FINE/blob/956d1709314c2c6a4df6f34de232054578a7449f/README.md) | 335 MB (Tiny) | 17.3 / 58 |
+| [RF-DETR-N](object_detection/rfdetr_n) | 🟢 Apache-2.0 | 🟢 Apache-2.0 | 384×384 | [48.4](https://github.com/roboflow/rf-detr/blob/5f441831aaf23a68f40128ad0a2e27cb44e52640/README.md) | 355 MB (Tiny) | 13.2 / 76 |
+| [RF-DETR-S](object_detection/rfdetr_s) | 🟢 Apache-2.0 | 🟢 Apache-2.0 | 512×512 | [53.0](https://github.com/roboflow/rf-detr/blob/5f441831aaf23a68f40128ad0a2e27cb44e52640/README.md) | 489 MB (Tiny) | 24.7 / 40 |
+| [RT-DETR-R18](object_detection/rtdetr_r18vd) | 🟢 Apache-2.0 | 🟢 Apache-2.0 | 640×640 | [46.5](https://huggingface.co/PekingU/rtdetr_r18vd/blob/ac77a11ff0170a41b771c03264987f8ce2b0d753/README.md) | 361 MB (Tiny) | 23.1 / 43 |
+| [RT-DETRv4-M](object_detection/rtdetrv4_m) | 🟢 Apache-2.0 | 🟢 Apache-2.0* | 640×640 | [53.7](https://github.com/RT-DETRs/RT-DETRv4/blob/55fefaaed7efe2a5f72d0a18fd4e05965e35c292/README.md) | 383 MB (Tiny) | 26.9 / 37 |
+| [RT-DETRv4-S](object_detection/rtdetrv4_s) | 🟢 Apache-2.0 | 🟢 Apache-2.0* | 640×640 | [49.8](https://github.com/RT-DETRs/RT-DETRv4/blob/55fefaaed7efe2a5f72d0a18fd4e05965e35c292/README.md) | 335 MB (Tiny) | 16.8 / 59 |
+| [SSDLite320-MobileNetV3](object_detection/ssdlite320_mobilenet_v3_large) | 🟢 BSD-3-Clause | ⚪ unknown | 320×320 | [21.3](https://github.com/pytorch/vision/blob/6da25ff876100d36f23472f5762d5f306c47d735/torchvision/models/detection/ssdlite.py) | 249 MB (Tiny) | 20.9 / 48 |
+| [YOLO11n](object_detection/yolo11n) | 🟡 AGPL-3.0 | 🟡 AGPL-3.0* | 640×640 | [39.5](https://github.com/ultralytics/ultralytics/blob/50ca85e03bc669c694c474ab91168f9b5425d9a8/docs/en/models/yolo11.md) | 239 MB (Tiny) | 7.2 / 138 |
+| [YOLO26n](object_detection/yolo26n) | 🟡 AGPL-3.0 | 🟡 AGPL-3.0 | 640×640 | [40.1](https://github.com/ultralytics/ultralytics/blob/50ca85e03bc669c694c474ab91168f9b5425d9a8/README.md) | 247 MB (Tiny) | 8.3 / 121 |
+| [YOLOX-S](object_detection/yolox_s) | 🟢 Apache-2.0 | 🟢 Apache-2.0* | 640×640 | [40.5](https://github.com/Megvii-BaseDetection/YOLOX/blob/6ddff4824372906469a7fae2dc3206c7aa4bbaee/README.md) | 249 MB (Tiny) | 11.2 / 89 |
 <!-- END:object_detection_table -->
 
 - 🟢 permissive · 🟡 copyleft · 🔴 restricted · ⚪ unknown. `*` = the weights are published from a repository/release under that license, but upstream does not state a separate license for the weights. See [docs/licenses.md](docs/licenses.md).
 - **COCO mAP** is copied from upstream (linked) and was *not* re-evaluated here. Different models report slightly different metrics — follow the link.
 - **ms / FPS**: mean `session.run` latency, batch 1, FP32, ONNX Runtime 1.22 (full conditions in each model's `benchmarks.yaml`). Graphs differ in how much post-processing they contain: DEIM / RT-DETRv4 / YOLO26n include top-k selection, SSDLite includes resize + NMS, the others end at raw predictions (decoded in NumPy, see `e2e_ms_mean` in `benchmarks.yaml`).
+- These are **FP32 ONNX Runtime** numbers. Upstream latency tables (e.g. "T4, TensorRT, FP16") use different conditions, so they are not directly comparable; TensorRT / FP16 records are planned.
 - **Peak VRAM**: device memory delta during session creation + inference, CUDA context included ([method](docs/hardware.md#how-vram-is-measured)). It is valid only for the listed hardware/runtime/precision/batch/input.
 
 Tables are generated from metadata by `python tools/build_readme.py`; do not edit them by hand.
@@ -41,10 +42,14 @@ How these models relate to the current state of the art, and which models are pl
 ## Find a model
 
 ```console
-$ python tools/find_models.py --task object_detection --license permissive --max-vram-mb 4096
-model         license (code / weights)      hardware            runtime           latency  peak VRAM
-rtdetr_r18vd  🟢 Apache-2.0 / 🟢 Apache-2.0   GTX 1660 Ti Laptop  onnxruntime-cuda  27.4 ms  319 MB
-yolox_s       🟢 Apache-2.0 / 🟢 Apache-2.0*  GTX 1660 Ti Laptop  onnxruntime-cuda  14.5 ms  199 MB
+$ python tools/find_models.py --task object_detection --license permissive --max-latency-ms 20
+model         license (code / weights)      hardware          runtime           latency  peak VRAM
+deim_dfine_s  🟢 Apache-2.0 / 🟢 Apache-2.0*  Tesla T4 (Colab)  onnxruntime-cuda  16.7 ms  335 MB
+dfine_n       🟢 Apache-2.0 / 🟢 Apache-2.0   Tesla T4 (Colab)  onnxruntime-cuda  9.8 ms   219 MB
+dfine_s       🟢 Apache-2.0 / 🟢 Apache-2.0   Tesla T4 (Colab)  onnxruntime-cuda  17.3 ms  335 MB
+rfdetr_n      🟢 Apache-2.0 / 🟢 Apache-2.0   Tesla T4 (Colab)  onnxruntime-cuda  13.2 ms  355 MB
+rtdetrv4_s    🟢 Apache-2.0 / 🟢 Apache-2.0*  Tesla T4 (Colab)  onnxruntime-cuda  16.8 ms  335 MB
+yolox_s       🟢 Apache-2.0 / 🟢 Apache-2.0*  Tesla T4 (Colab)  onnxruntime-cuda  11.2 ms  249 MB
 
 * = license inherited from the repository/release; weights have no separate license statement.
 ```
