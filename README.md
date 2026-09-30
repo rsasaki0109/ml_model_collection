@@ -113,6 +113,9 @@ python tools/fetch_model.py --task object_detection
 # 2. run one model on a video -> outputs/object_detection/<model>/<clip>/{annotated.mp4,detections.jsonl}
 python tools/run_video.py --model yolox_s --input assets/demo.mp4
 
+#    open-vocabulary models take free-text prompts (OWLv2):
+python tools/run_video.py --model owlv2_b16 --input assets/demo.mp4 --prompts "delivery van,pedestrian,street lamp"
+
 # 3. rebuild the comparison GIF
 python tools/make_comparison.py --task object_detection --input assets/demo.mp4
 

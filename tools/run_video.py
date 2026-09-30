@@ -1,6 +1,7 @@
 """Run one model over a video and save annotated video + raw detections.
 
     python tools/run_video.py --model yolox_s --input assets/demo.mp4
+    python tools/run_video.py --model owlv2_b16 --input assets/demo.mp4 --prompts "van,pedestrian,flag"
 
 Outputs (under ``outputs/<task>/<model>/<input stem>/``):
     annotated.mp4     every input frame, same fps / size: boxes drawn
@@ -35,10 +36,17 @@ def output_dir(model: Model, video: Path) -> Path:
 
 
 def run(model: Model, video: Path, provider: str = "cuda",
-        max_frames: int | None = None) -> Path:
+        max_frames: int | None = None, prompts: list[str] | None = None) -> Path:
     out_dir = output_dir(model, video)
+    if prompts:
+        out_dir = out_dir.with_name(out_dir.name + "_prompts")
     out_dir.mkdir(parents=True, exist_ok=True)
-    runner = model.load_runner(provider=provider)
+    kwargs = {"provider": provider}
+    if prompts:
+        if not model.meta.get("open_vocabulary") or model.meta.get("prompts") == "fixed":
+            raise SystemExit(f"{model.name} does not take runtime prompts")
+        kwargs["prompts"] = prompts
+    runner = model.load_runner(**kwargs)
     is_det = model.task == "object_detection"
 
     cap = cv2.VideoCapture(str(video))
@@ -88,8 +96,11 @@ def main():
     ap.add_argument("--input", required=True, type=Path)
     ap.add_argument("--provider", default="cuda", choices=["cuda", "cpu", "tensorrt", "tensorrt-fp16"])
     ap.add_argument("--max-frames", type=int)
+    ap.add_argument("--prompts", help="comma-separated class prompts (open-vocabulary models only), "
+                                      "e.g. 'delivery van,pedestrian,street lamp'")
     args = ap.parse_args()
-    run(get_model(args.model), args.input.resolve(), args.provider, args.max_frames)
+    prompts = [s.strip() for s in args.prompts.split(",") if s.strip()] if args.prompts else None
+    run(get_model(args.model), args.input.resolve(), args.provider, args.max_frames, prompts)
 
 
 if __name__ == "__main__":

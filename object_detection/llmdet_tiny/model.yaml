@@ -3,6 +3,7 @@ name: llmdet_tiny
 display_name: LLMDet-T
 task: object_detection
 open_vocabulary: true
+prompts: fixed  # vocabulary is baked in at export time (80 COCO names)
 summary: "LLMDet (CVPR 2025), Swin-T Grounding-DINO-style open-vocabulary detector co-trained with an LLM. Exported with a fixed prompt of the 80 COCO class names."
 
 source:
