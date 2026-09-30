@@ -33,9 +33,9 @@ Video: "Road traffic on Stritarjeva street" by Sounds of Changes, [CC BY 3.0](ht
 
 - 🔤 = open-vocabulary (prompted with the 80 COCO class names here; COCO AP is zero-shot unless the model's notes say otherwise).
 - 🟢 permissive · 🟡 copyleft · 🔴 restricted · ⚪ unknown. `*` = the weights are published from a repository/release under that license, but upstream does not state a separate license for the weights. See [docs/licenses.md](docs/licenses.md).
-- **COCO mAP** is copied from upstream (linked) and was *not* re-evaluated here. Different models report slightly different metrics — follow the link.
-- **ms / FPS**: mean `session.run` latency, batch 1, FP32, ONNX Runtime 1.22 (full conditions in each model's `benchmarks.yaml`). Graphs differ in how much post-processing they contain: DEIM / RT-DETRv4 / YOLO26n include top-k selection, SSDLite includes resize + NMS, the others end at raw predictions (decoded in NumPy, see `e2e_ms_mean` in `benchmarks.yaml`).
-- These are **FP32 ONNX Runtime** numbers. Upstream latency tables (e.g. "T4, TensorRT, FP16") use different conditions, so they are not directly comparable; TensorRT / FP16 records are planned.
+- **COCO mAP (reported)** is copied from upstream (linked). **COCO mAP (measured, ONNX)** is measured here by [`tools/evaluate.py`](tools/evaluate.py) on COCO val2017 with the *exported ONNX file and this repo's pre/post-processing* (score ≥ 0.001, 100 dets/image, pycocotools) — it checks the artifact you would deploy, not the upstream PyTorch model. For all non-open-vocabulary detectors the two agree within 0.1–0.9 AP.
+- **ms / FPS**: mean `session.run` latency, batch 1, ONNX Runtime 1.22, CUDA FP32 or TensorRT FP16 (full conditions in each model's `benchmarks.yaml`). Graphs differ in how much post-processing they contain: DEIM / RT-DETRv4 / YOLO26n include top-k selection, SSDLite includes resize + NMS, the others end at raw predictions (decoded in NumPy, see `e2e_ms_mean` in `benchmarks.yaml`).
+- The **TensorRT FP16** column is the closest to upstream "T4 / TensorRT / FP16" tables, but it runs through ONNX Runtime's TensorRT EP and includes whatever post-processing the graph contains, so small differences to upstream numbers are expected.
 - **Peak VRAM**: device memory delta during session creation + inference, CUDA context included ([method](docs/hardware.md#how-vram-is-measured)). It is valid only for the listed hardware/runtime/precision/batch/input.
 
 Tables are generated from metadata by `python tools/build_readme.py`; do not edit them by hand.
