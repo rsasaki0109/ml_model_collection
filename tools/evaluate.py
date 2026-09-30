@@ -36,6 +36,7 @@ import numpy as np
 import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from tools.benchmark import collection_commit  # noqa: E402
 from tools.mlmc.catalog import Model, all_models, get_model  # noqa: E402
 from tools.mlmc.detection import COCO80, COCO91_IDS, PROVIDERS, provider_precision  # noqa: E402
 
@@ -160,6 +161,7 @@ def main():
         "runtime_version": ort_version(),
         "precision": precision,
         "artifact": {"file": model.meta["artifacts"]["onnx"]["file"], "sha256": sha},
+        "collection_commit": collection_commit(),
     }
     print(yaml.safe_dump(rec, sort_keys=False))
     if not args.limit:

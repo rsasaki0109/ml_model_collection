@@ -53,6 +53,18 @@ def ort_package() -> str:
     return "unknown"
 
 
+def collection_commit() -> str | None:
+    """git commit of this repository (pre/post-processing code is part of e2e timing)."""
+    try:
+        out = subprocess.run(["git", "-C", str(REPO_ROOT), "rev-parse", "--short=12", "HEAD"],
+                             capture_output=True, text=True, timeout=10)
+        dirty = subprocess.run(["git", "-C", str(REPO_ROOT), "status", "--porcelain", "--", "tools"],
+                               capture_output=True, text=True, timeout=10).stdout.strip()
+        return out.stdout.strip() + ("-dirty" if dirty else "") if out.returncode == 0 else None
+    except (OSError, subprocess.SubprocessError):
+        return None
+
+
 def slug(text: str) -> str:
     return "".join(c if c.isalnum() else "-" for c in text.lower()).strip("-")
 
@@ -171,6 +183,7 @@ def measure(model: Model, provider: str, frame_path: Path, warmup: int,
         "vram_method": vram.METHOD if mon else None,
         "vram_tier": hardware.vram_tier(mon.delta_mb) if mon else None,
         "system_load": load,  # sampled right before the run
+        "collection_commit": collection_commit(),
     }
     if provider.startswith("tensorrt"):
         # ORT may run unsupported nodes on CUDA; engine built beforehand.

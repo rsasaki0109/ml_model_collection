@@ -52,19 +52,26 @@ class Segmenter:
             masks = out[self.outputs.index("masks_queries_logits")][0]   # (Q, h, w)
             e = np.exp(cls - cls.max(-1, keepdims=True))
             prob = (e / e.sum(-1, keepdims=True))[:, :-1]
-            return np.einsum("qc,qhw->chw", prob, 1 / (1 + np.exp(-np.clip(masks, -88, 88))))
+            sig = 1 / (1 + np.exp(-np.clip(masks, -88, 88)))
+            q, h, w = sig.shape  # sum over queries as a matrix product (BLAS), = einsum qc,qhw->chw
+            return (prob.T @ sig.reshape(q, h * w)).reshape(-1, h, w)
         return out[self.outputs.index("logits")][0]
 
     def postprocess(self, out, wh):
         w, h = wh
         scores = self.class_scores(out)
-        # Resize class scores in groups of 4 channels: OpenCV 5 rejects arrays
-        # with many channels (ADE20K has 150).
-        hwc = np.ascontiguousarray(scores.transpose(1, 2, 0))
+        # Upsampling all 150 ADE20K score maps to full resolution dominates the
+        # run time, so only classes that are top-2 somewhere at low resolution
+        # are upsampled; a pixel's full-resolution argmax is almost always one
+        # of them (see tests). Resized in groups of 4 channels because
+        # OpenCV 5 rejects arrays with many channels.
+        top2 = np.argpartition(-scores, 1, axis=0)[:2]
+        cand = np.unique(top2)
+        hwc = np.ascontiguousarray(scores[cand].transpose(1, 2, 0))
         up = np.concatenate(
             [cv2.resize(hwc[..., i:i + 4], (w, h), interpolation=cv2.INTER_LINEAR).reshape(h, w, -1)
              for i in range(0, hwc.shape[-1], 4)], axis=-1)
-        return SemanticMap(up.argmax(-1).astype(np.int32), self.names)
+        return SemanticMap(cand[up.argmax(-1)].astype(np.int32), self.names)
 
     def __call__(self, frame_bgr):
         x, wh = self.preprocess(frame_bgr)

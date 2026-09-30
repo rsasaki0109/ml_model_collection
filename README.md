@@ -63,11 +63,11 @@ Depth-Anything-3-S is the newest (2025-11). Depth-Anything-V2-S and -B share cod
 ![Segmentation comparison on the same clip](assets/segmentation_comparison.gif)
 
 <!-- BEGIN:segmentation_table -->
-| Model | Kind | Code license | Weights license | Input | Accuracy (reported) | Peak VRAM<br>(measured) |
-|---|---|---|---|---|---|---|
-| [Mask2Former-SwinT (ADE20K)](segmentation/mask2former_swin_t_ade) | semantic | 🟢 MIT | 🟢 MIT* | 512×512 | [47.7](https://github.com/facebookresearch/Mask2Former/blob/9b0651c6c1d5b3af2e6da0589b719c514ec0d69a/MODEL_ZOO.md) ADE20K val mIoU | not measured |
-| [RF-DETR-Seg-N](segmentation/rfdetr_seg_n) | instance | 🟢 Apache-2.0 | 🟢 Apache-2.0 | 312×312 | [40.3](https://github.com/roboflow/rf-detr/blob/5f441831aaf23a68f40128ad0a2e27cb44e52640/README.md) COCO val2017 mask AP | not measured |
-| [SegFormer-B0 (ADE20K)](segmentation/segformer_b0_ade) | semantic | 🔴 NVIDIA-NC | 🔴 NVIDIA-NC* | 512×512 | [37.4](https://arxiv.org/abs/2105.15203) ADE20K val mIoU | not measured |
+| Model | Kind | Code license | Weights license | Input | Accuracy (reported) | Peak VRAM<br>(measured) | Tesla T4 (Colab)<br>onnxruntime-cuda FP32 · ms / FPS | Tesla T4 (Colab)<br>onnxruntime-tensorrt FP16 · ms / FPS |
+|---|---|---|---|---|---|---|---|---|
+| [Mask2Former-SwinT (ADE20K)](segmentation/mask2former_swin_t_ade) | semantic | 🟢 MIT | 🟢 MIT* | 512×512 | [47.7](https://github.com/facebookresearch/Mask2Former/blob/9b0651c6c1d5b3af2e6da0589b719c514ec0d69a/MODEL_ZOO.md) ADE20K val mIoU | 1375 MB (Tiny, CUDA FP32)<br>573 MB (Tiny, TRT FP16) | 108.2 / 9 | 42.2 / 24 |
+| [RF-DETR-Seg-N](segmentation/rfdetr_seg_n) | instance | 🟢 Apache-2.0 | 🟢 Apache-2.0 | 312×312 | [40.3](https://github.com/roboflow/rf-detr/blob/5f441831aaf23a68f40128ad0a2e27cb44e52640/README.md) COCO val2017 mask AP | 407 MB (Tiny, CUDA FP32)<br>431 MB (Tiny, TRT FP16) | 21.0 / 48 | 5.1 / 196 |
+| [SegFormer-B0 (ADE20K)](segmentation/segformer_b0_ade) | semantic | 🔴 NVIDIA-NC | 🔴 NVIDIA-NC* | 512×512 | [37.4](https://arxiv.org/abs/2105.15203) ADE20K val mIoU | 485 MB (Tiny, CUDA FP32)<br>461 MB (Tiny, TRT FP16) | 13.8 / 72 | 6.3 / 159 |
 <!-- END:segmentation_table -->
 
 Instance (RF-DETR-Seg) and semantic (ADE20K, 150 classes) models side by side. SegFormer-B0 is tiny and has a ready-made ONNX on the Hub, but its code **and** weights are NVIDIA non-commercial — it is here as a license-trap example. Survey: [docs/sota/segmentation.md](docs/sota/segmentation.md).
