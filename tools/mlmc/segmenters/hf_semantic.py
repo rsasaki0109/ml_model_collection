@@ -58,8 +58,12 @@ class Segmenter:
     def postprocess(self, out, wh):
         w, h = wh
         scores = self.class_scores(out)
-        up = cv2.resize(scores.transpose(1, 2, 0), (w, h), interpolation=cv2.INTER_LINEAR)
-        up = up.reshape(h, w, -1)
+        # Resize class scores in groups of 4 channels: OpenCV 5 rejects arrays
+        # with many channels (ADE20K has 150).
+        hwc = np.ascontiguousarray(scores.transpose(1, 2, 0))
+        up = np.concatenate(
+            [cv2.resize(hwc[..., i:i + 4], (w, h), interpolation=cv2.INTER_LINEAR).reshape(h, w, -1)
+             for i in range(0, hwc.shape[-1], 4)], axis=-1)
         return SemanticMap(up.argmax(-1).astype(np.int32), self.names)
 
     def __call__(self, frame_bgr):
