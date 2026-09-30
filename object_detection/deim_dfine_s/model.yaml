@@ -1,0 +1,47 @@
+# Curated metadata. Measured numbers live in benchmarks.yaml (tool-generated).
+name: deim_dfine_s
+display_name: DEIM-D-FINE-S
+task: object_detection
+summary: "DEIM (CVPR 2025) training of the D-FINE-S architecture, COCO only."
+
+source:
+  repository: https://github.com/Intellindust-AI-Lab/DEIM
+  commit: 09d35d53d39ee3145a1e61e3a989b28b9468d1dd  # HEAD when added (2026-09-30)
+  paper: https://arxiv.org/abs/2412.04234
+  checkpoint: https://drive.google.com/file/d/1tB8gVJNrfb6dhFvoHJECKOF5VpkthhfC
+  checkpoint_sha256: a089c9eb798f8a0322e05f757fe8e8188eee34aa578788a35ec253bcec8a6b38
+
+license:
+  code:
+    spdx: Apache-2.0
+    status: explicit
+    evidence: https://github.com/Intellindust-AI-Lab/DEIM/blob/09d35d53d39ee3145a1e61e3a989b28b9468d1dd/LICENSE
+  weights:
+    spdx: Apache-2.0
+    status: repository_license
+    evidence: https://github.com/Intellindust-AI-Lab/DEIM/blob/09d35d53d39ee3145a1e61e3a989b28b9468d1dd/README.md
+    note: >-
+      Checkpoint is linked from the README of the Apache-2.0 repository (Google Drive); no separate weights license is stated. The same lab relicensed its successor DEIMv2 to a non-commercial license on 2026-08-24; this repository was still Apache-2.0 at the pinned commit. The repository moved from ShihuaHuang95/DEIM.
+  dataset:
+    name: COCO 2017
+    note: >-
+      Annotations CC BY 4.0; images are subject to Flickr terms of use
+      (https://cocodataset.org/#termsofuse).
+
+artifacts:
+  onnx:
+    file: deim_dfine_s.onnx
+    fetch: export
+    script: export.py
+    input_shape: [1, 3, 640, 640]
+    input_format: RGB, plain resize to 640x640 (no letterbox), scaled to [0, 1]; second input orig_target_sizes [[w, h]]
+    output: "labels [1, 300] (0-79), boxes [1, 300, 4] xyxy in source pixels, scores [1, 300]"
+
+runtimes:
+  onnxruntime: verified
+
+reported_accuracy:
+  - metric: COCO val2017 AP
+    value: 49.0
+    input_size: 640
+    source: https://github.com/Intellindust-AI-Lab/DEIM/blob/09d35d53d39ee3145a1e61e3a989b28b9468d1dd/README.md

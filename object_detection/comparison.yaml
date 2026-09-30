@@ -1,0 +1,13 @@
+# Default line-up and layout for tools/make_comparison.py --task object_detection.
+# Current real-time SOTA per docs/sota/object_detection.md, small sizes that
+# fit the collection's hardware focus. Command-line flags override these.
+models:
+  - dfine_n
+  - dfine_s
+  - deim_dfine_s
+  - rtdetrv4_s
+  - rfdetr_s
+  - yolo26n
+cols: 3
+tile_width: 400
+fps: 5

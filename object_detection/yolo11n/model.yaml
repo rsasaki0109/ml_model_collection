@@ -1,0 +1,52 @@
+# Curated metadata. Measured numbers live in benchmarks.yaml (tool-generated).
+name: yolo11n
+display_name: YOLO11n
+task: object_detection
+summary: Smallest Ultralytics YOLO11 detector. AGPL-3.0 (copyleft) — see license notes.
+
+source:
+  repository: https://github.com/ultralytics/ultralytics
+  commit: 50ca85e03bc669c694c474ab91168f9b5425d9a8  # HEAD when added (2026-09-30)
+  weights_url: https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo11n.pt
+
+license:
+  code:
+    spdx: AGPL-3.0
+    status: explicit
+    evidence: https://github.com/ultralytics/ultralytics/blob/50ca85e03bc669c694c474ab91168f9b5425d9a8/LICENSE
+  weights:
+    spdx: AGPL-3.0
+    status: repository_license
+    evidence: https://github.com/ultralytics/assets
+    note: >-
+      Weights are release assets of github.com/ultralytics/assets, which is
+      licensed AGPL-3.0. Ultralytics also offers an "Enterprise License" that
+      its README describes as covering "Ultralytics software and AI models"
+      (https://www.ultralytics.com/license).
+  dataset:
+    name: COCO 2017
+    note: >-
+      Annotations CC BY 4.0; images are subject to Flickr terms of use
+      (https://cocodataset.org/#termsofuse).
+  export_dependencies:
+    - {name: ultralytics, spdx: AGPL-3.0}
+
+artifacts:
+  onnx:
+    file: yolo11n.onnx
+    fetch: export
+    script: export.py
+    # Exporting needs `pip install ultralytics`. Use a separate virtualenv if
+    # you do not want the AGPL-3.0 package in your main environment.
+    input_shape: [1, 3, 640, 640]
+    input_format: RGB, centered letterbox, pad 114, scaled to [0, 1]
+    output: "[1, 84, 8400] (cxcywh + 80 class scores); NMS in detector.py"
+
+runtimes:
+  onnxruntime: verified
+
+reported_accuracy:
+  - metric: COCO val2017 mAP@[.5:.95]
+    value: 39.5
+    input_size: 640
+    source: https://github.com/ultralytics/ultralytics/blob/50ca85e03bc669c694c474ab91168f9b5425d9a8/docs/en/models/yolo11.md

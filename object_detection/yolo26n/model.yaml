@@ -1,0 +1,54 @@
+# Curated metadata. Measured numbers live in benchmarks.yaml (tool-generated).
+name: yolo26n
+display_name: YOLO26n
+task: object_detection
+summary: Smallest Ultralytics YOLO26 detector (2026-01), NMS-free end-to-end head. AGPL-3.0 (copyleft).
+
+source:
+  repository: https://github.com/ultralytics/ultralytics
+  commit: 50ca85e03bc669c694c474ab91168f9b5425d9a8  # HEAD when added (2026-09-30)
+  weights_url: https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo26n.pt
+
+license:
+  code:
+    spdx: AGPL-3.0
+    status: explicit
+    evidence: https://github.com/ultralytics/ultralytics/blob/50ca85e03bc669c694c474ab91168f9b5425d9a8/LICENSE
+  weights:
+    spdx: AGPL-3.0
+    status: explicit
+    evidence: https://github.com/ultralytics/ultralytics/blob/50ca85e03bc669c694c474ab91168f9b5425d9a8/docs/en/models/yolo26.md
+    note: >-
+      Ultralytics docs: "YOLO26 code, models, and documentation are available
+      ... under AGPL-3.0 and Enterprise licenses". Weights are release assets
+      of github.com/ultralytics/assets (AGPL-3.0).
+  dataset:
+    name: COCO 2017
+    note: >-
+      Annotations CC BY 4.0; images are subject to Flickr terms of use
+      (https://cocodataset.org/#termsofuse).
+  export_dependencies:
+    - {name: ultralytics, spdx: AGPL-3.0}
+
+artifacts:
+  onnx:
+    file: yolo26n.onnx
+    fetch: export
+    script: export.py
+    # Exporting needs `pip install ultralytics`; see yolo11n/model.yaml.
+    input_shape: [1, 3, 640, 640]
+    input_format: RGB, centered letterbox, pad 114, scaled to [0, 1]
+    output: "[1, 300, 6] x1 y1 x2 y2 score class in letterboxed input pixels (end-to-end, no NMS)"
+
+runtimes:
+  onnxruntime: verified
+
+reported_accuracy:
+  - metric: COCO val2017 mAP@[.5:.95], end-to-end (NMS-free) head — the one exported here
+    value: 40.1
+    input_size: 640
+    source: https://github.com/ultralytics/ultralytics/blob/50ca85e03bc669c694c474ab91168f9b5425d9a8/README.md
+  - metric: COCO val2017 mAP@[.5:.95] (with NMS)
+    value: 40.9
+    input_size: 640
+    source: https://github.com/ultralytics/ultralytics/blob/50ca85e03bc669c694c474ab91168f9b5425d9a8/README.md

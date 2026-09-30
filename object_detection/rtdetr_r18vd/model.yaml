@@ -1,0 +1,48 @@
+# Curated metadata. Measured numbers live in benchmarks.yaml (tool-generated).
+name: rtdetr_r18vd
+display_name: RT-DETR-R18
+task: object_detection
+summary: Real-time DETR (NMS-free) with ResNet-18vd backbone, Hugging Face port.
+
+source:
+  repository: https://github.com/lyuwenyu/RT-DETR
+  commit: 29320b6fd828f8e0987a71426cf2d961b09dfed7  # HEAD when added (2026-09-30)
+  paper: https://arxiv.org/abs/2304.08069
+  weights_repository: https://huggingface.co/PekingU/rtdetr_r18vd
+  weights_revision: ac77a11ff0170a41b771c03264987f8ce2b0d753
+
+license:
+  code:
+    spdx: Apache-2.0
+    status: explicit
+    evidence: https://github.com/lyuwenyu/RT-DETR/blob/29320b6fd828f8e0987a71426cf2d961b09dfed7/LICENSE
+  weights:
+    spdx: Apache-2.0
+    status: explicit
+    evidence: https://huggingface.co/PekingU/rtdetr_r18vd/blob/ac77a11ff0170a41b771c03264987f8ce2b0d753/README.md
+    note: "Model card metadata declares `license: apache-2.0`."
+  dataset:
+    name: COCO 2017
+    note: >-
+      Annotations CC BY 4.0; images are subject to Flickr terms of use
+      (https://cocodataset.org/#termsofuse).
+  export_dependencies:
+    - {name: transformers, spdx: Apache-2.0}
+
+artifacts:
+  onnx:
+    file: rtdetr_r18vd.onnx
+    fetch: export
+    script: export.py
+    input_shape: [1, 3, 640, 640]
+    input_format: RGB, plain resize to 640x640 (no letterbox), scaled to [0, 1]
+    output: "logits [1, 300, 80], pred_boxes [1, 300, 4] (cxcywh, normalized)"
+
+runtimes:
+  onnxruntime: verified
+
+reported_accuracy:
+  - metric: COCO val2017 AP
+    value: 46.5
+    input_size: 640
+    source: https://huggingface.co/PekingU/rtdetr_r18vd/blob/ac77a11ff0170a41b771c03264987f8ce2b0d753/README.md

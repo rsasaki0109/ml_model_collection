@@ -1,0 +1,8 @@
+__pycache__/
+*.pyc
+.venv*/
+# fetched / exported model files (reproduce with tools/fetch_model.py)
+*/*/weights/
+# per-model inference outputs (reproduce with tools/run_video.py)
+outputs/
+dist/

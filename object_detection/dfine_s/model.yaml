@@ -1,0 +1,52 @@
+# Curated metadata. Measured numbers live in benchmarks.yaml (tool-generated).
+name: dfine_s
+display_name: D-FINE-S
+task: object_detection
+summary: D-FINE (ICLR 2025) real-time DETR, COCO-only weights, Hugging Face port.
+
+source:
+  repository: https://github.com/Peterande/D-FINE
+  commit: 956d1709314c2c6a4df6f34de232054578a7449f  # HEAD when added (2026-09-30)
+  paper: https://arxiv.org/abs/2410.13842
+  weights_repository: https://huggingface.co/ustc-community/dfine-small-coco
+  weights_revision: f79e65b5fbb33ceb9d3ebba042955d7410c608f8
+
+license:
+  code:
+    spdx: Apache-2.0
+    status: explicit
+    evidence: https://github.com/Peterande/D-FINE/blob/956d1709314c2c6a4df6f34de232054578a7449f/LICENSE
+  weights:
+    spdx: Apache-2.0
+    status: explicit
+    evidence: https://huggingface.co/ustc-community/dfine-small-coco/blob/f79e65b5fbb33ceb9d3ebba042955d7410c608f8/README.md
+    note: >-
+      Model card metadata declares "license: apache-2.0". COCO-only weights
+      are used on purpose: the D-FINE README warns that Objects365
+      checkpoints (*_obj365, *_obj2coco) "should not be assumed to be
+      commercially cleared under the D-FINE license".
+  dataset:
+    name: COCO 2017
+    note: >-
+      Annotations CC BY 4.0; images are subject to Flickr terms of use
+      (https://cocodataset.org/#termsofuse).
+  export_dependencies:
+    - {name: transformers, spdx: Apache-2.0}
+
+artifacts:
+  onnx:
+    file: dfine_s.onnx
+    fetch: export
+    script: export.py
+    input_shape: [1, 3, 640, 640]
+    input_format: RGB, plain resize to 640x640 (no letterbox), scaled to [0, 1]
+    output: "logits [1, 300, 80], pred_boxes [1, 300, 4] (cxcywh, normalized)"
+
+runtimes:
+  onnxruntime: verified
+
+reported_accuracy:
+  - metric: COCO val2017 AP
+    value: 48.5
+    input_size: 640
+    source: https://github.com/Peterande/D-FINE/blob/956d1709314c2c6a4df6f34de232054578a7449f/README.md

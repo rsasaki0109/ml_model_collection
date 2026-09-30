@@ -1,0 +1,53 @@
+# Curated metadata. Measured numbers live in benchmarks.yaml (tool-generated).
+name: rfdetr_n
+display_name: RF-DETR-N
+task: object_detection
+summary: "Roboflow RF-DETR (nano): DINOv2 ViT backbone, Objects365-pretrained, NMS-free. ~30M params even at this size."
+
+source:
+  repository: https://github.com/roboflow/rf-detr
+  commit: 5f441831aaf23a68f40128ad0a2e27cb44e52640  # HEAD when added (2026-09-30); rfdetr 1.11.0
+  paper: https://arxiv.org/abs/2511.09554
+  weights_url: https://storage.googleapis.com/rfdetr/nano_coco/checkpoint_best_regular.pth
+  weights_sha256: d8d6b9ee57d4d0ed2b1f305163624712a0532cb7bce0c747317984fc5457440d
+
+license:
+  code:
+    spdx: Apache-2.0
+    status: explicit
+    evidence: https://github.com/roboflow/rf-detr/blob/5f441831aaf23a68f40128ad0a2e27cb44e52640/LICENSE
+  weights:
+    spdx: Apache-2.0
+    status: explicit
+    evidence: https://github.com/roboflow/rf-detr/blob/5f441831aaf23a68f40128ad0a2e27cb44e52640/README.md
+    note: >-
+      README model table lists RF-DETR-N as "Apache 2.0" ("The open-source
+      rfdetr package and Apache-designated models are released under Apache
+      2.0"; XL/2XL are PML 1.0 and are not included here). The paper states
+      all models are pretrained on Objects365 before COCO fine-tuning;
+      Objects365's own terms are not addressed by the model license.
+  dataset:
+    name: Objects365 (pretraining) + COCO 2017
+    note: >-
+      COCO annotations CC BY 4.0, images subject to Flickr terms of use.
+      Objects365 terms: see https://www.objects365.org/.
+  export_dependencies:
+    - {name: rfdetr, spdx: Apache-2.0}
+
+artifacts:
+  onnx:
+    file: rfdetr_n.onnx
+    fetch: export
+    script: export.py
+    input_shape: [1, 3, 384, 384]
+    input_format: RGB, bilinear resize to 384x384 (no letterbox), ImageNet mean/std normalization
+    output: "dets [1, 300, 4] (cxcywh, normalized), labels [1, 300, 91] logits indexed by COCO category id"
+
+runtimes:
+  onnxruntime: verified
+
+reported_accuracy:
+  - metric: COCO val2017 AP50:95
+    value: 48.4
+    input_size: 384
+    source: https://github.com/roboflow/rf-detr/blob/5f441831aaf23a68f40128ad0a2e27cb44e52640/README.md

@@ -1,0 +1,49 @@
+# Curated metadata. Measured numbers live in benchmarks.yaml (tool-generated).
+name: ssdlite320_mobilenet_v3_large
+display_name: SSDLite320-MobileNetV3
+task: object_detection
+summary: Lightweight SSDLite with MobileNetV3-Large backbone from torchvision.
+
+source:
+  repository: https://github.com/pytorch/vision
+  commit: 6da25ff876100d36f23472f5762d5f306c47d735  # HEAD when added (2026-09-30)
+  paper: https://arxiv.org/abs/1905.02244
+  weights_url: https://download.pytorch.org/models/ssdlite320_mobilenet_v3_large_coco-a79551df.pth
+
+license:
+  code:
+    spdx: BSD-3-Clause
+    status: explicit
+    evidence: https://github.com/pytorch/vision/blob/6da25ff876100d36f23472f5762d5f306c47d735/LICENSE
+  weights:
+    spdx: null
+    status: unknown
+    evidence: https://docs.pytorch.org/vision/stable/models.html
+    note: >-
+      torchvision docs: "The pre-trained models provided in this library may
+      have their own licenses or terms and conditions derived from the dataset
+      used for training. It is your responsibility to determine whether you
+      have permission to use the models for your use case."
+  dataset:
+    name: COCO 2017
+    note: >-
+      Annotations CC BY 4.0; images are subject to Flickr terms of use
+      (https://cocodataset.org/#termsofuse).
+
+artifacts:
+  onnx:
+    file: ssdlite320_mobilenet_v3_large.onnx
+    fetch: export
+    script: export.py
+    input_shape: [1, 3, 320, 320]
+    input_format: RGB, plain resize to 320x320, scaled to [0, 1] (normalization is inside the graph)
+    output: "boxes [N, 4] xyxy (320x320 space), scores [N], labels [N] (91-id COCO); NMS is inside the graph"
+
+runtimes:
+  onnxruntime: verified
+
+reported_accuracy:
+  - metric: COCO val2017 box mAP
+    value: 21.3
+    input_size: 320
+    source: https://github.com/pytorch/vision/blob/6da25ff876100d36f23472f5762d5f306c47d735/torchvision/models/detection/ssdlite.py
