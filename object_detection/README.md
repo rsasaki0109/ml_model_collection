@@ -14,7 +14,7 @@ compared and benchmarked by the same tools.
 | [DEIM-D-FINE-S](deim_dfine_s) | 🟢 Apache-2.0 | 🟢 Apache-2.0* | 640×640 | [49.0](https://github.com/Intellindust-AI-Lab/DEIM/blob/09d35d53d39ee3145a1e61e3a989b28b9468d1dd/README.md) | **48.7** | 335 MB (Tiny, CUDA FP32)<br>415 MB (Tiny, TRT FP16) | 16.7 / 60 | 6.2 / 162 |
 | [D-FINE-N](dfine_n) | 🟢 Apache-2.0 | 🟢 Apache-2.0 | 640×640 | [42.8](https://github.com/Peterande/D-FINE/blob/956d1709314c2c6a4df6f34de232054578a7449f/README.md) | **42.6** | 219 MB (Tiny, CUDA FP32)<br>405 MB (Tiny, TRT FP16) | 9.8 / 102 | 5.4 / 184 |
 | [D-FINE-S](dfine_s) | 🟢 Apache-2.0 | 🟢 Apache-2.0 | 640×640 | [48.5](https://github.com/Peterande/D-FINE/blob/956d1709314c2c6a4df6f34de232054578a7449f/README.md) | **48.3** | 335 MB (Tiny, CUDA FP32)<br>425 MB (Tiny, TRT FP16) | 17.3 / 58 | 6.8 / 148 |
-| [LLMDet-T](llmdet_tiny) 🔤 | 🟢 Apache-2.0 | 🟢 Apache-2.0 | 800×1333 | [44.7](https://github.com/iSEE-Laboratory/LLMDet/blob/main/README.md) | – | 6257 MB (Consumer, CUDA FP32)<br>1435 MB (Tiny, TRT FP16) | 728.6 / 1 | 172.0 / 6 |
+| [LLMDet-T](llmdet_tiny) 🔤 ⚠️ | 🟢 Apache-2.0 | 🟢 Apache-2.0 | 800×1333 | – | **1.5** | 6257 MB (Consumer, CUDA FP32)<br>1435 MB (Tiny, TRT FP16) | 728.6 / 1 | 172.0 / 6 |
 | [OWLv2-B/16](owlv2_b16) 🔤 | 🟢 Apache-2.0 | 🟢 Apache-2.0 | 960×960 | – | **45.7** | 3519 MB (Light, CUDA FP32)<br>763 MB (Tiny, TRT FP16) | 510.2 / 2 | 84.5 / 12 |
 | [RF-DETR-N](rfdetr_n) | 🟢 Apache-2.0 | 🟢 Apache-2.0 | 384×384 | [48.4](https://github.com/roboflow/rf-detr/blob/5f441831aaf23a68f40128ad0a2e27cb44e52640/README.md) | **47.9** | 355 MB (Tiny, CUDA FP32)<br>423 MB (Tiny, TRT FP16) | 13.2 / 76 | 3.7 / 270 |
 | [RF-DETR-S](rfdetr_s) | 🟢 Apache-2.0 | 🟢 Apache-2.0 | 512×512 | [53.0](https://github.com/roboflow/rf-detr/blob/5f441831aaf23a68f40128ad0a2e27cb44e52640/README.md) | **52.6** | 489 MB (Tiny, CUDA FP32)<br>433 MB (Tiny, TRT FP16) | 24.7 / 40 | 5.6 / 179 |
@@ -95,7 +95,10 @@ Open-vocabulary (🔤; prompted with the 80 COCO class names by default):
   `aten::isin/cummax/cummin` are replaced by exportable equivalents during
   export and a bool `EyeLike` is rewritten for ONNX Runtime; top detections
   match PyTorch (score ≤ 4e-4, box ≤ 0.003). COCO is part of its training
-  data, so its COCO AP is **not** zero-shot.
+  data, so its COCO AP is **not** zero-shot. ⚠️ **Known issue:** measured COCO AP is 1.5 — boxes are
+  badly localised by the transformers `MMGroundingDino` port itself (the official transformers pipeline
+  gives the same boxes; Grounding-DINO-T in the same pipeline is correct). Kept for transparency; see
+  `known_issue` in its `model.yaml`.
 
 Earlier baselines, kept for comparison:
 

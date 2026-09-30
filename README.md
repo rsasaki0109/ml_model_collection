@@ -18,7 +18,7 @@ Video: "Road traffic on Stritarjeva street" by Sounds of Changes, [CC BY 3.0](ht
 | [DEIM-D-FINE-S](object_detection/deim_dfine_s) | 🟢 Apache-2.0 | 🟢 Apache-2.0* | 640×640 | [49.0](https://github.com/Intellindust-AI-Lab/DEIM/blob/09d35d53d39ee3145a1e61e3a989b28b9468d1dd/README.md) | **48.7** | 335 MB (Tiny, CUDA FP32)<br>415 MB (Tiny, TRT FP16) | 16.7 / 60 | 6.2 / 162 |
 | [D-FINE-N](object_detection/dfine_n) | 🟢 Apache-2.0 | 🟢 Apache-2.0 | 640×640 | [42.8](https://github.com/Peterande/D-FINE/blob/956d1709314c2c6a4df6f34de232054578a7449f/README.md) | **42.6** | 219 MB (Tiny, CUDA FP32)<br>405 MB (Tiny, TRT FP16) | 9.8 / 102 | 5.4 / 184 |
 | [D-FINE-S](object_detection/dfine_s) | 🟢 Apache-2.0 | 🟢 Apache-2.0 | 640×640 | [48.5](https://github.com/Peterande/D-FINE/blob/956d1709314c2c6a4df6f34de232054578a7449f/README.md) | **48.3** | 335 MB (Tiny, CUDA FP32)<br>425 MB (Tiny, TRT FP16) | 17.3 / 58 | 6.8 / 148 |
-| [LLMDet-T](object_detection/llmdet_tiny) 🔤 | 🟢 Apache-2.0 | 🟢 Apache-2.0 | 800×1333 | [44.7](https://github.com/iSEE-Laboratory/LLMDet/blob/main/README.md) | – | 6257 MB (Consumer, CUDA FP32)<br>1435 MB (Tiny, TRT FP16) | 728.6 / 1 | 172.0 / 6 |
+| [LLMDet-T](object_detection/llmdet_tiny) 🔤 ⚠️ | 🟢 Apache-2.0 | 🟢 Apache-2.0 | 800×1333 | – | **1.5** | 6257 MB (Consumer, CUDA FP32)<br>1435 MB (Tiny, TRT FP16) | 728.6 / 1 | 172.0 / 6 |
 | [OWLv2-B/16](object_detection/owlv2_b16) 🔤 | 🟢 Apache-2.0 | 🟢 Apache-2.0 | 960×960 | – | **45.7** | 3519 MB (Light, CUDA FP32)<br>763 MB (Tiny, TRT FP16) | 510.2 / 2 | 84.5 / 12 |
 | [RF-DETR-N](object_detection/rfdetr_n) | 🟢 Apache-2.0 | 🟢 Apache-2.0 | 384×384 | [48.4](https://github.com/roboflow/rf-detr/blob/5f441831aaf23a68f40128ad0a2e27cb44e52640/README.md) | **47.9** | 355 MB (Tiny, CUDA FP32)<br>423 MB (Tiny, TRT FP16) | 13.2 / 76 | 3.7 / 270 |
 | [RF-DETR-S](object_detection/rfdetr_s) | 🟢 Apache-2.0 | 🟢 Apache-2.0 | 512×512 | [53.0](https://github.com/roboflow/rf-detr/blob/5f441831aaf23a68f40128ad0a2e27cb44e52640/README.md) | **52.6** | 489 MB (Tiny, CUDA FP32)<br>433 MB (Tiny, TRT FP16) | 24.7 / 40 | 5.6 / 179 |
@@ -31,6 +31,7 @@ Video: "Road traffic on Stritarjeva street" by Sounds of Changes, [CC BY 3.0](ht
 | [YOLOX-S](object_detection/yolox_s) | 🟢 Apache-2.0 | 🟢 Apache-2.0* | 640×640 | [40.5](https://github.com/Megvii-BaseDetection/YOLOX/blob/6ddff4824372906469a7fae2dc3206c7aa4bbaee/README.md) | **40.3** | 249 MB (Tiny, CUDA FP32)<br>387 MB (Tiny, TRT FP16) | 11.2 / 89 | 5.4 / 184 |
 <!-- END:object_detection_table -->
 
+- ⚠️ = known issue, see the model's `model.yaml` (`known_issue`) before using it.
 - 🔤 = open-vocabulary (prompted with the 80 COCO class names here; COCO AP is zero-shot unless the model's notes say otherwise).
 - 🟢 permissive · 🟡 copyleft · 🔴 restricted · ⚪ unknown. `*` = the weights are published from a repository/release under that license, but upstream does not state a separate license for the weights. See [docs/licenses.md](docs/licenses.md).
 - **COCO mAP (reported)** is copied from upstream (linked). **COCO mAP (measured, ONNX)** is measured here by [`tools/evaluate.py`](tools/evaluate.py) on COCO val2017 with the *exported ONNX file and this repo's pre/post-processing* (score ≥ 0.001, 100 dets/image, pycocotools) — it checks the artifact you would deploy, not the upstream PyTorch model. For all non-open-vocabulary detectors the two agree within 0.1–0.9 AP.
@@ -49,10 +50,10 @@ How these models relate to the current state of the art, and which models are pl
 <!-- BEGIN:depth_estimation_table -->
 | Model | Code license | Weights license | Output | Input | NYUv2 AbsRel ↓<br>(reported) | Peak VRAM<br>(measured) | Tesla T4 (Colab)<br>onnxruntime-cuda FP32 · ms / FPS | Tesla T4 (Colab)<br>onnxruntime-tensorrt FP16 · ms / FPS |
 |---|---|---|---|---|---|---|---|---|
-| [Depth-Anything-3-S](depth_estimation/depth_anything_3_small) | 🟢 Apache-2.0 | 🟢 Apache-2.0 | relative (depth) | 280×504 | – | not measured | – | – |
+| [Depth-Anything-3-S](depth_estimation/depth_anything_3_small) | 🟢 Apache-2.0 | 🟢 Apache-2.0 | relative (depth) | 280×504 | – | 507 MB (Tiny, CUDA FP32)<br>447 MB (Tiny, TRT FP16) | 22.1 / 45 | 5.2 / 192 |
 | [Depth-Anything-V2-B](depth_estimation/depth_anything_v2_base) | 🟢 Apache-2.0 | 🔴 CC-BY-NC-4.0 | relative (disparity) | 518×924 | [0.049](https://arxiv.org/abs/2406.09414) | 2099 MB (Light, CUDA FP32)<br>697 MB (Tiny, TRT FP16) | 297.3 / 3 | 48.1 / 21 |
 | [Depth-Anything-V2-S](depth_estimation/depth_anything_v2_small) | 🟢 Apache-2.0 | 🟢 Apache-2.0 | relative (disparity) | 518×924 | [0.053](https://arxiv.org/abs/2406.09414) | 1013 MB (Tiny, CUDA FP32)<br>495 MB (Tiny, TRT FP16) | 119.4 / 8 | 18.9 / 53 |
-| [MoGe-2-S](depth_estimation/moge2_vits) | 🟢 MIT | 🟢 MIT | metric (m) | 720×1280 | – | not measured | – | – |
+| [MoGe-2-S](depth_estimation/moge2_vits) | 🟢 MIT | 🟢 MIT | metric (m) | 720×1280 | – | 1503 MB (Tiny, CUDA FP32) | 203.4 / 5 | – |
 <!-- END:depth_estimation_table -->
 
 Depth-Anything-3-S is the newest (2025-11). Depth-Anything-V2-S and -B share code and architecture, but only **S** has Apache-2.0 weights — **B** is CC-BY-NC-4.0. Relative outputs are per-frame normalised in the GIF. Survey: [docs/sota/depth_estimation.md](docs/sota/depth_estimation.md).

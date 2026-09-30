@@ -41,8 +41,10 @@ def find_bench(model: Model, col):
     return None
 
 
-def accuracy(model: Model) -> str:
-    acc = model.meta.get("reported_accuracy") or []
+def accuracy(model: Model, metric_prefix: str) -> str:
+    """First upstream-reported value whose metric name starts with the column's metric."""
+    acc = [a for a in model.meta.get("reported_accuracy") or []
+           if a["metric"].startswith(metric_prefix)]
     if not acc:
         return "–"
     a = acc[0]
@@ -91,8 +93,10 @@ def comparison_table(models: list[Model], start: Path) -> str:
         name = f"[{m.display_name}]({rel(m, start)})"
         if m.meta.get("open_vocabulary"):
             name += " 🔤"
+        if m.meta.get("known_issue"):
+            name += " ⚠️"
         row = [name, licenses.describe(lic.get("code")), licenses.describe(lic.get("weights")),
-               f"{shape[-2]}×{shape[-1]}", accuracy(m), measured_coco(m), vram_cell(m)]
+               f"{shape[-2]}×{shape[-1]}", accuracy(m, "COCO"), measured_coco(m), vram_cell(m)]
         lines.append("| " + " | ".join(row + bench_cells(m, cols)) + " |")
     return "\n".join(lines)
 
@@ -112,7 +116,7 @@ def depth_table(models: list[Model], start: Path) -> str:
         row = [f"[{m.display_name}]({rel(m, start)})", licenses.describe(lic.get("code")),
                licenses.describe(lic.get("weights")),
                OUTPUT_LABEL.get(m.meta.get("output"), "?"), f"{shape[-2]}×{shape[-1]}",
-               accuracy(m), vram_cell(m)]
+               accuracy(m, "NYUv2 AbsRel"), vram_cell(m)]
         lines.append("| " + " | ".join(row + bench_cells(m, cols)) + " |")
     return "\n".join(lines)
 

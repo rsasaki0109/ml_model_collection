@@ -46,6 +46,10 @@ artifacts:
 
 runtimes:
   onnxruntime: verified
+  onnxruntime-tensorrt: >-
+    not usable (Colab T4, TensorRT 10.9, 2026-09-30): the session silently
+    fell back to CPUExecutionProvider (7.3 s/frame); the record was discarded
+    and tools/benchmark.py now refuses to record such fallbacks
 
 notes: >-
   The official ONNX equals upstream PyTorch in `onnx_compatible_mode`

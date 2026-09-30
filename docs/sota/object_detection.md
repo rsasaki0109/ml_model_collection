@@ -115,7 +115,8 @@ The initial line-up (YOLOX-S 2021, SSDLite 2019, RT-DETR-R18 2023, YOLO11n
 | YOLO26n | **added** | current AGPL reference, NMS-free | AGPL-3.0 |
 | RT-DETR-R18, YOLOX-S, YOLO11n | kept | older baselines for CPU/edge comparison | – |
 | SSDLite320 | kept, **removed from GIF** | weights license unknown, low accuracy | ⚪ unknown |
-| LLMDet-T, OWLv2-B | next | first open-vocabulary entries; need a prompt-aware detector interface | Apache-2.0 (explicit) |
+| OWLv2-B/16 | **added** | open-vocabulary, free-text prompts; COCO zero-shot 45.7 AP (measured) | Apache-2.0 (explicit) |
+| LLMDet-T | **added, ⚠️ known issue** | the transformers MMGroundingDino port mislocalises boxes (COCO AP 1.5 measured); needs an export from the official mmdetection code | Apache-2.0 (explicit) |
 
 Not planned: DEIMv2, ECDet, YOLO-NAS, RF-DETR XL/2XL (non-commercial / PML);
 API-only models; ≥1B-param accuracy leaders (do not fit the collection's

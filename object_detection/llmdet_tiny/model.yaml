@@ -45,10 +45,17 @@ artifacts:
 runtimes:
   onnxruntime: verified
 
-notes: >-
-  COCO val2017 evaluation is pending: the first run hit portrait images that
-  did not fit the landscape 800x1333 canvas (fixed in detector.py by fitting
-  them inside the canvas, i.e. smaller than upstream sizing for portrait).
+known_issue: >-
+  Boxes are badly localised: COCO val2017 AP 1.5 (measured). The ONNX
+  artifact matches the transformers model exactly, and the official
+  transformers pipeline (processor + post_process_grounded_object_detection,
+  transformers 5.9 and 5.16) misplaces the same boxes, as does
+  openmmlab-community/mm_grounding_dino_tiny, which uses the same
+  MMGroundingDino class; IDEA-Research/grounding-dino-tiny in the same
+  pipeline is correct. The problem therefore appears to be in the
+  transformers MMGroundingDino port, not in the checkpoint or this export
+  (not yet reported upstream / root cause unverified). Do not use until an
+  export from the official LLMDet (mmdetection) code is available.
 
 reported_accuracy:
   - metric: LVIS minival AP (fixed AP, zero-shot)

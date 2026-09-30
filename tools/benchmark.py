@@ -123,6 +123,15 @@ def measure(model: Model, provider: str, frame_path: Path, warmup: int,
         if mon:
             mon.__exit__(None, None, None)
 
+    # ONNX Runtime can fall back to CPU at run time (e.g. when TensorRT cannot
+    # build an engine for a data-dependent shape); never record that as GPU.
+    used = det.sess.get_providers()[0]
+    expected = {"cpu": "CPUExecutionProvider", "cuda": "CUDAExecutionProvider"}.get(
+        provider, "TensorrtExecutionProvider")
+    if used != expected:
+        raise SystemExit(f"{model.name}: requested {provider} but the session ran on {used}; "
+                         "not recording")
+
     lat.sort()
     mean = statistics.fmean(lat)
     art = model.meta["artifacts"]["onnx"]
