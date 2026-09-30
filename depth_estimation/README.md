@@ -20,6 +20,7 @@ alignment; the comparison GIF normalises each frame independently.
 <!-- BEGIN:depth_estimation_table -->
 | Model | Code license | Weights license | Output | Input | NYUv2 AbsRel ↓<br>(reported) | Peak VRAM<br>(measured) |
 |---|---|---|---|---|---|---|
+| [Depth-Anything-3-S](depth_anything_3_small) | 🟢 Apache-2.0 | 🟢 Apache-2.0 | relative (depth) | 280×504 | – | not measured |
 | [Depth-Anything-V2-B](depth_anything_v2_base) | 🟢 Apache-2.0 | 🔴 CC-BY-NC-4.0 | relative (disparity) | 518×924 | [0.049](https://arxiv.org/abs/2406.09414) | not measured |
 | [Depth-Anything-V2-S](depth_anything_v2_small) | 🟢 Apache-2.0 | 🟢 Apache-2.0 | relative (disparity) | 518×924 | [0.053](https://arxiv.org/abs/2406.09414) | not measured |
 <!-- END:depth_estimation_table -->
@@ -29,6 +30,7 @@ alignment; the comparison GIF normalises each frame independently.
 <!-- BEGIN:depth_estimation_provenance -->
 | Model | Source (pinned) | Artifact | How it is produced |
 |---|---|---|---|
+| Depth-Anything-3-S | [ByteDance-Seed/Depth-Anything-3@3d835ec](https://github.com/ByteDance-Seed/Depth-Anything-3/tree/3d835ec1a5802d64a8b8b15f817a1ab54809bfe4) | `depth_anything_3_small.onnx` | [`export.py`](depth_anything_3_small/export.py) |
 | Depth-Anything-V2-B | [DepthAnything/Depth-Anything-V2@a561b84](https://github.com/DepthAnything/Depth-Anything-V2/tree/a561b849ebae10a6f5ef49e26c83cbbcd36c71bf) | `depth_anything_v2_base.onnx` | [`export.py`](depth_anything_v2_base/export.py) |
 | Depth-Anything-V2-S | [DepthAnything/Depth-Anything-V2@a561b84](https://github.com/DepthAnything/Depth-Anything-V2/tree/a561b849ebae10a6f5ef49e26c83cbbcd36c71bf) | `depth_anything_v2_small.onnx` | [`export.py`](depth_anything_v2_small/export.py) |
 <!-- END:depth_estimation_provenance -->
@@ -44,6 +46,15 @@ alignment; the comparison GIF normalises each frame independently.
   ONNX output equals the PyTorch model on the same input (relative
   difference 4e-7); against the full transformers pipeline (PIL bicubic vs
   OpenCV bicubic resize) the correlation is 0.99998.
+
+- **Depth-Anything-3-S** — exported from the official ByteDance-Seed code
+  (pinned commit) and `depth-anything/DA3-SMALL` weights, not from the
+  community ONNX (which does not state its source). Only the model code's
+  imports are needed (omegaconf, einops, addict), not the full package.
+  `torch.cartesian_prod` (RoPE grid) is replaced by an exportable
+  equivalent. Pre-processing is identical to upstream `InputProcessor`
+  (pixel difference 0.0); ONNX equals PyTorch (relative difference 4e-7).
+  Outputs relative **depth** (larger = farther), unlike DA-V2's disparity.
 
 See [docs/sota/depth_estimation.md](../docs/sota/depth_estimation.md) for how these
 were chosen and which models are *not* included.

@@ -1,0 +1,50 @@
+# Curated metadata. Measured numbers live in benchmarks.yaml (tool-generated).
+name: depth_anything_3_small
+display_name: Depth-Anything-3-S
+task: depth_estimation
+output: relative_depth
+summary: "Depth Anything 3 Small (0.08B, 2025-11): any-view geometry model used here for monocular relative depth."
+
+source:
+  repository: https://github.com/ByteDance-Seed/Depth-Anything-3
+  commit: 3d835ec1a5802d64a8b8b15f817a1ab54809bfe4  # HEAD when added (2026-09-30)
+  paper: https://arxiv.org/abs/2511.10647
+  weights_repository: https://huggingface.co/depth-anything/DA3-SMALL
+  weights_revision: e08cab65ca0ec38e7826075418411ab90cab4da3
+
+license:
+  code:
+    spdx: Apache-2.0
+    status: explicit
+    evidence: https://github.com/ByteDance-Seed/Depth-Anything-3/blob/3d835ec1a5802d64a8b8b15f817a1ab54809bfe4/LICENSE
+  weights:
+    spdx: Apache-2.0
+    status: explicit
+    evidence: https://github.com/ByteDance-Seed/Depth-Anything-3/blob/3d835ec1a5802d64a8b8b15f817a1ab54809bfe4/README.md
+    note: >-
+      The upstream README model table lists DA3-SMALL and DA3-BASE as Apache
+      2.0 and DA3-LARGE / GIANT / NESTED as CC BY-NC 4.0; the HF card of
+      DA3-SMALL declares apache-2.0. Community ONNX conversions exist but do
+      not state their source revision, so this artifact is exported from the
+      official code and weights instead.
+  dataset:
+    name: See the paper (mixture of synthetic and real multi-view data)
+    note: Individual dataset terms are not restated upstream.
+  export_dependencies:
+    - {name: omegaconf, spdx: BSD-3-Clause}
+    - {name: einops, spdx: MIT}
+    - {name: addict, spdx: MIT}
+
+artifacts:
+  onnx:
+    file: depth_anything_3_small.onnx
+    fetch: export
+    script: export.py
+    input_shape: [1, 1, 3, 280, 504]  # (batch, views, C, H, W); fixed, = upstream sizing for 16:9
+    input_format: RGB, longest side 504 (INTER_AREA), sides to nearest multiple of 14, ImageNet mean/std
+    output: "depth [1, 1, 280, 504] relative depth (larger = farther), depth_conf [1, 1, 280, 504]"
+
+runtimes:
+  onnxruntime: verified
+
+reported_accuracy: []

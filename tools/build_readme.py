@@ -89,7 +89,7 @@ def comparison_table(models: list[Model], start: Path) -> str:
         if m.meta.get("open_vocabulary"):
             name += " 🔤"
         row = [name, licenses.describe(lic.get("code")), licenses.describe(lic.get("weights")),
-               f"{shape[2]}×{shape[3]}", accuracy(m), measured_coco(m), vram_cell(m)]
+               f"{shape[-2]}×{shape[-1]}", accuracy(m), measured_coco(m), vram_cell(m)]
         lines.append("| " + " | ".join(row + bench_cells(m, cols)) + " |")
     return "\n".join(lines)
 
@@ -108,7 +108,7 @@ def depth_table(models: list[Model], start: Path) -> str:
         shape = m.meta["artifacts"]["onnx"]["input_shape"]
         row = [f"[{m.display_name}]({rel(m, start)})", licenses.describe(lic.get("code")),
                licenses.describe(lic.get("weights")),
-               OUTPUT_LABEL.get(m.meta.get("output"), "?"), f"{shape[2]}×{shape[3]}",
+               OUTPUT_LABEL.get(m.meta.get("output"), "?"), f"{shape[-2]}×{shape[-1]}",
                accuracy(m), vram_cell(m)]
         lines.append("| " + " | ".join(row + bench_cells(m, cols)) + " |")
     return "\n".join(lines)

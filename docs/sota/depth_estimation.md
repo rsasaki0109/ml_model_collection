@@ -50,6 +50,6 @@ DA-V2-L NYUv2 0.045 / 0.979 (arXiv 2406.09414, Table 2).
 |---|---|---|
 | Depth-Anything-V2-S | **added** | Apache-2.0 code + weights, 25M params, the baseline everyone compares to |
 | Depth-Anything-V2-B | **added** | license-trap example: same code, CC-BY-NC-4.0 weights |
-| Depth Anything 3 Small | next | newest (2025-11), Apache weights; needs an export from the official code (the community ONNX lacks provenance) |
+| Depth Anything 3 Small | **added** | newest (2025-11), Apache weights; exported from the official code (the community ONNX lacks provenance) |
 | MoGe-2 ViT-S | next | MIT, metric geometry, official ONNX; needs focal/shift recovery ported from upstream |
 | Metric3D v2, Depth Pro, UniDepth, DepthCrafter | not planned | weights license unstated, research-only or non-commercial |
