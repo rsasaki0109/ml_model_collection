@@ -87,10 +87,11 @@ means they are not identical to a pure `trtexec` engine.
 
 For GPUs you do not own (or when your machine is busy):
 
-1. `python tools/pack_for_colab.py` → `dist/ml_model_collection.zip`
-   (skip if the repository can be `git clone`d; set `REPO_URL` instead).
-2. Open [`tools/colab_benchmark.ipynb`](../tools/colab_benchmark.ipynb) in
-   Colab with a GPU runtime and run all cells. It exports every artifact from
+1. [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/rsasaki0109/ml_model_collection/blob/main/tools/colab_benchmark.ipynb)
+   — select a GPU runtime and run all cells (it clones this repository; for
+   a fork or local changes, set `REPO_URL` or upload the zip from
+   `python tools/pack_for_colab.py`).
+2. The notebook exports every artifact from
    the pinned sources inside Colab, benchmarks it, and downloads
    `benchmarks_colab.zip`.
 3. `python tools/merge_benchmarks.py benchmarks_colab.zip && python tools/build_readme.py`
