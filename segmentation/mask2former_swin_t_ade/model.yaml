@@ -1,0 +1,50 @@
+# Curated metadata. Measured numbers live in benchmarks.yaml (tool-generated).
+name: mask2former_swin_t_ade
+display_name: Mask2Former-SwinT (ADE20K)
+task: segmentation
+kind: semantic
+summary: "Mask2Former with a Swin-T backbone trained on ADE20K (150 classes), universal architecture used for semantic segmentation."
+
+source:
+  repository: https://github.com/facebookresearch/Mask2Former
+  commit: 9b0651c6c1d5b3af2e6da0589b719c514ec0d69a  # HEAD when added (2026-10-01)
+  paper: https://arxiv.org/abs/2112.01527
+  weights_repository: https://huggingface.co/facebook/mask2former-swin-tiny-ade-semantic
+  weights_revision: c8cf1b5e823aee214d937d0d001c1850ba44ef6a
+
+license:
+  code:
+    spdx: MIT
+    status: explicit
+    evidence: https://github.com/facebookresearch/Mask2Former/blob/9b0651c6c1d5b3af2e6da0589b719c514ec0d69a/README.md
+    note: >-
+      README - "The majority of Mask2Former is licensed under a MIT License." (parts derived from Swin / Deformable DETR carry their own Apache-2.0 / MIT terms).
+  weights:
+    spdx: MIT
+    status: repository_license
+    evidence: https://huggingface.co/facebook/mask2former-swin-tiny-ade-semantic/blob/c8cf1b5e823aee214d937d0d001c1850ba44ef6a/README.md
+    note: >-
+      The HF card is tagged "other" and points to the upstream repository; no separate weights license is stated.
+  dataset:
+    name: ADE20K
+    note: ADE20K has its own terms of use (MIT CSAIL); not restated here.
+  export_dependencies:
+    - {name: transformers, spdx: Apache-2.0}
+
+artifacts:
+  onnx:
+    file: mask2former_swin_t_ade.onnx
+    fetch: export
+    script: export.py
+    input_shape: [1, 3, 512, 512]  # fixed; any input is resized (stretched) to 512x512
+    input_format: RGB, bilinear resize to 512x512, ImageNet mean/std
+    output: "class_queries_logits [1,100,151] (150 classes + no-object), masks_queries_logits [1,100,128,128]"
+
+runtimes:
+  onnxruntime: verified
+
+reported_accuracy:
+  - metric: ADE20K val mIoU (single-scale)
+    value: 47.7
+    input_size: 512
+    source: https://github.com/facebookresearch/Mask2Former/blob/9b0651c6c1d5b3af2e6da0589b719c514ec0d69a/MODEL_ZOO.md

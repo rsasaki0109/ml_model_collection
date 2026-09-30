@@ -110,6 +110,8 @@ def patch_for_ort(path: Path) -> list[str]:
       code does, and cast back.
     * EyeLike on non-float inputs (e.g. bool masks built with torch.eye):
       generate the identity in float32 and cast to the original type.
+    * GridSample with a float64 grid (transformers Mask2Former): cast the
+      grid to float32 (ONNX Runtime only implements float grids).
 
     Returns a list of what was changed, for the export log.
     """
@@ -128,6 +130,13 @@ def patch_for_ort(path: Path) -> list[str]:
     float_types = (TensorProto.FLOAT, TensorProto.FLOAT16, TensorProto.DOUBLE)
     nodes, changes = [], []
     for node in model.graph.node:
+        if node.op_type == "GridSample" and types.get(node.input[1]) == TensorProto.DOUBLE:
+            g32 = f"{node.input[1]}__f32__{len(changes)}"
+            nodes.append(helper.make_node("Cast", [node.input[1]], [g32], to=TensorProto.FLOAT))
+            node.input[1] = g32
+            nodes.append(node)
+            changes.append(f"GridSample {node.name}: grid DOUBLE -> FLOAT")
+            continue
         src_t = types.get(node.input[0]) if node.input else None
         if node.op_type in ("Sin", "Cos") and src_t == TensorProto.DOUBLE:
             to, back = TensorProto.FLOAT, TensorProto.DOUBLE

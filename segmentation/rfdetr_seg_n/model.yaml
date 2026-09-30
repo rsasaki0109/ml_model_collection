@@ -1,0 +1,46 @@
+# Curated metadata. Measured numbers live in benchmarks.yaml (tool-generated).
+name: rfdetr_seg_n
+display_name: RF-DETR-Seg-N
+task: segmentation
+kind: instance
+summary: "Roboflow RF-DETR-Seg (nano): real-time instance segmentation, DINOv2 backbone, NMS-free."
+
+source:
+  repository: https://github.com/roboflow/rf-detr
+  commit: 5f441831aaf23a68f40128ad0a2e27cb44e52640  # rfdetr 1.11.0, same as the detection models
+  weights_url: https://storage.googleapis.com/rfdetr/rf-detr-seg-n-ft.pth
+  weights_sha256: a44613a4ecd6b5ba61a62002c600b0b6cb7a9da2936a45317ec4b62c635fb99b
+
+license:
+  code:
+    spdx: Apache-2.0
+    status: explicit
+    evidence: https://github.com/roboflow/rf-detr/blob/5f441831aaf23a68f40128ad0a2e27cb44e52640/LICENSE
+  weights:
+    spdx: Apache-2.0
+    status: explicit
+    evidence: https://github.com/roboflow/rf-detr/blob/5f441831aaf23a68f40128ad0a2e27cb44e52640/README.md
+    note: README model table lists RF-DETR-Seg-N as "Apache 2.0" (XL/2XL detection models are PML 1.0 and not included).
+  dataset:
+    name: Objects365 (pretraining, per the paper) + COCO 2017
+    note: COCO annotations CC BY 4.0, images subject to Flickr terms of use.
+  export_dependencies:
+    - {name: rfdetr, spdx: Apache-2.0}
+
+artifacts:
+  onnx:
+    file: rfdetr_seg_n.onnx
+    fetch: export
+    script: export.py
+    input_shape: [1, 3, 312, 312]
+    input_format: RGB, bilinear resize to 312x312 (no letterbox), ImageNet mean/std normalization
+    output: "dets [1,100,4] cxcywh normalized, labels [1,100,91] logits by COCO category id, masks [1,100,78,78] mask logits"
+
+runtimes:
+  onnxruntime: verified
+
+reported_accuracy:
+  - metric: COCO val2017 mask AP
+    value: 40.3
+    input_size: 312
+    source: https://github.com/roboflow/rf-detr/blob/5f441831aaf23a68f40128ad0a2e27cb44e52640/README.md

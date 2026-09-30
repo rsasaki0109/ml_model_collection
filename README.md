@@ -13,22 +13,22 @@ Video: "Road traffic on Stritarjeva street" by Sounds of Changes, [CC BY 3.0](ht
 ## Object detection
 
 <!-- BEGIN:object_detection_table -->
-| Model | Code license | Weights license | Input | COCO mAP<br>(reported) | COCO mAP<br>(measured, ONNX) | Peak VRAM<br>(measured) | Tesla T4 (Colab)<br>onnxruntime-cuda FP32 · ms / FPS | Tesla T4 (Colab)<br>onnxruntime-tensorrt FP16 · ms / FPS |
-|---|---|---|---|---|---|---|---|---|
-| [DEIM-D-FINE-S](object_detection/deim_dfine_s) | 🟢 Apache-2.0 | 🟢 Apache-2.0* | 640×640 | [49.0](https://github.com/Intellindust-AI-Lab/DEIM/blob/09d35d53d39ee3145a1e61e3a989b28b9468d1dd/README.md) | **48.7** | 335 MB (Tiny, CUDA FP32)<br>415 MB (Tiny, TRT FP16) | 16.7 / 60 | 6.2 / 162 |
-| [D-FINE-N](object_detection/dfine_n) | 🟢 Apache-2.0 | 🟢 Apache-2.0 | 640×640 | [42.8](https://github.com/Peterande/D-FINE/blob/956d1709314c2c6a4df6f34de232054578a7449f/README.md) | **42.6** | 219 MB (Tiny, CUDA FP32)<br>405 MB (Tiny, TRT FP16) | 9.8 / 102 | 5.4 / 184 |
-| [D-FINE-S](object_detection/dfine_s) | 🟢 Apache-2.0 | 🟢 Apache-2.0 | 640×640 | [48.5](https://github.com/Peterande/D-FINE/blob/956d1709314c2c6a4df6f34de232054578a7449f/README.md) | **48.3** | 335 MB (Tiny, CUDA FP32)<br>425 MB (Tiny, TRT FP16) | 17.3 / 58 | 6.8 / 148 |
-| [LLMDet-T](object_detection/llmdet_tiny) 🔤 ⚠️ | 🟢 Apache-2.0 | 🟢 Apache-2.0 | 800×1333 | – | **1.5** | 6257 MB (Consumer, CUDA FP32)<br>1435 MB (Tiny, TRT FP16) | 728.6 / 1 | 172.0 / 6 |
-| [OWLv2-B/16](object_detection/owlv2_b16) 🔤 | 🟢 Apache-2.0 | 🟢 Apache-2.0 | 960×960 | – | **45.7** | 3519 MB (Light, CUDA FP32)<br>763 MB (Tiny, TRT FP16) | 510.2 / 2 | 84.5 / 12 |
-| [RF-DETR-N](object_detection/rfdetr_n) | 🟢 Apache-2.0 | 🟢 Apache-2.0 | 384×384 | [48.4](https://github.com/roboflow/rf-detr/blob/5f441831aaf23a68f40128ad0a2e27cb44e52640/README.md) | **47.9** | 355 MB (Tiny, CUDA FP32)<br>423 MB (Tiny, TRT FP16) | 13.2 / 76 | 3.7 / 270 |
-| [RF-DETR-S](object_detection/rfdetr_s) | 🟢 Apache-2.0 | 🟢 Apache-2.0 | 512×512 | [53.0](https://github.com/roboflow/rf-detr/blob/5f441831aaf23a68f40128ad0a2e27cb44e52640/README.md) | **52.6** | 489 MB (Tiny, CUDA FP32)<br>433 MB (Tiny, TRT FP16) | 24.7 / 40 | 5.6 / 179 |
-| [RT-DETR-R18](object_detection/rtdetr_r18vd) | 🟢 Apache-2.0 | 🟢 Apache-2.0 | 640×640 | [46.5](https://huggingface.co/PekingU/rtdetr_r18vd/blob/ac77a11ff0170a41b771c03264987f8ce2b0d753/README.md) | **46.2** | 361 MB (Tiny, CUDA FP32)<br>467 MB (Tiny, TRT FP16) | 23.1 / 43 | 6.7 / 149 |
-| [RT-DETRv4-M](object_detection/rtdetrv4_m) | 🟢 Apache-2.0 | 🟢 Apache-2.0* | 640×640 | [53.7](https://github.com/RT-DETRs/RT-DETRv4/blob/55fefaaed7efe2a5f72d0a18fd4e05965e35c292/README.md) | **53.5** | 383 MB (Tiny, CUDA FP32)<br>441 MB (Tiny, TRT FP16) | 26.9 / 37 | 8.7 / 115 |
-| [RT-DETRv4-S](object_detection/rtdetrv4_s) | 🟢 Apache-2.0 | 🟢 Apache-2.0* | 640×640 | [49.8](https://github.com/RT-DETRs/RT-DETRv4/blob/55fefaaed7efe2a5f72d0a18fd4e05965e35c292/README.md) | **49.6** | 335 MB (Tiny, CUDA FP32)<br>415 MB (Tiny, TRT FP16) | 16.8 / 59 | 6.8 / 148 |
-| [SSDLite320-MobileNetV3](object_detection/ssdlite320_mobilenet_v3_large) | 🟢 BSD-3-Clause | ⚪ unknown | 320×320 | [21.3](https://github.com/pytorch/vision/blob/6da25ff876100d36f23472f5762d5f306c47d735/torchvision/models/detection/ssdlite.py) | **21.1** | 249 MB (Tiny, CUDA FP32) | 20.9 / 48 | – |
-| [YOLO11n](object_detection/yolo11n) | 🟡 AGPL-3.0 | 🟡 AGPL-3.0* | 640×640 | [39.5](https://github.com/ultralytics/ultralytics/blob/50ca85e03bc669c694c474ab91168f9b5425d9a8/docs/en/models/yolo11.md) | **38.6** | 239 MB (Tiny, CUDA FP32)<br>403 MB (Tiny, TRT FP16) | 7.2 / 138 | 4.9 / 205 |
-| [YOLO26n](object_detection/yolo26n) | 🟡 AGPL-3.0 | 🟡 AGPL-3.0 | 640×640 | [40.1](https://github.com/ultralytics/ultralytics/blob/50ca85e03bc669c694c474ab91168f9b5425d9a8/README.md) | **40.0** | 247 MB (Tiny, CUDA FP32)<br>401 MB (Tiny, TRT FP16) | 8.3 / 121 | 4.5 / 223 |
-| [YOLOX-S](object_detection/yolox_s) | 🟢 Apache-2.0 | 🟢 Apache-2.0* | 640×640 | [40.5](https://github.com/Megvii-BaseDetection/YOLOX/blob/6ddff4824372906469a7fae2dc3206c7aa4bbaee/README.md) | **40.3** | 249 MB (Tiny, CUDA FP32)<br>387 MB (Tiny, TRT FP16) | 11.2 / 89 | 5.4 / 184 |
+| Model | Code license | Weights license | Input | COCO mAP<br>(reported) | COCO mAP<br>(measured, ONNX) | Peak VRAM<br>(measured) | GTX 1660 Ti Laptop<br>onnxruntime-cuda FP32 · ms / FPS | Tesla T4 (Colab)<br>onnxruntime-cuda FP32 · ms / FPS | Tesla T4 (Colab)<br>onnxruntime-tensorrt FP16 · ms / FPS |
+|---|---|---|---|---|---|---|---|---|---|
+| [DEIM-D-FINE-S](object_detection/deim_dfine_s) | 🟢 Apache-2.0 | 🟢 Apache-2.0* | 640×640 | [49.0](https://github.com/Intellindust-AI-Lab/DEIM/blob/09d35d53d39ee3145a1e61e3a989b28b9468d1dd/README.md) | **48.7** | 299 MB (Tiny, CUDA FP32)<br>335 MB (Tiny, CUDA FP32)<br>415 MB (Tiny, TRT FP16) | 21.7 / 46 | 16.7 / 60 | 6.2 / 162 |
+| [D-FINE-N](object_detection/dfine_n) | 🟢 Apache-2.0 | 🟢 Apache-2.0 | 640×640 | [42.8](https://github.com/Peterande/D-FINE/blob/956d1709314c2c6a4df6f34de232054578a7449f/README.md) | **42.6** | 177 MB (Tiny, CUDA FP32)<br>219 MB (Tiny, CUDA FP32)<br>405 MB (Tiny, TRT FP16) | 13.4 / 74 | 9.8 / 102 | 5.4 / 184 |
+| [D-FINE-S](object_detection/dfine_s) | 🟢 Apache-2.0 | 🟢 Apache-2.0 | 640×640 | [48.5](https://github.com/Peterande/D-FINE/blob/956d1709314c2c6a4df6f34de232054578a7449f/README.md) | **48.3** | 299 MB (Tiny, CUDA FP32)<br>335 MB (Tiny, CUDA FP32)<br>425 MB (Tiny, TRT FP16) | 22.3 / 45 | 17.3 / 58 | 6.8 / 148 |
+| [LLMDet-T](object_detection/llmdet_tiny) 🔤 ⚠️ | 🟢 Apache-2.0 | 🟢 Apache-2.0 | 800×1333 | – | **1.5** | 5939 MB (Consumer, CUDA FP32)<br>6257 MB (Consumer, CUDA FP32)<br>1435 MB (Tiny, TRT FP16) | 2655.8 / 0 | 728.6 / 1 | 172.0 / 6 |
+| [OWLv2-B/16](object_detection/owlv2_b16) 🔤 | 🟢 Apache-2.0 | 🟢 Apache-2.0 | 960×960 | – | **45.7** | 3477 MB (Light, CUDA FP32)<br>3519 MB (Light, CUDA FP32)<br>763 MB (Tiny, TRT FP16) | 660.1 / 2 | 510.2 / 2 | 84.5 / 12 |
+| [RF-DETR-N](object_detection/rfdetr_n) | 🟢 Apache-2.0 | 🟢 Apache-2.0 | 384×384 | [48.4](https://github.com/roboflow/rf-detr/blob/5f441831aaf23a68f40128ad0a2e27cb44e52640/README.md) | **47.9** | 355 MB (Tiny, CUDA FP32)<br>423 MB (Tiny, TRT FP16) | – | 13.2 / 76 | 3.7 / 270 |
+| [RF-DETR-S](object_detection/rfdetr_s) | 🟢 Apache-2.0 | 🟢 Apache-2.0 | 512×512 | [53.0](https://github.com/roboflow/rf-detr/blob/5f441831aaf23a68f40128ad0a2e27cb44e52640/README.md) | **52.6** | 489 MB (Tiny, CUDA FP32)<br>433 MB (Tiny, TRT FP16) | – | 24.7 / 40 | 5.6 / 179 |
+| [RT-DETR-R18](object_detection/rtdetr_r18vd) | 🟢 Apache-2.0 | 🟢 Apache-2.0 | 640×640 | [46.5](https://huggingface.co/PekingU/rtdetr_r18vd/blob/ac77a11ff0170a41b771c03264987f8ce2b0d753/README.md) | **46.2** | 361 MB (Tiny, CUDA FP32)<br>467 MB (Tiny, TRT FP16) | – | 23.1 / 43 | 6.7 / 149 |
+| [RT-DETRv4-M](object_detection/rtdetrv4_m) | 🟢 Apache-2.0 | 🟢 Apache-2.0* | 640×640 | [53.7](https://github.com/RT-DETRs/RT-DETRv4/blob/55fefaaed7efe2a5f72d0a18fd4e05965e35c292/README.md) | **53.5** | 383 MB (Tiny, CUDA FP32)<br>441 MB (Tiny, TRT FP16) | – | 26.9 / 37 | 8.7 / 115 |
+| [RT-DETRv4-S](object_detection/rtdetrv4_s) | 🟢 Apache-2.0 | 🟢 Apache-2.0* | 640×640 | [49.8](https://github.com/RT-DETRs/RT-DETRv4/blob/55fefaaed7efe2a5f72d0a18fd4e05965e35c292/README.md) | **49.6** | 335 MB (Tiny, CUDA FP32)<br>415 MB (Tiny, TRT FP16) | – | 16.8 / 59 | 6.8 / 148 |
+| [SSDLite320-MobileNetV3](object_detection/ssdlite320_mobilenet_v3_large) | 🟢 BSD-3-Clause | ⚪ unknown | 320×320 | [21.3](https://github.com/pytorch/vision/blob/6da25ff876100d36f23472f5762d5f306c47d735/torchvision/models/detection/ssdlite.py) | **21.1** | 249 MB (Tiny, CUDA FP32) | – | 20.9 / 48 | – |
+| [YOLO11n](object_detection/yolo11n) | 🟡 AGPL-3.0 | 🟡 AGPL-3.0* | 640×640 | [39.5](https://github.com/ultralytics/ultralytics/blob/50ca85e03bc669c694c474ab91168f9b5425d9a8/docs/en/models/yolo11.md) | **38.6** | 239 MB (Tiny, CUDA FP32)<br>403 MB (Tiny, TRT FP16) | – | 7.2 / 138 | 4.9 / 205 |
+| [YOLO26n](object_detection/yolo26n) | 🟡 AGPL-3.0 | 🟡 AGPL-3.0 | 640×640 | [40.1](https://github.com/ultralytics/ultralytics/blob/50ca85e03bc669c694c474ab91168f9b5425d9a8/README.md) | **40.0** | 247 MB (Tiny, CUDA FP32)<br>401 MB (Tiny, TRT FP16) | – | 8.3 / 121 | 4.5 / 223 |
+| [YOLOX-S](object_detection/yolox_s) | 🟢 Apache-2.0 | 🟢 Apache-2.0* | 640×640 | [40.5](https://github.com/Megvii-BaseDetection/YOLOX/blob/6ddff4824372906469a7fae2dc3206c7aa4bbaee/README.md) | **40.3** | 249 MB (Tiny, CUDA FP32)<br>387 MB (Tiny, TRT FP16) | – | 11.2 / 89 | 5.4 / 184 |
 <!-- END:object_detection_table -->
 
 - ⚠️ = known issue, see the model's `model.yaml` (`known_issue`) before using it.
@@ -57,6 +57,20 @@ How these models relate to the current state of the art, and which models are pl
 <!-- END:depth_estimation_table -->
 
 Depth-Anything-3-S is the newest (2025-11). Depth-Anything-V2-S and -B share code and architecture, but only **S** has Apache-2.0 weights — **B** is CC-BY-NC-4.0. Relative outputs are per-frame normalised in the GIF. Survey: [docs/sota/depth_estimation.md](docs/sota/depth_estimation.md).
+
+## Segmentation
+
+![Segmentation comparison on the same clip](assets/segmentation_comparison.gif)
+
+<!-- BEGIN:segmentation_table -->
+| Model | Kind | Code license | Weights license | Input | Accuracy (reported) | Peak VRAM<br>(measured) |
+|---|---|---|---|---|---|---|
+| [Mask2Former-SwinT (ADE20K)](segmentation/mask2former_swin_t_ade) | semantic | 🟢 MIT | 🟢 MIT* | 512×512 | [47.7](https://github.com/facebookresearch/Mask2Former/blob/9b0651c6c1d5b3af2e6da0589b719c514ec0d69a/MODEL_ZOO.md) ADE20K val mIoU | not measured |
+| [RF-DETR-Seg-N](segmentation/rfdetr_seg_n) | instance | 🟢 Apache-2.0 | 🟢 Apache-2.0 | 312×312 | [40.3](https://github.com/roboflow/rf-detr/blob/5f441831aaf23a68f40128ad0a2e27cb44e52640/README.md) COCO val2017 mask AP | not measured |
+| [SegFormer-B0 (ADE20K)](segmentation/segformer_b0_ade) | semantic | 🔴 NVIDIA-NC | 🔴 NVIDIA-NC* | 512×512 | [37.4](https://arxiv.org/abs/2105.15203) ADE20K val mIoU | not measured |
+<!-- END:segmentation_table -->
+
+Instance (RF-DETR-Seg) and semantic (ADE20K, 150 classes) models side by side. SegFormer-B0 is tiny and has a ready-made ONNX on the Hub, but its code **and** weights are NVIDIA non-commercial — it is here as a license-trap example. Survey: [docs/sota/segmentation.md](docs/sota/segmentation.md).
 
 ## Find a model
 
@@ -139,6 +153,7 @@ ml_model_collection/
 ├── assets/                  demo clip + generated comparison GIF (with attribution)
 ├── docs/                    licenses, hardware/VRAM, metadata, adding a model
 ├── depth_estimation/        same layout; runner file is estimator.py
+├── segmentation/            same layout; runner file is segmenter.py
 ├── object_detection/
 │   └── <model>/
 │       ├── model.yaml       curated metadata: source, licenses, artifacts, reported accuracy
@@ -150,7 +165,7 @@ ml_model_collection/
 └── tools/                   fetch, run, compare, benchmark, find, validate, build_readme
 ```
 
-Other tasks (`segmentation/`, `pose_estimation/`, `optical_flow/`) will be added when there are models for them. The inner structure of `object_detection/` is deliberately flat for now and will be revisited once more models show what is actually shared ([docs/metadata.md](docs/metadata.md)).
+Other tasks (`pose_estimation/`, `optical_flow/`) will be added when there are models for them. The inner structure of `object_detection/` is deliberately flat for now and will be revisited once more models show what is actually shared ([docs/metadata.md](docs/metadata.md)).
 
 ## Contributing
 

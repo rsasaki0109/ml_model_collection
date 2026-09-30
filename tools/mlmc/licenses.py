@@ -26,6 +26,7 @@ CATEGORIES = {
     "CC-BY-SA-4.0": COPYLEFT,
     "CC-BY-NC-4.0": RESTRICTED,
     "CC-BY-NC-SA-4.0": RESTRICTED,
+    "LicenseRef-NVIDIA-SCL-NC": RESTRICTED,  # NVIDIA Source Code License (non-commercial)
 }
 
 # How the license of a component was established.
@@ -34,6 +35,14 @@ CATEGORIES = {
 #                       but upstream does not separately state a weights license
 #   unknown             no statement found
 STATUSES = ("explicit", "repository_license", "unknown")
+
+
+# Display names for non-SPDX identifiers.
+SHORT = {"LicenseRef-NVIDIA-SCL-NC": "NVIDIA-NC"}
+
+
+def short(spdx: str | None) -> str:
+    return SHORT.get(spdx, spdx) if spdx else "unknown"
 
 
 def category(spdx: str | None) -> str:
@@ -51,7 +60,7 @@ def describe(entry: dict | None) -> str:
         return f"{BADGE[UNKNOWN]} unknown"
     spdx = entry.get("spdx")
     status = entry.get("status", "unknown")
-    text = spdx or "unknown"
+    text = short(spdx)
     if status == "repository_license":
         text += "*"
     return f"{BADGE[category(spdx)]} {text}"

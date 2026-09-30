@@ -5,7 +5,8 @@
 
 Outputs (under ``outputs/<task>/<model>/<input stem>/``):
     annotated.mp4     every input frame, same fps / size: boxes drawn
-                      (object detection) or a colourised depth map (depth)
+                      (object detection), a colourised depth map (depth) or
+                      mask overlays (segmentation)
     detections.jsonl  object detection only: one JSON line per frame,
                       {"frame": i, "detections": [...]}
     run.json          settings used (provider, thresholds, input, model hash)
@@ -29,6 +30,7 @@ from tools.mlmc import REPO_ROOT  # noqa: E402
 from tools.mlmc.catalog import Model, get_model  # noqa: E402
 from tools.mlmc.depth import colorize  # noqa: E402
 from tools.mlmc.detection import draw  # noqa: E402
+from tools.mlmc.segmentation import render as render_seg  # noqa: E402
 
 
 def output_dir(model: Model, video: Path) -> Path:
@@ -69,6 +71,8 @@ def run(model: Model, video: Path, provider: str = "cuda",
         if is_det:
             writer.write(draw(frame, res))
             jf.write(json.dumps({"frame": n, "detections": res.to_json()}) + "\n")
+        elif model.task == "segmentation":
+            writer.write(render_seg(frame, res))
         else:
             writer.write(colorize(res))
         n += 1

@@ -1,0 +1,50 @@
+# Curated metadata. Measured numbers live in benchmarks.yaml (tool-generated).
+name: segformer_b0_ade
+display_name: SegFormer-B0 (ADE20K)
+task: segmentation
+kind: semantic
+summary: "NVIDIA SegFormer MiT-B0 (3.7M params) on ADE20K. Tiny and fast, but NON-COMMERCIAL (research / evaluation only): kept as a license-trap example."
+
+source:
+  repository: https://github.com/NVlabs/SegFormer
+  commit: 65fa8cfa9b52b6ee7e8897a98705abf8570f9e32  # HEAD when added (2026-10-01)
+  paper: https://arxiv.org/abs/2105.15203
+  weights_repository: https://huggingface.co/nvidia/segformer-b0-finetuned-ade-512-512
+  weights_revision: 489d5cd81a0b59fab9b7ea758d3548ebe99677da
+
+license:
+  code:
+    spdx: LicenseRef-NVIDIA-SCL-NC
+    status: explicit
+    evidence: https://github.com/NVlabs/SegFormer/blob/65fa8cfa9b52b6ee7e8897a98705abf8570f9e32/LICENSE
+    note: >-
+      NVIDIA Source Code License, section 3.3: "The Work and any derivative works thereof only may be used or intended for use non-commercially ... 'non-commercially' means for research or evaluation purposes only."
+  weights:
+    spdx: LicenseRef-NVIDIA-SCL-NC
+    status: repository_license
+    evidence: https://huggingface.co/nvidia/segformer-b0-finetuned-ade-512-512/blob/489d5cd81a0b59fab9b7ea758d3548ebe99677da/README.md
+    note: >-
+      HF card tagged "other" and refers to the NVlabs license; re-uploads (e.g. Xenova ONNX) carry no license tag, and mmsegmentation re-hosts the weights inside an Apache-2.0 repository without restating the NVIDIA terms. Treat as non-commercial.
+  dataset:
+    name: ADE20K
+    note: ADE20K has its own terms of use (MIT CSAIL); not restated here.
+  export_dependencies:
+    - {name: transformers, spdx: Apache-2.0}
+
+artifacts:
+  onnx:
+    file: segformer_b0_ade.onnx
+    fetch: export
+    script: export.py
+    input_shape: [1, 3, 512, 512]  # fixed; any input is resized (stretched) to 512x512
+    input_format: RGB, bilinear resize to 512x512, ImageNet mean/std
+    output: "logits [1,150,128,128]"
+
+runtimes:
+  onnxruntime: verified
+
+reported_accuracy:
+  - metric: ADE20K val mIoU (single-scale)
+    value: 37.4
+    input_size: 512
+    source: https://arxiv.org/abs/2105.15203

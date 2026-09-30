@@ -78,3 +78,16 @@ def test_catalog_consistency():
     for m in models:
         assert m.task in TASKS
         assert (m.dir / RUNNERS[m.task][0]).is_file()
+
+
+def test_segmentation_render():
+    from tools.mlmc.segmentation import InstanceMasks, SemanticMap, render
+    frame = np.zeros((20, 30, 3), np.uint8)
+    masks = np.zeros((1, 20, 30), bool)
+    masks[0, 5:10, 5:10] = True
+    inst = InstanceMasks(np.array([[5, 5, 10, 10]], np.float32), np.array([0.9], np.float32),
+                         ["person"], masks)
+    out = render(frame, inst)
+    assert out.shape == frame.shape and out[7, 7].any() and not out[15, 25].any()
+    sem = SemanticMap(np.ones((20, 30), np.int64), ["bg", "road"])
+    assert render(frame, sem).any()

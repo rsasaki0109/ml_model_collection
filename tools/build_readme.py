@@ -137,7 +137,24 @@ def provenance_table(models: list[Model], start: Path) -> str:
     return "\n".join(lines)
 
 
-OD, DE = "object_detection", "depth_estimation"
+def segmentation_table(models: list[Model], start: Path) -> str:
+    cols = bench_columns(models)
+    head = ["Model", "Kind", "Code license", "Weights license", "Input",
+            "Accuracy (reported)", "Peak VRAM<br>(measured)"] + bench_head(cols)
+    lines = ["| " + " | ".join(head) + " |", "|" + "---|" * len(head)]
+    for m in models:
+        lic = m.meta.get("license", {})
+        shape = m.meta["artifacts"]["onnx"]["input_shape"]
+        acc = (m.meta.get("reported_accuracy") or [None])[0]
+        acc_cell = f"[{acc['value']}]({acc['source']}) {acc['metric'].split(' (')[0]}" if acc else "–"
+        row = [f"[{m.display_name}]({rel(m, start)})", m.meta.get("kind", "?"),
+               licenses.describe(lic.get("code")), licenses.describe(lic.get("weights")),
+               f"{shape[-2]}×{shape[-1]}", acc_cell, vram_cell(m)]
+        lines.append("| " + " | ".join(row + bench_cells(m, cols)) + " |")
+    return "\n".join(lines)
+
+
+OD, DE, SG = "object_detection", "depth_estimation", "segmentation"
 TABLES = {
     (REPO_ROOT / "README.md", "object_detection_table"): (OD, comparison_table),
     (REPO_ROOT / "README.md", "depth_estimation_table"): (DE, depth_table),
@@ -145,6 +162,9 @@ TABLES = {
     (REPO_ROOT / OD / "README.md", "object_detection_provenance"): (OD, provenance_table),
     (REPO_ROOT / DE / "README.md", "depth_estimation_table"): (DE, depth_table),
     (REPO_ROOT / DE / "README.md", "depth_estimation_provenance"): (DE, provenance_table),
+    (REPO_ROOT / "README.md", "segmentation_table"): (SG, segmentation_table),
+    (REPO_ROOT / SG / "README.md", "segmentation_table"): (SG, segmentation_table),
+    (REPO_ROOT / SG / "README.md", "segmentation_provenance"): (SG, provenance_table),
 }
 
 

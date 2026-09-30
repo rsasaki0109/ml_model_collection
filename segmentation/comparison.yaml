@@ -1,0 +1,8 @@
+# Default line-up and layout for tools/make_comparison.py --task segmentation.
+models:
+  - rfdetr_seg_n
+  - mask2former_swin_t_ade
+  - segformer_b0_ade
+cols: 3
+tile_width: 400
+fps: 5

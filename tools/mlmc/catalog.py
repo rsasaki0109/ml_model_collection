@@ -22,6 +22,7 @@ TASKS = ("object_detection", "segmentation", "depth_estimation",
 RUNNERS = {
     "object_detection": ("detector.py", "Detector"),
     "depth_estimation": ("estimator.py", "Estimator"),
+    "segmentation": ("segmenter.py", "Segmenter"),
 }
 
 

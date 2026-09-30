@@ -36,7 +36,7 @@ import numpy as np
 import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from tools.mlmc import REPO_ROOT  # noqa: E402
+from tools.mlmc import REPO_ROOT, licenses  # noqa: E402
 from tools.mlmc.catalog import Model, all_models, get_model  # noqa: E402
 from tools.mlmc.detection import Detections, draw  # noqa: E402
 from tools.run_video import output_dir, run  # noqa: E402
@@ -47,8 +47,8 @@ BG = (24, 24, 24)
 
 def license_text(model: Model) -> str:
     lic = model.meta.get("license", {})
-    code = (lic.get("code") or {}).get("spdx") or "unknown"
-    weights = (lic.get("weights") or {}).get("spdx") or "unknown"
+    code = licenses.short((lic.get("code") or {}).get("spdx"))
+    weights = licenses.short((lic.get("weights") or {}).get("spdx"))
     return f"code: {code}   weights: {weights}"
 
 
