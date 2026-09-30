@@ -100,3 +100,52 @@ def export_dfine_family(repo_dir: Path, config: str, checkpoint: Path, out: Path
             output_names=["labels", "boxes", "scores"],
             opset_version=opset, dynamo=False, do_constant_folding=True)
     print(f"wrote {out}")
+
+
+def patch_for_ort(path: Path) -> list[str]:
+    """Rewrite nodes ONNX Runtime has no kernel for, keeping semantics.
+
+    * Sin / Cos on float64 (transformers computes sin-cos position
+      embeddings in float64): run them in float32, as the original research
+      code does, and cast back.
+    * EyeLike on non-float inputs (e.g. bool masks built with torch.eye):
+      generate the identity in float32 and cast to the original type.
+
+    Returns a list of what was changed, for the export log.
+    """
+    import onnx
+    from onnx import TensorProto, helper
+
+    model = onnx.load(str(path))
+    inferred = onnx.shape_inference.infer_shapes(model)
+    types = {v.name: v.type.tensor_type.elem_type
+             for v in list(inferred.graph.value_info) + list(inferred.graph.input)
+             + list(inferred.graph.output)}
+    for node in model.graph.node:  # ConstantOfShape outputs may lack value_info
+        if node.op_type == "ConstantOfShape":
+            val = next((a.t for a in node.attribute if a.name == "value"), None)
+            types.setdefault(node.output[0], val.data_type if val is not None else TensorProto.FLOAT)
+    float_types = (TensorProto.FLOAT, TensorProto.FLOAT16, TensorProto.DOUBLE)
+    nodes, changes = [], []
+    for node in model.graph.node:
+        src_t = types.get(node.input[0]) if node.input else None
+        if node.op_type in ("Sin", "Cos") and src_t == TensorProto.DOUBLE:
+            to, back = TensorProto.FLOAT, TensorProto.DOUBLE
+        elif node.op_type == "EyeLike" and src_t not in float_types and src_t is not None \
+                and not any(a.name == "dtype" for a in node.attribute):
+            to, back = TensorProto.FLOAT, src_t
+        else:
+            nodes.append(node)
+            continue
+        x32, y32 = f"{node.input[0]}__f32__{len(changes)}", f"{node.output[0]}__f32"
+        nodes.append(helper.make_node("Cast", [node.input[0]], [x32], to=to))
+        new = helper.make_node(node.op_type, [x32] + list(node.input[1:]), [y32], name=node.name)
+        new.attribute.extend(node.attribute)
+        nodes.append(new)
+        nodes.append(helper.make_node("Cast", [y32], [node.output[0]], to=back))
+        changes.append(f"{node.op_type} {node.name}: {TensorProto.DataType.Name(src_t)} -> FLOAT")
+    if changes:
+        del model.graph.node[:]
+        model.graph.node.extend(nodes)
+        onnx.save(model, str(path))
+    return changes

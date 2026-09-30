@@ -16,6 +16,7 @@ import argparse
 import datetime as dt
 import hashlib
 import json
+import os
 import platform
 import re
 import subprocess
@@ -85,7 +86,8 @@ def fetch(model: Model, python: str, force: bool, update_hash: bool):
     elif art["fetch"] == "export":
         script = model.dir / art["script"]
         print(f"[{model.name}] exporting with {python} {script}")
-        subprocess.run([python, str(script)], check=True)
+        env = {**os.environ, "PYTHONIOENCODING": "utf-8"}  # exporters print emoji
+        subprocess.run([python, str(script)], check=True, env=env)
         prov["script"] = str(script.relative_to(model.dir.parents[1])).replace("\\", "/")
         prov["packages"] = package_versions(python)
         prov["python"] = platform.python_version()

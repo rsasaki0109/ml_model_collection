@@ -16,7 +16,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import yaml  # noqa: E402
 
 from tools.mlmc import REPO_ROOT, hardware, licenses  # noqa: E402
-from tools.mlmc.catalog import TASKS, all_models  # noqa: E402
+from tools.mlmc.catalog import RUNNERS, TASKS, all_models  # noqa: E402
 
 BENCH_REQUIRED = ("id", "date", "hardware", "runtime", "runtime_version",
                   "precision", "batch_size", "input_shape", "latency_ms",
@@ -60,8 +60,9 @@ def check_model(m) -> list[str]:
             errs.append("artifacts.onnx.script does not exist")
         if art.get("fetch") == "download" and not art.get("sha256"):
             errs.append("artifacts.onnx.sha256 missing for a download")
-    if not (m.dir / "detector.py").is_file():
-        errs.append("detector.py missing")
+    runner = RUNNERS.get(meta["task"], (None,))[0]
+    if runner and not (m.dir / runner).is_file():
+        errs.append(f"{runner} missing")
     for b in m.benchmarks:
         miss = [k for k in BENCH_REQUIRED if k not in b]
         if miss:

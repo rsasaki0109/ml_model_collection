@@ -7,7 +7,9 @@ Steps:
      reuse ``outputs/<task>/<model>/<clip>/detections.jsonl`` or create it with
      tools/run_video.py (``--rerun`` forces this).
   2. Take the same frame indices from the input video, resize them to one
-     tile size and draw each model's detections for exactly that frame.
+     tile size and draw each model's detections for exactly that frame
+     (other tasks, e.g. depth: take the same frames from each model's
+     rendered annotated.mp4).
      Drawing at tile resolution (instead of downscaling annotated.mp4) keeps
      labels readable in the GIF.
   3. Add a header bar with the model name and licenses, arrange tiles in a
@@ -124,7 +126,7 @@ def main():
     ap.add_argument("--fps", type=float, help="output frame rate")
     ap.add_argument("--start", type=float, default=0, help="seconds")
     ap.add_argument("--duration", type=float, help="seconds (default: whole clip)")
-    ap.add_argument("--provider", default="cuda", choices=["cuda", "cpu", "tensorrt"])
+    ap.add_argument("--provider", default="cuda", choices=["cuda", "cpu", "tensorrt", "tensorrt-fp16"])
     ap.add_argument("--rerun", action="store_true", help="re-run inference")
     ap.add_argument("--gif", type=Path, help="default: assets/<task>_comparison.gif")
     ap.add_argument("--mp4", type=Path, help="also write an MP4")
@@ -147,8 +149,10 @@ def main():
     if not models:
         raise SystemExit("no models with fetched artifacts; run tools/fetch_model.py")
 
+    is_det = args.task == "object_detection"
+    marker = "detections.jsonl" if is_det else "annotated.mp4"
     for m in models:
-        if args.rerun or not (output_dir(m, video) / "detections.jsonl").exists():
+        if args.rerun or not (output_dir(m, video) / marker).exists():
             run(m, video, args.provider)
 
     cap = cv2.VideoCapture(str(video))
@@ -165,8 +169,12 @@ def main():
     tw = args.tile_width
     th = int(round(h * tw / w / 2)) * 2
     frames = read_frames(video, indices, (tw, th))
-    dets = [read_detections(output_dir(m, video) / "detections.jsonl", indices, tw / w)
-            for m in models]
+    if is_det:
+        dets = [read_detections(output_dir(m, video) / "detections.jsonl", indices, tw / w)
+                for m in models]
+    else:  # e.g. depth: use each model's rendered frames directly
+        rendered = [read_frames(output_dir(m, video) / "annotated.mp4", indices, (tw, th))
+                    for m in models]
     headers = [header(m, tw) for m in models]
 
     cols = min(args.cols, len(models))
@@ -182,7 +190,7 @@ def main():
                 y, x = r * cell_h, c * cell_w
                 canvas[y:y + HEADER_H, x:x + tw] = headers[j]
                 canvas[y + HEADER_H:y + HEADER_H + th, x:x + tw] = \
-                    draw(frame, dets[j][k], thickness=1)
+                    draw(frame, dets[j][k], thickness=1) if is_det else rendered[j][k]
             cv2.imwrite(str(tmp / f"{k:05d}.png"), canvas)
         gif = args.gif or REPO_ROOT / "assets" / f"{args.task}_comparison.gif"
         encode(tmp, args.fps, gif, args.mp4)

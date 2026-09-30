@@ -29,14 +29,14 @@ def bench_columns(models: list[Model]) -> list[tuple[str, str]]:
     seen = {}
     for m in models:
         for b in m.benchmarks:
-            key = (b["hardware"]["label"], b["runtime"])
+            key = (b["hardware"]["label"], b["runtime"], b.get("precision", "fp32"))
             seen[key] = b["peak_vram_mb"] is None
     return sorted(seen, key=lambda k: (seen[k], k))
 
 
 def find_bench(model: Model, col):
     for b in model.benchmarks:
-        if (b["hardware"]["label"], b["runtime"]) == col:
+        if (b["hardware"]["label"], b["runtime"], b.get("precision", "fp32")) == col:
             return b
     return None
 
@@ -49,27 +49,68 @@ def accuracy(model: Model) -> str:
     return f"[{a['value']}]({a['source']})"
 
 
+def measured_coco(model: Model) -> str:
+    """COCO val2017 AP measured by tools/evaluate.py on the exported artifact."""
+    recs = [r for r in model.accuracy if r.get("dataset") == "COCO val2017"]
+    if not recs:
+        return "–"
+    r = sorted(recs, key=lambda r: r.get("precision") != "fp32")[0]
+    return f"**{r['metrics']['AP']}**"
+
+
+def vram_cell(m: Model) -> str:
+    vram = [b for b in m.benchmarks if b.get("peak_vram_mb") is not None]
+    cells = [f"{b['peak_vram_mb']} MB ({b['vram_tier']})" for b in vram]
+    return "<br>".join(cells) or "not measured"
+
+
+def bench_cells(m: Model, cols) -> list[str]:
+    out = []
+    for col in cols:
+        b = find_bench(m, col)
+        out.append(f"{b['latency_ms']['mean']:.1f} / {b['fps']:.0f}" if b else "–")
+    return out
+
+
+def bench_head(cols) -> list[str]:
+    return [f"{hw}<br>{rt} {prec.upper()} · ms / FPS" for hw, rt, prec in cols]
+
+
 def comparison_table(models: list[Model], start: Path) -> str:
     cols = bench_columns(models)
     head = ["Model", "Code license", "Weights license", "Input",
-            "COCO mAP<br>(reported)", "Peak VRAM<br>(measured)"]
-    head += [f"{hw}<br>{rt} · ms / FPS" for hw, rt in cols]
+            "COCO mAP<br>(reported)", "COCO mAP<br>(measured, ONNX)", "Peak VRAM<br>(measured)"]
+    head += bench_head(cols)
     lines = ["| " + " | ".join(head) + " |", "|" + "---|" * len(head)]
     for m in models:
         lic = m.meta.get("license", {})
         shape = m.meta["artifacts"]["onnx"]["input_shape"]
-        vram = [b for b in m.benchmarks if b.get("peak_vram_mb") is not None]
-        vram_cell = "<br>".join(
-            f"{b['peak_vram_mb']} MB ({b['vram_tier']})" for b in vram) or "not measured"
-        row = [f"[{m.display_name}]({rel(m, start)})",
-               licenses.describe(lic.get("code")),
+        name = f"[{m.display_name}]({rel(m, start)})"
+        if m.meta.get("open_vocabulary"):
+            name += " 🔤"
+        row = [name, licenses.describe(lic.get("code")), licenses.describe(lic.get("weights")),
+               f"{shape[2]}×{shape[3]}", accuracy(m), measured_coco(m), vram_cell(m)]
+        lines.append("| " + " | ".join(row + bench_cells(m, cols)) + " |")
+    return "\n".join(lines)
+
+
+OUTPUT_LABEL = {"relative_disparity": "relative (disparity)",
+                "relative_depth": "relative (depth)", "metric_depth_m": "metric (m)"}
+
+
+def depth_table(models: list[Model], start: Path) -> str:
+    cols = bench_columns(models)
+    head = ["Model", "Code license", "Weights license", "Output", "Input",
+            "NYUv2 AbsRel ↓<br>(reported)", "Peak VRAM<br>(measured)"] + bench_head(cols)
+    lines = ["| " + " | ".join(head) + " |", "|" + "---|" * len(head)]
+    for m in models:
+        lic = m.meta.get("license", {})
+        shape = m.meta["artifacts"]["onnx"]["input_shape"]
+        row = [f"[{m.display_name}]({rel(m, start)})", licenses.describe(lic.get("code")),
                licenses.describe(lic.get("weights")),
-               f"{shape[2]}×{shape[3]}",
-               accuracy(m), vram_cell]
-        for col in cols:
-            b = find_bench(m, col)
-            row.append(f"{b['latency_ms']['mean']:.1f} / {b['fps']:.0f}" if b else "–")
-        lines.append("| " + " | ".join(row) + " |")
+               OUTPUT_LABEL.get(m.meta.get("output"), "?"), f"{shape[2]}×{shape[3]}",
+               accuracy(m), vram_cell(m)]
+        lines.append("| " + " | ".join(row + bench_cells(m, cols)) + " |")
     return "\n".join(lines)
 
 
@@ -89,13 +130,14 @@ def provenance_table(models: list[Model], start: Path) -> str:
     return "\n".join(lines)
 
 
+OD, DE = "object_detection", "depth_estimation"
 TABLES = {
-    (REPO_ROOT / "README.md", "object_detection_table"):
-        lambda ms, s: comparison_table(ms, s),
-    (REPO_ROOT / "object_detection" / "README.md", "object_detection_table"):
-        lambda ms, s: comparison_table(ms, s),
-    (REPO_ROOT / "object_detection" / "README.md", "object_detection_provenance"):
-        lambda ms, s: provenance_table(ms, s),
+    (REPO_ROOT / "README.md", "object_detection_table"): (OD, comparison_table),
+    (REPO_ROOT / "README.md", "depth_estimation_table"): (DE, depth_table),
+    (REPO_ROOT / OD / "README.md", "object_detection_table"): (OD, comparison_table),
+    (REPO_ROOT / OD / "README.md", "object_detection_provenance"): (OD, provenance_table),
+    (REPO_ROOT / DE / "README.md", "depth_estimation_table"): (DE, depth_table),
+    (REPO_ROOT / DE / "README.md", "depth_estimation_provenance"): (DE, provenance_table),
 }
 
 
@@ -111,12 +153,11 @@ def main():
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--check", action="store_true")
     args = ap.parse_args()
-    models = all_models("object_detection")
     stale = []
     files: dict[Path, str] = {}
-    for (path, name), fn in TABLES.items():
+    for (path, name), (task, fn) in TABLES.items():
         text = files.get(path) or path.read_text(encoding="utf-8")
-        files[path] = render(text, name, fn(models, path.parent))
+        files[path] = render(text, name, fn(all_models(task), path.parent))
     for path, new in files.items():
         if new != path.read_text(encoding="utf-8"):
             stale.append(path)

@@ -1,0 +1,48 @@
+# Curated metadata. Measured numbers live in benchmarks.yaml / accuracy.yaml (tool-generated).
+name: owlv2_b16
+display_name: OWLv2-B/16
+task: object_detection
+open_vocabulary: true
+summary: "Google OWLv2 (ViT-B/16, ensemble checkpoint): open-vocabulary detector prompted with text. Default prompts are the 80 COCO class names."
+
+source:
+  repository: https://github.com/google-research/scenic
+  commit: 8c113c501c9f700b69899c55a69e65bb46727da6  # HEAD when added (2026-09-30)
+  paper: https://arxiv.org/abs/2306.09683
+  weights_repository: https://huggingface.co/google/owlv2-base-patch16-ensemble
+  weights_revision: cfd3195ba4ea9592eec887ded089f4c08eff231d
+
+license:
+  code:
+    spdx: Apache-2.0
+    status: explicit
+    evidence: https://github.com/google-research/scenic/blob/8c113c501c9f700b69899c55a69e65bb46727da6/scenic/projects/owl_vit/README.md
+  weights:
+    spdx: Apache-2.0
+    status: explicit
+    evidence: https://huggingface.co/google/owlv2-base-patch16-ensemble/blob/cfd3195ba4ea9592eec887ded089f4c08eff231d/README.md
+    note: >-
+      Model card metadata declares "license: apache-2.0"; the scenic OWL-ViT
+      README states "Both the code and the model checkpoints are licensed
+      under the Apache 2.0 license."
+  dataset:
+    name: WebLI pseudo-labels (self-training) + detection datasets per the paper
+    note: >-
+      See the paper for the exact training mixture. The ensemble checkpoint
+      is not fine-tuned on COCO, so COCO AP here is zero-shot.
+  export_dependencies:
+    - {name: transformers, spdx: Apache-2.0}
+
+artifacts:
+  onnx:
+    file: owlv2_b16.onnx
+    fetch: export
+    script: export.py
+    input_shape: [1, 3, 960, 960]
+    input_format: RGB, pad to square (0), anti-alias blur, resize 960x960, CLIP mean/std; plus text input_ids / attention_mask [Q, 16]
+    output: "logits [1, 3600, Q], pred_boxes [1, 3600, 4] (cxcywh, relative to the padded square)"
+
+runtimes:
+  onnxruntime: verified
+
+reported_accuracy: []

@@ -3,8 +3,10 @@
     python tools/run_video.py --model yolox_s --input assets/demo.mp4
 
 Outputs (under ``outputs/<task>/<model>/<input stem>/``):
-    annotated.mp4     every input frame, same fps / size, with boxes drawn
-    detections.jsonl  one JSON line per frame: {"frame": i, "detections": [...]}
+    annotated.mp4     every input frame, same fps / size: boxes drawn
+                      (object detection) or a colourised depth map (depth)
+    detections.jsonl  object detection only: one JSON line per frame,
+                      {"frame": i, "detections": [...]}
     run.json          settings used (provider, thresholds, input, model hash)
 
 Frame i of annotated.mp4 always corresponds to frame i of the input, which is
@@ -24,6 +26,7 @@ import cv2
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from tools.mlmc import REPO_ROOT  # noqa: E402
 from tools.mlmc.catalog import Model, get_model  # noqa: E402
+from tools.mlmc.depth import colorize  # noqa: E402
 from tools.mlmc.detection import draw  # noqa: E402
 
 
@@ -35,7 +38,8 @@ def run(model: Model, video: Path, provider: str = "cuda",
         max_frames: int | None = None) -> Path:
     out_dir = output_dir(model, video)
     out_dir.mkdir(parents=True, exist_ok=True)
-    detector = model.load_detector(provider=provider)
+    runner = model.load_runner(provider=provider)
+    is_det = model.task == "object_detection"
 
     cap = cv2.VideoCapture(str(video))
     if not cap.isOpened():
@@ -46,17 +50,22 @@ def run(model: Model, video: Path, provider: str = "cuda",
                              cv2.VideoWriter_fourcc(*"mp4v"), fps, (w, h))
 
     n, t_total = 0, 0.0
-    with open(out_dir / "detections.jsonl", "w") as jf:
-        while max_frames is None or n < max_frames:
-            ok, frame = cap.read()
-            if not ok:
-                break
-            t0 = time.perf_counter()
-            det = detector(frame)
-            t_total += time.perf_counter() - t0
-            writer.write(draw(frame, det))
-            jf.write(json.dumps({"frame": n, "detections": det.to_json()}) + "\n")
-            n += 1
+    jf = open(out_dir / "detections.jsonl", "w") if is_det else None
+    while max_frames is None or n < max_frames:
+        ok, frame = cap.read()
+        if not ok:
+            break
+        t0 = time.perf_counter()
+        res = runner(frame)
+        t_total += time.perf_counter() - t0
+        if is_det:
+            writer.write(draw(frame, res))
+            jf.write(json.dumps({"frame": n, "detections": res.to_json()}) + "\n")
+        else:
+            writer.write(colorize(res))
+        n += 1
+    if jf:
+        jf.close()
     cap.release()
     writer.release()
 
@@ -77,7 +86,7 @@ def main():
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--model", required=True)
     ap.add_argument("--input", required=True, type=Path)
-    ap.add_argument("--provider", default="cuda", choices=["cuda", "cpu", "tensorrt"])
+    ap.add_argument("--provider", default="cuda", choices=["cuda", "cpu", "tensorrt", "tensorrt-fp16"])
     ap.add_argument("--max-frames", type=int)
     args = ap.parse_args()
     run(get_model(args.model), args.input.resolve(), args.provider, args.max_frames)

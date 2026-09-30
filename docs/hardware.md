@@ -65,6 +65,16 @@ Consequences:
   `arena_extend_strategy=kSameAsRequested` to avoid power-of-two
   over-allocation.
 
+## TensorRT
+
+`--provider tensorrt` / `tensorrt-fp16` use ONNX Runtime's TensorRT execution
+provider (nodes TensorRT cannot take run on CUDA). The engine is built and
+cached (`weights/trt_cache/`) in a separate process *before* the measured
+run, so builder workspace memory is not counted as inference VRAM. Records
+carry `precision: fp16` and a `notes` field. These are the closest
+equivalent to upstream "T4 / TensorRT / FP16" tables, but ORT's partitioning
+means they are not identical to a pure `trtexec` engine.
+
 ## Latency
 
 - `latency_ms`: `session.run` only, after 20 warm-up runs, 200 timed runs

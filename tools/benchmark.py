@@ -41,6 +41,7 @@ import yaml
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from tools.mlmc import REPO_ROOT, hardware, vram  # noqa: E402
 from tools.mlmc.catalog import Model, all_models, get_model  # noqa: E402
+from tools.mlmc.detection import PROVIDERS, provider_precision  # noqa: E402
 
 
 def ort_package() -> str:
@@ -90,6 +91,13 @@ def check_idle(args) -> dict:
 
 def measure(model: Model, provider: str, frame_path: Path, warmup: int,
             iters: int, args) -> dict:
+    if provider.startswith("tensorrt"):
+        # Build (or load) the TensorRT engine in a separate process first, so
+        # the builder's temporary workspace is not counted as inference VRAM.
+        subprocess.run([sys.executable, __file__, "--model", model.name,
+                        "--provider", provider, "--prebuild-only",
+                        "--hardware-label", "-", "--hardware-class", args.hardware_class],
+                       check=True)
     load = check_idle(args)
     frame = read_frame(frame_path)
     gpu = provider != "cpu"
@@ -97,7 +105,7 @@ def measure(model: Model, provider: str, frame_path: Path, warmup: int,
     if mon:
         mon.__enter__()
     try:
-        det = model.load_detector(provider=provider)
+        det = model.load_runner(provider=provider)
         x, meta = det.preprocess(frame)
         for _ in range(warmup):
             det.infer(x)
@@ -121,9 +129,10 @@ def measure(model: Model, provider: str, frame_path: Path, warmup: int,
     prov_file = model.weights_dir / "provenance.json"
     sha = json.loads(prov_file.read_text()).get("sha256") if prov_file.exists() else None
     gpu_info = hardware.gpu_info() if gpu else None
-    runtime = f"onnxruntime-{provider}"
+    runtime = "onnxruntime-" + provider.split("-")[0]
+    precision = provider_precision(provider)
     rec = {
-        "id": f"{slug(args.hardware_label)}_{runtime}_fp32_b1",
+        "id": f"{slug(args.hardware_label)}_{runtime}_{precision}_b1",
         "date": dt.date.today().isoformat(),
         "hardware": {
             "label": args.hardware_label,
@@ -137,9 +146,9 @@ def measure(model: Model, provider: str, frame_path: Path, warmup: int,
         "runtime": runtime,
         "runtime_version": ort_package(),
         "execution_provider": det.sess.get_providers()[0],
-        "precision": "fp32",
+        "precision": precision,
         "batch_size": 1,
-        "input_shape": art["input_shape"],
+        "input_shape": list((x[0] if isinstance(x, tuple) else x).shape),
         "artifact": {"file": art["file"], "sha256": sha},
         "warmup_iters": warmup,
         "timed_iters": iters,
@@ -154,6 +163,9 @@ def measure(model: Model, provider: str, frame_path: Path, warmup: int,
         "vram_tier": hardware.vram_tier(mon.delta_mb) if mon else None,
         "system_load": load,  # sampled right before the run
     }
+    if provider.startswith("tensorrt"):
+        # ORT may run unsupported nodes on CUDA; engine built beforehand.
+        rec["notes"] = "ONNX Runtime TensorRT EP; engine built and cached before timing"
     return rec
 
 
@@ -189,7 +201,8 @@ def main():
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--model")
     ap.add_argument("--task")
-    ap.add_argument("--provider", default="cuda", choices=["cuda", "cpu", "tensorrt"])
+    ap.add_argument("--provider", default="cuda", choices=list(PROVIDERS))
+    ap.add_argument("--prebuild-only", action="store_true", help=argparse.SUPPRESS)
     ap.add_argument("--hardware-label", required=True,
                     help='human-readable name, e.g. "GTX 1660 Ti Laptop"')
     ap.add_argument("--hardware-class", required=True, choices=hardware.HARDWARE_CLASSES)
@@ -206,6 +219,11 @@ def main():
                     help="run anyway; the load is still recorded")
     args = ap.parse_args()
 
+    if args.model and args.prebuild_only:
+        runner = get_model(args.model).load_runner(provider=args.provider)
+        x, _ = runner.preprocess(read_frame(args.input))
+        runner.infer(x)
+        return
     if args.model:
         model = get_model(args.model)
         rec = measure(model, args.provider, args.input, args.warmup, args.iters, args)

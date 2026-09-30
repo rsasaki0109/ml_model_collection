@@ -55,14 +55,20 @@ class Detections:
         ]
 
 
+_CUDA = ("CUDAExecutionProvider", {"arena_extend_strategy": "kSameAsRequested"})
+
+# provider name -> (ORT providers, precision). TensorRT engines are cached next
+# to the ONNX file (weights/trt_cache/) so the build cost is paid once.
 PROVIDERS = {
-    "cpu": ["CPUExecutionProvider"],
-    "cuda": [("CUDAExecutionProvider",
-              {"arena_extend_strategy": "kSameAsRequested"}),
-             "CPUExecutionProvider"],
-    "tensorrt": ["TensorrtExecutionProvider", "CUDAExecutionProvider",
-                 "CPUExecutionProvider"],
+    "cpu": (["CPUExecutionProvider"], "fp32"),
+    "cuda": ([_CUDA, "CPUExecutionProvider"], "fp32"),
+    "tensorrt": (["TensorrtExecutionProvider", _CUDA, "CPUExecutionProvider"], "fp32"),
+    "tensorrt-fp16": (["TensorrtExecutionProvider", _CUDA, "CPUExecutionProvider"], "fp16"),
 }
+
+
+def provider_precision(provider: str) -> str:
+    return PROVIDERS[provider][1]
 
 
 def ort_session(path, provider: str = "cuda"):
@@ -71,12 +77,26 @@ def ort_session(path, provider: str = "cuda"):
     if provider != "cpu" and hasattr(ort, "preload_dlls"):
         # Load CUDA/cuDNN DLLs shipped with PyTorch or nvidia-* wheels, if any.
         ort.preload_dlls()
+    providers, precision = PROVIDERS[provider]
+    if provider.startswith("tensorrt"):
+        from pathlib import Path
+        cache = Path(path).parent / "trt_cache"
+        cache.mkdir(exist_ok=True)
+        providers = [("TensorrtExecutionProvider", {
+            "trt_fp16_enable": precision == "fp16",
+            "trt_engine_cache_enable": True,
+            "trt_engine_cache_path": str(cache),
+            "trt_timing_cache_enable": True,
+        })] + providers[1:]
     opts = ort.SessionOptions()
     opts.log_severity_level = 3
-    sess = ort.InferenceSession(str(path), opts, providers=PROVIDERS[provider])
+    sess = ort.InferenceSession(str(path), opts, providers=providers)
+    wanted = "TensorrtExecutionProvider" if provider.startswith("tensorrt") else None
     if provider != "cpu" and sess.get_providers()[0] == "CPUExecutionProvider":
         raise RuntimeError(f"provider {provider!r} unavailable; got "
                            f"{sess.get_providers()}")
+    if wanted and sess.get_providers()[0] != wanted:
+        raise RuntimeError(f"TensorRT unavailable; got {sess.get_providers()}")
     return sess
 
 

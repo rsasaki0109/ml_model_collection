@@ -9,20 +9,22 @@ compared and benchmarked by the same tools.
 ## Comparison
 
 <!-- BEGIN:object_detection_table -->
-| Model | Code license | Weights license | Input | COCO mAP<br>(reported) | Peak VRAM<br>(measured) | Tesla T4 (Colab)<br>onnxruntime-cuda · ms / FPS |
-|---|---|---|---|---|---|---|
-| [DEIM-D-FINE-S](deim_dfine_s) | 🟢 Apache-2.0 | 🟢 Apache-2.0* | 640×640 | [49.0](https://github.com/Intellindust-AI-Lab/DEIM/blob/09d35d53d39ee3145a1e61e3a989b28b9468d1dd/README.md) | 335 MB (Tiny) | 16.7 / 60 |
-| [D-FINE-N](dfine_n) | 🟢 Apache-2.0 | 🟢 Apache-2.0 | 640×640 | [42.8](https://github.com/Peterande/D-FINE/blob/956d1709314c2c6a4df6f34de232054578a7449f/README.md) | 219 MB (Tiny) | 9.8 / 102 |
-| [D-FINE-S](dfine_s) | 🟢 Apache-2.0 | 🟢 Apache-2.0 | 640×640 | [48.5](https://github.com/Peterande/D-FINE/blob/956d1709314c2c6a4df6f34de232054578a7449f/README.md) | 335 MB (Tiny) | 17.3 / 58 |
-| [RF-DETR-N](rfdetr_n) | 🟢 Apache-2.0 | 🟢 Apache-2.0 | 384×384 | [48.4](https://github.com/roboflow/rf-detr/blob/5f441831aaf23a68f40128ad0a2e27cb44e52640/README.md) | 355 MB (Tiny) | 13.2 / 76 |
-| [RF-DETR-S](rfdetr_s) | 🟢 Apache-2.0 | 🟢 Apache-2.0 | 512×512 | [53.0](https://github.com/roboflow/rf-detr/blob/5f441831aaf23a68f40128ad0a2e27cb44e52640/README.md) | 489 MB (Tiny) | 24.7 / 40 |
-| [RT-DETR-R18](rtdetr_r18vd) | 🟢 Apache-2.0 | 🟢 Apache-2.0 | 640×640 | [46.5](https://huggingface.co/PekingU/rtdetr_r18vd/blob/ac77a11ff0170a41b771c03264987f8ce2b0d753/README.md) | 361 MB (Tiny) | 23.1 / 43 |
-| [RT-DETRv4-M](rtdetrv4_m) | 🟢 Apache-2.0 | 🟢 Apache-2.0* | 640×640 | [53.7](https://github.com/RT-DETRs/RT-DETRv4/blob/55fefaaed7efe2a5f72d0a18fd4e05965e35c292/README.md) | 383 MB (Tiny) | 26.9 / 37 |
-| [RT-DETRv4-S](rtdetrv4_s) | 🟢 Apache-2.0 | 🟢 Apache-2.0* | 640×640 | [49.8](https://github.com/RT-DETRs/RT-DETRv4/blob/55fefaaed7efe2a5f72d0a18fd4e05965e35c292/README.md) | 335 MB (Tiny) | 16.8 / 59 |
-| [SSDLite320-MobileNetV3](ssdlite320_mobilenet_v3_large) | 🟢 BSD-3-Clause | ⚪ unknown | 320×320 | [21.3](https://github.com/pytorch/vision/blob/6da25ff876100d36f23472f5762d5f306c47d735/torchvision/models/detection/ssdlite.py) | 249 MB (Tiny) | 20.9 / 48 |
-| [YOLO11n](yolo11n) | 🟡 AGPL-3.0 | 🟡 AGPL-3.0* | 640×640 | [39.5](https://github.com/ultralytics/ultralytics/blob/50ca85e03bc669c694c474ab91168f9b5425d9a8/docs/en/models/yolo11.md) | 239 MB (Tiny) | 7.2 / 138 |
-| [YOLO26n](yolo26n) | 🟡 AGPL-3.0 | 🟡 AGPL-3.0 | 640×640 | [40.1](https://github.com/ultralytics/ultralytics/blob/50ca85e03bc669c694c474ab91168f9b5425d9a8/README.md) | 247 MB (Tiny) | 8.3 / 121 |
-| [YOLOX-S](yolox_s) | 🟢 Apache-2.0 | 🟢 Apache-2.0* | 640×640 | [40.5](https://github.com/Megvii-BaseDetection/YOLOX/blob/6ddff4824372906469a7fae2dc3206c7aa4bbaee/README.md) | 249 MB (Tiny) | 11.2 / 89 |
+| Model | Code license | Weights license | Input | COCO mAP<br>(reported) | COCO mAP<br>(measured, ONNX) | Peak VRAM<br>(measured) | Tesla T4 (Colab)<br>onnxruntime-cuda FP32 · ms / FPS |
+|---|---|---|---|---|---|---|---|
+| [DEIM-D-FINE-S](deim_dfine_s) | 🟢 Apache-2.0 | 🟢 Apache-2.0* | 640×640 | [49.0](https://github.com/Intellindust-AI-Lab/DEIM/blob/09d35d53d39ee3145a1e61e3a989b28b9468d1dd/README.md) | – | 335 MB (Tiny) | 16.7 / 60 |
+| [D-FINE-N](dfine_n) | 🟢 Apache-2.0 | 🟢 Apache-2.0 | 640×640 | [42.8](https://github.com/Peterande/D-FINE/blob/956d1709314c2c6a4df6f34de232054578a7449f/README.md) | – | 219 MB (Tiny) | 9.8 / 102 |
+| [D-FINE-S](dfine_s) | 🟢 Apache-2.0 | 🟢 Apache-2.0 | 640×640 | [48.5](https://github.com/Peterande/D-FINE/blob/956d1709314c2c6a4df6f34de232054578a7449f/README.md) | – | 335 MB (Tiny) | 17.3 / 58 |
+| [LLMDet-T](llmdet_tiny) 🔤 | 🟢 Apache-2.0 | 🟢 Apache-2.0 | 800×1333 | [44.7](https://github.com/iSEE-Laboratory/LLMDet/blob/main/README.md) | – | not measured | – |
+| [OWLv2-B/16](owlv2_b16) 🔤 | 🟢 Apache-2.0 | 🟢 Apache-2.0 | 960×960 | – | – | not measured | – |
+| [RF-DETR-N](rfdetr_n) | 🟢 Apache-2.0 | 🟢 Apache-2.0 | 384×384 | [48.4](https://github.com/roboflow/rf-detr/blob/5f441831aaf23a68f40128ad0a2e27cb44e52640/README.md) | – | 355 MB (Tiny) | 13.2 / 76 |
+| [RF-DETR-S](rfdetr_s) | 🟢 Apache-2.0 | 🟢 Apache-2.0 | 512×512 | [53.0](https://github.com/roboflow/rf-detr/blob/5f441831aaf23a68f40128ad0a2e27cb44e52640/README.md) | – | 489 MB (Tiny) | 24.7 / 40 |
+| [RT-DETR-R18](rtdetr_r18vd) | 🟢 Apache-2.0 | 🟢 Apache-2.0 | 640×640 | [46.5](https://huggingface.co/PekingU/rtdetr_r18vd/blob/ac77a11ff0170a41b771c03264987f8ce2b0d753/README.md) | – | 361 MB (Tiny) | 23.1 / 43 |
+| [RT-DETRv4-M](rtdetrv4_m) | 🟢 Apache-2.0 | 🟢 Apache-2.0* | 640×640 | [53.7](https://github.com/RT-DETRs/RT-DETRv4/blob/55fefaaed7efe2a5f72d0a18fd4e05965e35c292/README.md) | – | 383 MB (Tiny) | 26.9 / 37 |
+| [RT-DETRv4-S](rtdetrv4_s) | 🟢 Apache-2.0 | 🟢 Apache-2.0* | 640×640 | [49.8](https://github.com/RT-DETRs/RT-DETRv4/blob/55fefaaed7efe2a5f72d0a18fd4e05965e35c292/README.md) | – | 335 MB (Tiny) | 16.8 / 59 |
+| [SSDLite320-MobileNetV3](ssdlite320_mobilenet_v3_large) | 🟢 BSD-3-Clause | ⚪ unknown | 320×320 | [21.3](https://github.com/pytorch/vision/blob/6da25ff876100d36f23472f5762d5f306c47d735/torchvision/models/detection/ssdlite.py) | – | 249 MB (Tiny) | 20.9 / 48 |
+| [YOLO11n](yolo11n) | 🟡 AGPL-3.0 | 🟡 AGPL-3.0* | 640×640 | [39.5](https://github.com/ultralytics/ultralytics/blob/50ca85e03bc669c694c474ab91168f9b5425d9a8/docs/en/models/yolo11.md) | – | 239 MB (Tiny) | 7.2 / 138 |
+| [YOLO26n](yolo26n) | 🟡 AGPL-3.0 | 🟡 AGPL-3.0 | 640×640 | [40.1](https://github.com/ultralytics/ultralytics/blob/50ca85e03bc669c694c474ab91168f9b5425d9a8/README.md) | – | 247 MB (Tiny) | 8.3 / 121 |
+| [YOLOX-S](yolox_s) | 🟢 Apache-2.0 | 🟢 Apache-2.0* | 640×640 | [40.5](https://github.com/Megvii-BaseDetection/YOLOX/blob/6ddff4824372906469a7fae2dc3206c7aa4bbaee/README.md) | – | 249 MB (Tiny) | 11.2 / 89 |
 <!-- END:object_detection_table -->
 
 See the [top-level README](../README.md#object-detection) for how to read each column.
@@ -35,6 +37,8 @@ See the [top-level README](../README.md#object-detection) for how to read each c
 | DEIM-D-FINE-S | [Intellindust-AI-Lab/DEIM@09d35d5](https://github.com/Intellindust-AI-Lab/DEIM/tree/09d35d53d39ee3145a1e61e3a989b28b9468d1dd) | `deim_dfine_s.onnx` | [`export.py`](deim_dfine_s/export.py) |
 | D-FINE-N | [Peterande/D-FINE@956d170](https://github.com/Peterande/D-FINE/tree/956d1709314c2c6a4df6f34de232054578a7449f) | `dfine_n.onnx` | [`export.py`](dfine_n/export.py) |
 | D-FINE-S | [Peterande/D-FINE@956d170](https://github.com/Peterande/D-FINE/tree/956d1709314c2c6a4df6f34de232054578a7449f) | `dfine_s.onnx` | [`export.py`](dfine_s/export.py) |
+| LLMDet-T | [iSEE-Laboratory/LLMDet@5336624](https://github.com/iSEE-Laboratory/LLMDet/tree/53366243fba7) | `llmdet_tiny.onnx` | [`export.py`](llmdet_tiny/export.py) |
+| OWLv2-B/16 | [google-research/scenic@8c113c5](https://github.com/google-research/scenic/tree/8c113c501c9f700b69899c55a69e65bb46727da6) | `owlv2_b16.onnx` | [`export.py`](owlv2_b16/export.py) |
 | RF-DETR-N | [roboflow/rf-detr@5f44183](https://github.com/roboflow/rf-detr/tree/5f441831aaf23a68f40128ad0a2e27cb44e52640) | `rfdetr_n.onnx` | [`export.py`](rfdetr_n/export.py) |
 | RF-DETR-S | [roboflow/rf-detr@5f44183](https://github.com/roboflow/rf-detr/tree/5f441831aaf23a68f40128ad0a2e27cb44e52640) | `rfdetr_s.onnx` | [`export.py`](rfdetr_s/export.py) |
 | RT-DETR-R18 | [lyuwenyu/RT-DETR@29320b6](https://github.com/lyuwenyu/RT-DETR/tree/29320b6fd828f8e0987a71426cf2d961b09dfed7) | `rtdetr_r18vd.onnx` | [`export.py`](rtdetr_r18vd/export.py) |
@@ -75,6 +79,23 @@ Current real-time SOTA (see [docs/sota/object_detection.md](../docs/sota/object_
   demo clip.
 - **YOLO26n** — Ultralytics export with the end-to-end (NMS-free) head
   (`nms=False`). AGPL-3.0.
+
+Open-vocabulary (🔤; prompted with the 80 COCO class names by default):
+
+- **OWLv2-B/16** — exported from `google/owlv2-base-patch16-ensemble`
+  (Apache-2.0, explicit). The COCO prompts are tokenized at export time, so
+  the default detector needs no tokenizer; custom prompts use the
+  transformers CLIP tokenizer. Parity with transformers checked (image
+  tensor ≤ 1.7e-4, probabilities ≤ 5e-5). COCO is not in its training
+  data, so COCO AP is zero-shot. Scores are low in absolute terms, hence the
+  0.1 default threshold.
+- **LLMDet-T** — Grounding-DINO-style, exported from
+  `iSEE-Laboratory/llmdet_tiny` (Apache-2.0) with a fixed 80-class prompt
+  and static shapes (800×1333 canvas + pixel mask, 256 text tokens).
+  `aten::isin/cummax/cummin` are replaced by exportable equivalents during
+  export and a bool `EyeLike` is rewritten for ONNX Runtime; top detections
+  match PyTorch (score ≤ 4e-4, box ≤ 0.003). COCO is part of its training
+  data, so its COCO AP is **not** zero-shot.
 
 Earlier baselines, kept for comparison:
 

@@ -18,12 +18,19 @@ from . import REPO_ROOT
 TASKS = ("object_detection", "segmentation", "depth_estimation",
          "pose_estimation", "optical_flow")
 
+# task -> (runner module in the model directory, class name)
+RUNNERS = {
+    "object_detection": ("detector.py", "Detector"),
+    "depth_estimation": ("estimator.py", "Estimator"),
+}
+
 
 @dataclass
 class Model:
     dir: Path
     meta: dict
     benchmarks: list = field(default_factory=list)
+    accuracy: list = field(default_factory=list)
 
     @property
     def name(self) -> str:
@@ -44,14 +51,22 @@ class Model:
     def artifact_path(self, fmt: str = "onnx") -> Path:
         return self.weights_dir / self.meta["artifacts"][fmt]["file"]
 
-    def load_detector(self, **kwargs):
-        """Import ``detector.py`` from the model dir and build its Detector."""
-        path = self.dir / "detector.py"
+    def load_runner(self, **kwargs):
+        """Build the model's runner (``Detector`` / ``Estimator``).
+
+        Every runner exposes ``preprocess(frame) -> (x, meta)``,
+        ``infer(x)``, ``postprocess(out, meta)`` and ``__call__(frame)``, so
+        benchmarking and evaluation tools are task-agnostic.
+        """
+        filename, cls = RUNNERS[self.task]
+        path = self.dir / filename
         spec = importlib.util.spec_from_file_location(
             f"mlmc_models.{self.task}.{self.name}", path)
         module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(module)
-        return module.Detector(self, **kwargs)
+        return getattr(module, cls)(self, **kwargs)
+
+    load_detector = load_runner
 
 
 def load_model(path: Path) -> Model:
@@ -60,12 +75,11 @@ def load_model(path: Path) -> Model:
         path = path.parent
     with open(path / "model.yaml", encoding="utf-8") as f:
         meta = yaml.safe_load(f)
-    bench = []
-    bench_file = path / "benchmarks.yaml"
-    if bench_file.exists():
-        with open(bench_file, encoding="utf-8") as f:
-            bench = yaml.safe_load(f) or []
-    return Model(dir=path, meta=meta, benchmarks=bench)
+    def generated(name):
+        f = path / name
+        return (yaml.safe_load(f.read_text(encoding="utf-8")) or []) if f.exists() else []
+    return Model(dir=path, meta=meta, benchmarks=generated("benchmarks.yaml"),
+                 accuracy=generated("accuracy.yaml"))
 
 
 def all_models(task: str | None = None) -> list[Model]:

@@ -1,0 +1,51 @@
+# Curated metadata. Measured numbers live in benchmarks.yaml / accuracy.yaml (tool-generated).
+name: llmdet_tiny
+display_name: LLMDet-T
+task: object_detection
+open_vocabulary: true
+summary: "LLMDet (CVPR 2025), Swin-T Grounding-DINO-style open-vocabulary detector co-trained with an LLM. Exported with a fixed prompt of the 80 COCO class names."
+
+source:
+  repository: https://github.com/iSEE-Laboratory/LLMDet
+  commit: 53366243fba7  # HEAD reported by the SOTA survey (2026-09-30); see weights_revision
+  paper: https://arxiv.org/abs/2501.18954
+  weights_repository: https://huggingface.co/iSEE-Laboratory/llmdet_tiny
+  weights_revision: d05199165a19320a9236396e20fca0a5e065189c
+
+license:
+  code:
+    spdx: Apache-2.0
+    status: explicit
+    evidence: https://github.com/iSEE-Laboratory/LLMDet/blob/main/README.md
+    note: README - "LLMDet is released under the Apache 2.0 license".
+  weights:
+    spdx: Apache-2.0
+    status: explicit
+    evidence: https://huggingface.co/iSEE-Laboratory/llmdet_tiny/blob/d05199165a19320a9236396e20fca0a5e065189c/README.md
+    note: Model card metadata declares "license apache-2.0".
+  dataset:
+    name: GroundingCap-1M (per the paper), which includes COCO images
+    note: >-
+      The WeDetect paper marks LLMDet's COCO numbers as not zero-shot because
+      COCO is part of its training data. Treat COCO AP here as
+      "seen during training", not zero-shot.
+  export_dependencies:
+    - {name: transformers, spdx: Apache-2.0}
+
+artifacts:
+  onnx:
+    file: llmdet_tiny.onnx
+    fetch: export
+    script: export.py
+    input_shape: [1, 3, 800, 1333]
+    input_format: RGB, resize shortest edge 800 / longest <= 1333, ImageNet mean/std, pad into 800x1333 with pixel_mask; fixed COCO-80 text prompt (256 tokens)
+    output: "logits [1, 900, 256] per text token, pred_boxes [1, 900, 4] (cxcywh, relative to the valid image)"
+
+runtimes:
+  onnxruntime: verified
+
+reported_accuracy:
+  - metric: LVIS minival AP (fixed AP, zero-shot)
+    value: 44.7
+    input_size: 800x1333
+    source: https://github.com/iSEE-Laboratory/LLMDet/blob/main/README.md

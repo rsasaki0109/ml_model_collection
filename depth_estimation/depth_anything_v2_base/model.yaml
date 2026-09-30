@@ -1,0 +1,52 @@
+# Curated metadata. Measured numbers live in benchmarks.yaml (tool-generated).
+name: depth_anything_v2_base
+display_name: Depth-Anything-V2-B
+task: depth_estimation
+output: relative_disparity
+summary: "Depth Anything V2 (Base, 97.5M params): relative monocular depth (affine-invariant disparity)."
+
+source:
+  repository: https://github.com/DepthAnything/Depth-Anything-V2
+  commit: a561b849ebae10a6f5ef49e26c83cbbcd36c71bf  # HEAD when added (2026-09-30)
+  paper: https://arxiv.org/abs/2406.09414
+  weights_repository: https://huggingface.co/depth-anything/Depth-Anything-V2-Base-hf
+  weights_revision: b1958afc87fb45a9e3746cb387596094de553ed8
+
+license:
+  code:
+    spdx: Apache-2.0
+    status: explicit
+    evidence: https://github.com/DepthAnything/Depth-Anything-V2/blob/a561b849ebae10a6f5ef49e26c83cbbcd36c71bf/LICENSE
+  weights:
+    spdx: CC-BY-NC-4.0
+    status: explicit
+    evidence: https://github.com/DepthAnything/Depth-Anything-V2/blob/a561b849ebae10a6f5ef49e26c83cbbcd36c71bf/README.md
+    note: >-
+      Same code base as the Apache-2.0 Small model, but the README states "Depth-Anything-V2-Base/Large/Giant models are under the CC-BY-NC-4.0 license" and the HF card declares cc-by-nc-4.0: non-commercial use only. Kept in the collection as a license-trap example.
+  dataset:
+    name: 595K synthetic images (teacher) + 62M pseudo-labelled real images (student), per the paper
+    note: See the paper for the individual datasets and their terms.
+  export_dependencies:
+    - {name: transformers, spdx: Apache-2.0}
+
+artifacts:
+  onnx:
+    file: depth_anything_v2_base.onnx
+    fetch: export
+    script: export.py
+    input_shape: [1, 3, 518, 924]  # fixed; = upstream processor output for 16:9 input
+    input_format: RGB, bicubic resize to 518x924 (matches upstream keep-aspect/multiple-of-14 sizing for 16:9; other aspect ratios are stretched), ImageNet mean/std
+    output: "predicted_depth [1, h, w]: relative disparity (larger = nearer)"
+
+runtimes:
+  onnxruntime: verified
+
+reported_accuracy:
+  - metric: NYUv2 AbsRel (zero-shot, relative)
+    value: 0.049
+    input_size: 518
+    source: https://arxiv.org/abs/2406.09414  # Table 2
+  - metric: KITTI AbsRel (zero-shot, relative)
+    value: 0.078
+    input_size: 518
+    source: https://arxiv.org/abs/2406.09414  # Table 2

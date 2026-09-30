@@ -16,6 +16,7 @@ import cv2
 import numpy as np
 
 from tools.mlmc.detection import COCO80, Detections, ort_session
+from tools.mlmc.export import patch_for_ort
 
 
 class Detector:
@@ -81,37 +82,5 @@ def export_hf_detr(repo_id: str, revision: str, out: Path, size: int = 640,
                           input_names=["pixel_values"],
                           output_names=["logits", "pred_boxes"],
                           opset_version=opset, dynamo=False)
-    n = _float32_trig(out)
-    print(f"wrote {out}" + (f" ({n} float64 Sin/Cos wrapped in float32 casts)" if n else ""))
-
-
-def _float32_trig(path: Path) -> int:
-    """Run float64 Sin/Cos in float32.
-
-    transformers' D-FINE computes sin-cos position embeddings in float64,
-    which ONNX Runtime's CPU provider does not implement for Sin/Cos. The
-    original D-FINE code computes them in float32, so casting around these
-    nodes restores upstream behaviour and CPU compatibility.
-    """
-    import onnx
-    from onnx import TensorProto, helper
-
-    model = onnx.load(str(path))
-    inferred = onnx.shape_inference.infer_shapes(model)
-    types = {v.name: v.type.tensor_type.elem_type
-             for v in list(inferred.graph.value_info) + list(inferred.graph.input)}
-    nodes, count = [], 0
-    for node in model.graph.node:
-        if node.op_type in ("Sin", "Cos") and types.get(node.input[0]) == TensorProto.DOUBLE:
-            x32, y32 = node.input[0] + "_f32_" + node.name, node.output[0] + "_f32"
-            nodes.append(helper.make_node("Cast", [node.input[0]], [x32], to=TensorProto.FLOAT))
-            nodes.append(helper.make_node(node.op_type, [x32], [y32], name=node.name))
-            nodes.append(helper.make_node("Cast", [y32], [node.output[0]], to=TensorProto.DOUBLE))
-            count += 1
-        else:
-            nodes.append(node)
-    if count:
-        del model.graph.node[:]
-        model.graph.node.extend(nodes)
-        onnx.save(model, str(path))
-    return count
+    changes = patch_for_ort(out)
+    print(f"wrote {out}" + (f" (patched for ONNX Runtime: {changes})" if changes else ""))

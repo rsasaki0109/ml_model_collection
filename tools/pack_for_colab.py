@@ -16,6 +16,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from tools.mlmc import REPO_ROOT  # noqa: E402
 
 EXCLUDE_DIRS = {".git", "weights", "outputs", "dist", "__pycache__"}
+EXCLUDE_SUFFIXES = {".gif"}  # comparison GIFs are not needed to run anything
 
 
 def main():
@@ -25,7 +26,9 @@ def main():
     with zipfile.ZipFile(out, "w", zipfile.ZIP_DEFLATED) as z:
         for p in sorted(REPO_ROOT.rglob("*")):
             rel = p.relative_to(REPO_ROOT)
-            if p.is_dir() or EXCLUDE_DIRS & set(rel.parts) or rel.parts[0].startswith(".venv"):
+            skip = (p.is_dir() or EXCLUDE_DIRS & set(rel.parts)
+                    or rel.parts[0].startswith(".venv") or p.suffix in EXCLUDE_SUFFIXES)
+            if skip:
                 continue
             z.write(p, Path("ml_model_collection") / rel)
             n += 1
