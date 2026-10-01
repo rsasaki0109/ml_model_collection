@@ -58,6 +58,8 @@ def write_hash_into_yaml(model: Model, digest: str):
 
 def fetch(model: Model, python: str, force: bool, update_hash: bool):
     art = model.meta["artifacts"]["onnx"]
+    if art["fetch"] == "reuse":  # the artifact belongs to another model
+        return fetch(get_model(art["model"]), python, force, update_hash)
     out = model.artifact_path("onnx")
     if out.exists() and not force:
         print(f"[{model.name}] already present: {out}")

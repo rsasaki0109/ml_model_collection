@@ -1,0 +1,60 @@
+# Curated metadata. Measured numbers live in benchmarks.yaml / accuracy.yaml (tool-generated).
+name: botsort
+display_name: BoT-SORT
+task: tracking
+summary: "BoT-SORT without ReID: ByteTrack association, x-y-w-h Kalman filter and camera-motion compensation (sparse optical flow)."
+detector: dfine_s  # person boxes (COCO class "person") from this collection's D-FINE-S
+
+source:
+  repository: https://github.com/rsasaki0109/ml_model_collection
+  commit: null  # implemented in this repository (tools/mlmc/tracking.py)
+  paper: https://arxiv.org/abs/2206.14651
+  reference_implementation: https://github.com/NirAharon/BoT-SORT/tree/251985436d6712aaf682aaaf5f71edb4987224bd/tracker
+
+license:
+  code:
+    spdx: Apache-2.0
+    status: explicit
+    evidence: https://github.com/rsasaki0109/ml_model_collection/blob/main/LICENSE
+    note: >-
+      Written from scratch for this repository from the paper and the published default parameters;
+      no code copied from the MIT reference implementation (whose Kalman filter derives from GPL-3.0 DeepSORT).
+  weights:
+    spdx: Apache-2.0
+    status: explicit
+    evidence: https://huggingface.co/ustc-community/dfine-small-coco/blob/f79e65b5fbb33ceb9d3ebba042955d7410c608f8/README.md
+    note: >-
+      The tracker has no weights; the only learned component is the D-FINE-S detector (COCO-only checkpoint, apache-2.0).
+  dataset:
+    name: COCO 2017 (detector)
+    note: >-
+      Annotations CC BY 4.0; images are subject to Flickr terms of use. No tracking data is used for training.
+
+artifacts:
+  onnx:
+    file: dfine_s.onnx
+    fetch: reuse
+    model: dfine_s
+    input_shape: [1, 3, 640, 640]  # the detector's input
+    input_format: as object_detection/dfine_s
+    output: "tracks: boxes, ids, scores (host-side tracker after the detector graph)"
+
+tracker:
+  algorithm: botsort
+  det_score_floor: 0.1  # detector boxes kept for the tracker (low-score association)
+  aspect_ratio_max: 1.6  # drop tracks wider than 1.6 x their height (pedestrian setting of all three references)
+  params: {track_thresh: 0.6, low_thresh: 0.1, new_thresh: 0.7, match_thresh: 0.8, second_thresh: 0.5, unconfirmed_thresh: 0.7, track_buffer: 30, min_box_area: 10}  # BoT-SORT tools/track.py defaults (ReID off); GMC = sparse optical flow at half resolution (BoT-SORT's GMC default).
+
+runtimes:
+  onnxruntime: verified
+
+reported_accuracy:
+  - metric: MOT17 test HOTA (YOLOX-X MOT detector, no ReID, upstream)
+    value: 64.6
+    source: https://github.com/NirAharon/BoT-SORT/blob/251985436d6712aaf682aaaf5f71edb4987224bd/README.md
+  - metric: MOT17 test MOTA (YOLOX-X MOT detector, no ReID, upstream)
+    value: 80.6
+    source: https://github.com/NirAharon/BoT-SORT/blob/251985436d6712aaf682aaaf5f71edb4987224bd/README.md
+  - metric: MOT17 test IDF1 (YOLOX-X MOT detector, no ReID, upstream)
+    value: 79.5
+    source: https://github.com/NirAharon/BoT-SORT/blob/251985436d6712aaf682aaaf5f71edb4987224bd/README.md

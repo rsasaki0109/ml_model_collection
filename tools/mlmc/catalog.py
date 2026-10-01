@@ -17,7 +17,7 @@ from . import REPO_ROOT
 
 TASKS = ("object_detection", "segmentation", "depth_estimation",
          "pose_estimation", "optical_flow", "super_resolution", "background_removal",
-         "face_detection", "ocr", "feature_matching")
+         "face_detection", "ocr", "feature_matching", "tracking")
 
 # task -> (runner module in the model directory, class name)
 RUNNERS = {
@@ -31,6 +31,7 @@ RUNNERS = {
     "face_detection": ("face.py", "FaceDetector"),
     "ocr": ("ocr.py", "OCR"),
     "feature_matching": ("matcher.py", "Matcher"),
+    "tracking": ("tracker.py", "Tracker"),
 }
 
 
@@ -55,6 +56,9 @@ class Model:
 
     @property
     def weights_dir(self) -> Path:
+        art = self.meta.get("artifacts", {}).get("onnx", {})
+        if art.get("fetch") == "reuse":  # e.g. a tracker running another model's detector
+            return get_model(art["model"]).weights_dir
         return self.dir / "weights"
 
     def artifact_path(self, fmt: str = "onnx") -> Path:

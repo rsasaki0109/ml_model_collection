@@ -25,6 +25,7 @@ Video: "Road traffic on Stritarjeva street" by Sounds of Changes, [CC BY 3.0](ht
 | [Face detection](#face-detection) | 3 | 🟢2 🔴1 | – | – |
 | [OCR (scene text)](#ocr-scene-text) | 3 | 🟢3 | – | – |
 | [Feature matching](#feature-matching) | 3 | 🟢2 🔴1 | – | – |
+| [Multi-object tracking](#multi-object-tracking) | 3 | 🟢3 | – | – |
 <!-- END:task_index -->
 
 <sub>🟢 permissive · 🟡 copyleft · 🔴 non-commercial / restricted · ⚪ unknown (weights license). Accuracy and latency come from the recorded `accuracy.yaml` / `benchmarks.yaml` files; each task section below has the full table with conditions. Every task has a comparison GIF on the same clip.</sub>
@@ -191,6 +192,20 @@ Detection (DB) + recognition (CTC) pipelines from PaddleOCR's official ONNX file
 
 Sparse keypoints + LightGlue between consecutive frames (each line: previous → current position, colour = match score). End-to-end ONNX pipelines from [fabio-sim/LightGlue-ONNX](https://github.com/fabio-sim/LightGlue-ONNX), 1024 keypoints, 448×800 per frame for video. HPatches uses the glue-factory protocol (short side 480, weighted DLT, corner-error AUC). **SuperPoint's weights are Magic Leap non-commercial** — included only as the classic reference; RaCo-ALIKED and DISK are permissive end to end. Survey: [docs/sota/feature_matching.md](docs/sota/feature_matching.md).
 
+## Multi-object tracking
+
+![Tracking comparison on the same clip](assets/tracking_comparison.gif)
+
+<!-- BEGIN:tracking_table -->
+| Tracker | Code license | Detector | Appearance / camera motion | MOT17 test HOTA / MOTA / IDF1<br>(reported, MOT-trained detector) | MOT17 train HOTA / MOTA / IDF1<br>(measured, our detector) |
+|---|---|---|---|---|---|
+| [BoT-SORT](tracking/botsort) | 🟢 Apache-2.0 | [D-FINE-S](object_detection/dfine_s) | no ReID; sparse-flow camera motion | [64.6 / 80.6 / 79.5](https://github.com/NirAharon/BoT-SORT/blob/251985436d6712aaf682aaaf5f71edb4987224bd/README.md) | – |
+| [ByteTrack](tracking/bytetrack) | 🟢 Apache-2.0 | [D-FINE-S](object_detection/dfine_s) | motion only | [63.1 / 80.3 / 77.3](https://github.com/ifzhang/ByteTrack/blob/d1bf0191adff59bc8fcfeaa0b33d3d1642552a99/README.md) | – |
+| [OC-SORT](tracking/ocsort) | 🟢 Apache-2.0 | [D-FINE-S](object_detection/dfine_s) | motion only (observation-centric) | [63.2 / 78.0 / 77.5](https://github.com/noahcao/OC_SORT/blob/8462e7e729a93ccd3bd995c0a79a890336cb3a0b/README.md) | – |
+<!-- END:tracking_table -->
+
+Tracking by detection on D-FINE-S person boxes (Apache-2.0 detector, COCO-only). The three trackers are implemented from scratch in NumPy for this repository (`tools/mlmc/tracking.py`, Apache-2.0) from the papers and published defaults — the popular reference code is MIT but its Kalman filter comes from GPL-3.0 DeepSORT, and the common libraries (boxmot, Ultralytics) are AGPL-3.0. Speed cells: model-only = detector; end-to-end = detector + tracker. MOT17-train numbers use our COCO detector, so they compare trackers here, not with the MOTChallenge leaderboard (MOT-trained detectors). Survey: [docs/sota/tracking.md](docs/sota/tracking.md).
+
 ## Find a model
 
 ```console
@@ -280,6 +295,7 @@ ml_model_collection/
 ├── face_detection/          same layout; runner file is face.py
 ├── ocr/                     same layout; runner file is ocr.py
 ├── feature_matching/        same layout; runner file is matcher.py
+├── tracking/                trackers on top of a detector; runner file is tracker.py
 ├── object_detection/
 │   └── <model>/
 │       ├── model.yaml       curated metadata: source, licenses, artifacts, reported accuracy

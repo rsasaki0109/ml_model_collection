@@ -1,0 +1,8 @@
+# Default line-up and layout for tools/make_comparison.py --task tracking.
+models:
+  - bytetrack
+  - botsort
+  - ocsort
+cols: 3
+tile_width: 400
+fps: 5

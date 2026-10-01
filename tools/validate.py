@@ -16,7 +16,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import yaml  # noqa: E402
 
 from tools.mlmc import REPO_ROOT, hardware, licenses  # noqa: E402
-from tools.mlmc.catalog import RUNNERS, TASKS, all_models  # noqa: E402
+from tools.mlmc.catalog import RUNNERS, TASKS, all_models, get_model  # noqa: E402
 
 BENCH_REQUIRED = ("id", "date", "hardware", "runtime", "runtime_version",
                   "precision", "batch_size", "input_shape", "latency_ms",
@@ -58,6 +58,13 @@ def check_model(m) -> list[str]:
                 errs.append(f"artifacts.onnx.{key} missing")
         if art.get("fetch") == "export" and not (m.dir / art.get("script", "")).is_file():
             errs.append("artifacts.onnx.script does not exist")
+        if art.get("fetch") == "reuse":
+            try:
+                other = get_model(art.get("model", ""))
+                if other.meta["artifacts"]["onnx"]["file"] != art.get("file"):
+                    errs.append("artifacts.onnx.file must equal the reused model's file")
+            except Exception:
+                errs.append(f"artifacts.onnx.model {art.get('model')!r} not found")
         if art.get("fetch") == "download" and not art.get("sha256"):
             errs.append("artifacts.onnx.sha256 missing for a download")
         if art.get("fetch") == "download_zip" and not all(art.get(k) for k in ("url", "zip_sha256", "member", "sha256")):

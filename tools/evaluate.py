@@ -37,6 +37,10 @@ our pre/post-processing, not the upstream PyTorch model.
 * Feature matching: HPatches homography AUC@1/3/5 px (glue-factory
   protocol, DLT), ``--hpatches-root`` = extracted
   ``hpatches-sequences-release`` (Hugging Face vbalnt/hpatches).
+* Tracking: MOT17 train HOTA / MOTA / IDF1 (TrackEval; FRCNN copy of the
+  7 sequences), ``--mot17-root`` = extracted ``MOT17/train``
+  (https://motchallenge.net/data/MOT17.zip). Needs ``pip install
+  git+https://github.com/JonathonLuiten/TrackEval``.
 * Semantic segmentation: ADE20K val mIoU (150 classes, label 0 ignored),
   ``--ade-root`` = the extracted ADEChallengeData2016 directory
   (http://data.csail.mit.edu/places/ADEchallenge/ADEChallengeData2016.zip).
@@ -520,6 +524,69 @@ def eval_icdar15(model: Model, root: Path, provider: str, limit: int | None) -> 
     }
 
 
+def eval_mot17(model: Model, root: Path, provider: str, limit: int | None) -> dict:
+    """MOT17 train (7 sequences, the FRCNN copy of each), HOTA / MOTA / IDF1
+    with TrackEval (JonathonLuiten/TrackEval, MIT). The tracker runs on this
+    collection's own COCO detector (class person), not on MOT17's public or
+    MOT-trained private detections, so numbers are not comparable with the
+    MOTChallenge leaderboards — only between trackers here.
+
+    ``root`` = extracted ``MOT17/train`` (``MOT17-XX-FRCNN/{img1,gt,seqinfo.ini}``).
+    """
+    import configparser
+    import tempfile
+
+    for alias, typ in (("float", float), ("int", int), ("bool", bool)):
+        if not hasattr(np, alias):  # TrackEval still uses the removed NumPy aliases
+            setattr(np, alias, typ)
+    import trackeval
+
+    t0 = time.perf_counter()
+    runner = model.load_runner(provider=provider)
+    seqs = sorted(p.name for p in root.iterdir() if p.is_dir() and p.name.endswith("-FRCNN"))
+    tmp = Path(tempfile.mkdtemp())
+    out_dir = tmp / "trackers" / model.name / "data"
+    out_dir.mkdir(parents=True)
+    n_frames, seq_info = 0, {}
+    for seq in seqs:
+        ini = configparser.ConfigParser()
+        ini.read(root / seq / "seqinfo.ini")
+        length = int(ini["Sequence"]["seqLength"])
+        runner.reset(fps=float(ini["Sequence"]["frameRate"]))
+        frames = sorted((root / seq / "img1").glob("*.jpg"))[:limit]
+        seq_info[seq] = len(frames)
+        lines = []
+        for k, f in enumerate(frames, start=1):
+            tr = runner(cv2.imread(str(f)))
+            for b, i, s in zip(tr.boxes, tr.ids, tr.scores):
+                lines.append(f"{k},{i},{b[0]:.2f},{b[1]:.2f},{b[2] - b[0]:.2f},{b[3] - b[1]:.2f},{s:.3f},-1,-1,-1")
+        (out_dir / f"{seq}.txt").write_text("\n".join(lines) + "\n")
+        n_frames += len(frames)
+        assert limit or len(frames) == length, f"{seq}: {len(frames)} frames, seqinfo says {length}"
+    eval_cfg = {**trackeval.Evaluator.get_default_eval_config(), "USE_PARALLEL": False,
+                "PRINT_RESULTS": False, "PRINT_CONFIG": False, "OUTPUT_SUMMARY": False,
+                "OUTPUT_DETAILED": False, "PLOT_CURVES": False, "TIME_PROGRESS": False}
+    ds_cfg = {**trackeval.datasets.MotChallenge2DBox.get_default_dataset_config(),
+              "GT_FOLDER": str(root), "TRACKERS_FOLDER": str(tmp / "trackers"),
+              "TRACKERS_TO_EVAL": [model.name], "SKIP_SPLIT_FOL": True, "SEQ_INFO": seq_info,
+              "GT_LOC_FORMAT": "{gt_folder}/{seq}/gt/gt.txt", "PRINT_CONFIG": False}
+    metrics = [trackeval.metrics.HOTA(), trackeval.metrics.CLEAR(), trackeval.metrics.Identity()]
+    res, _ = trackeval.Evaluator(eval_cfg).evaluate([trackeval.datasets.MotChallenge2DBox(ds_cfg)], metrics)
+    comb = res["MotChallenge2DBox"][model.name]["COMBINED_SEQ"]["pedestrian"]
+    return {
+        "dataset": "MOT17 train" + (f" (first {limit} frames per sequence)" if limit else ""),
+        "images": n_frames,
+        "metrics": {"HOTA": round(float(np.mean(comb["HOTA"]["HOTA"])) * 100, 1),
+                    "MOTA": round(float(comb["CLEAR"]["MOTA"]) * 100, 1),
+                    "IDF1": round(float(comb["Identity"]["IDF1"]) * 100, 1),
+                    "IDSW": int(comb["CLEAR"]["IDSW"])},
+        "settings": {"sequences": "7 train sequences, FRCNN copies (images identical across copies)",
+                     "detector": f"{model.meta['detector']} (COCO person), not MOT-trained",
+                     "evaluator": "TrackEval MotChallenge2DBox (HOTA, CLEAR, Identity)"},
+        "wall_time_s": round(time.perf_counter() - t0, 1),
+    }
+
+
 HPATCHES_IGNORED = ("i_contruction", "i_crownnight", "i_dc", "i_pencils", "i_whitebuilding",
                     "v_artisans", "v_astronautis", "v_talent")  # glue-factory: large images
 
@@ -622,6 +689,7 @@ def main():
                     help="directory with WIDER_val/images/ and eval_tools/ground_truth/")
     ap.add_argument("--icdar15-root", type=Path, help="directory with images/ and gt/ (ICDAR2015 test)")
     ap.add_argument("--hpatches-root", type=Path, help="extracted hpatches-sequences-release/")
+    ap.add_argument("--mot17-root", type=Path, help="extracted MOT17/train")
     ap.add_argument("--provider", default="cuda", choices=list(PROVIDERS))
     ap.add_argument("--limit", type=int, help="evaluate only the first N images (smoke test)")
     args = ap.parse_args()
@@ -637,7 +705,8 @@ def main():
                     (["--dis-root", str(args.dis_root)] if args.dis_root else []) + \
                     (["--wider-root", str(args.wider_root)] if args.wider_root else []) + \
                     (["--icdar15-root", str(args.icdar15_root)] if args.icdar15_root else []) + \
-                    (["--hpatches-root", str(args.hpatches_root)] if args.hpatches_root else [])
+                    (["--hpatches-root", str(args.hpatches_root)] if args.hpatches_root else []) + \
+                    (["--mot17-root", str(args.mot17_root)] if args.mot17_root else [])
                 subprocess.run([sys.executable, __file__, "--model", m.name, *roots,
                                 "--provider", args.provider]
                                + (["--limit", str(args.limit)] if args.limit else []))
@@ -684,6 +753,11 @@ def main():
             raise SystemExit("--hpatches-root is required")
         res = eval_hpatches(model, args.hpatches_root, args.provider, args.limit)
         ds_id = "hpatches"
+    elif model.task == "tracking":
+        if not args.mot17_root:
+            raise SystemExit("--mot17-root is required")
+        res = eval_mot17(model, args.mot17_root, args.provider, args.limit)
+        ds_id = "mot17-train"
     elif model.task in ("object_detection", "segmentation"):
         if not args.coco_root:
             raise SystemExit("--coco-root is required")

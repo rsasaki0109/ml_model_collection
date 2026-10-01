@@ -150,3 +150,14 @@ def test_matching_dlt_and_auc():
     p1 = q[:, :2] / q[:, 2:]
     assert corner_error(homography_dlt(p0, p1), H, 400, 300) < 1e-6
     assert error_auc([0.0, 0.0], [1])[0] > 0.99 and error_auc([10.0, 10.0], [1, 3, 5]) == [0.0, 0.0, 0.0]
+
+
+def test_trackers_keep_ids():
+    from tools.mlmc.tracking import ByteTracker, OCSortTracker
+    for trk in (ByteTracker(), ByteTracker(mode="xywh", track_thresh=0.6, new_thresh=0.7), OCSortTracker()):
+        ids = []
+        for f in range(12):
+            boxes = np.array([[10 + 5 * f, 10, 50 + 5 * f, 90], [200 - 4 * f, 50, 240 - 4 * f, 130]], float)
+            out = trk.update(boxes, np.array([0.9, 0.9]), ["person", "person"])
+            ids.append(sorted(t.id for t in out))
+        assert ids[-1] == ids[-5] and len(ids[-1]) == 2

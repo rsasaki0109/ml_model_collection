@@ -38,6 +38,7 @@ from tools.mlmc.ocr import render as render_ocr  # noqa: E402
 from tools.mlmc.pose import render as render_pose  # noqa: E402
 from tools.mlmc.segmentation import render as render_seg  # noqa: E402
 from tools.mlmc.sr import render as render_sr  # noqa: E402
+from tools.mlmc.tracking import TrackRenderer  # noqa: E402
 
 
 # task -> render(source frame, runner result) -> BGR frame of the same size
@@ -74,6 +75,7 @@ def run(model: Model, video: Path, provider: str = "cuda",
             raise SystemExit(f"{model.name} does not take runtime prompts")
         kwargs["prompts"] = prompts
     runner = model.load_runner(**kwargs)
+    render = TrackRenderer() if model.task == "tracking" else RENDER.get(model.task)  # trails are per video
     is_det = model.task == "object_detection"
 
     cap = cv2.VideoCapture(str(video))
@@ -103,7 +105,7 @@ def run(model: Model, video: Path, provider: str = "cuda",
             writer.write(draw(frame, res))
             jf.write(json.dumps({"frame": n, "detections": res.to_json()}) + "\n")
         else:
-            last = RENDER[model.task](frame, res)
+            last = render(frame, res)
             writer.write(last)
         n += 1
     if jf:

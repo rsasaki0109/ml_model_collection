@@ -17,7 +17,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from tools.mlmc import REPO_ROOT, licenses  # noqa: E402
-from tools.mlmc.catalog import Model, all_models  # noqa: E402
+from tools.mlmc.catalog import Model, all_models, get_model  # noqa: E402
 
 
 def rel(model: Model, start: Path) -> str:
@@ -332,6 +332,28 @@ def matching_table(models: list[Model], start: Path) -> str:
     return "\n".join(lines)
 
 
+def tracking_table(models: list[Model], start: Path) -> str:
+    cols = bench_columns(models)
+    head = ["Tracker", "Code license", "Detector", "Appearance / camera motion",
+            "MOT17 test HOTA / MOTA / IDF1<br>(reported, MOT-trained detector)",
+            "MOT17 train HOTA / MOTA / IDF1<br>(measured, our detector)"] + bench_head(cols)
+    lines = ["| " + " | ".join(head) + " |", "|" + "---|" * len(head)]
+    for m in models:
+        lic = m.meta.get("license", {})
+        rep = m.meta.get("reported_accuracy", [])
+        rep_cell = f"[{' / '.join(str(r['value']) for r in rep)}]({rep[0]['source']})" if rep else "–"
+        meas = next((r for r in m.accuracy if r.get("dataset") == "MOT17 train"), None)
+        meas_cell = (" / ".join(f"**{meas['metrics'][k]}**" for k in ("HOTA", "MOTA", "IDF1")) if meas else "–")
+        algo = m.meta["tracker"]["algorithm"]
+        extra = {"botsort": "no ReID; sparse-flow camera motion", "bytetrack": "motion only",
+                 "ocsort": "motion only (observation-centric)"}.get(algo, "?")
+        det = get_model(m.meta["detector"])
+        row = [f"[{m.display_name}]({rel(m, start)})", licenses.describe(lic.get("code")),
+               f"[{det.display_name}]({rel(det, start)})", extra, rep_cell, meas_cell]
+        lines.append("| " + " | ".join(row + bench_cells(m, cols)) + " |")
+    return "\n".join(lines)
+
+
 # task -> (section title, measured metric: dataset prefix, key, higher is better, label)
 TASK_INDEX = {
     "object_detection": ("Object detection", ("COCO val2017", "AP", True, "COCO AP")),
@@ -344,6 +366,7 @@ TASK_INDEX = {
     "face_detection": ("Face detection", ("WIDER FACE val", "AP_hard", True, "WIDER FACE hard AP")),
     "ocr": ("OCR (scene text)", ("ICDAR2015 test", "e2e_hmean", True, "ICDAR2015 end-to-end H-mean")),
     "feature_matching": ("Feature matching", ("HPatches", "H_AUC@3px", True, "HPatches H-AUC@3px")),
+    "tracking": ("Multi-object tracking", ("MOT17 train", "HOTA", True, "MOT17-train HOTA")),
 }
 
 
@@ -422,6 +445,8 @@ TABLES = {
     (REPO_ROOT / "feature_matching" / "README.md", "feature_matching_table"): ("feature_matching", matching_table),
     (REPO_ROOT / "feature_matching" / "README.md", "feature_matching_provenance"):
         ("feature_matching", provenance_table),
+    (REPO_ROOT / "README.md", "tracking_table"): ("tracking", tracking_table),
+    (REPO_ROOT / "tracking" / "README.md", "tracking_table"): ("tracking", tracking_table),
 }
 
 
