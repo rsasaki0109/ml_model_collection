@@ -1,0 +1,3 @@
+"""PP-OCRv5-mobile-EN: shared PP-OCR pipeline runner (tools/mlmc/ocr.py)."""
+
+from tools.mlmc.ocr import PPOCR as OCR  # noqa: F401

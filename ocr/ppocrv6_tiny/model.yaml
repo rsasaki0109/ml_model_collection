@@ -1,0 +1,70 @@
+# Curated metadata. Measured numbers live in benchmarks.yaml / accuracy.yaml (tool-generated).
+name: ppocrv6_tiny
+display_name: PP-OCRv6-tiny
+task: ocr
+languages: "multilingual (6904-entry dictionary)"
+summary: "PP-OCRv6 tiny (2026): 0.4M-param DB detector + 1.1M-param CTC recognizer for edge devices (official ONNX)."
+
+source:
+  repository: https://github.com/PaddlePaddle/PaddleOCR
+  commit: dab3fe35379033fdcb2d0e9572fac0b36c9a9ebf  # HEAD when added (2026-10-01)
+  paper: https://arxiv.org/abs/2606.13108
+  weights_repository: https://huggingface.co/PaddlePaddle/PP-OCRv6_tiny_det_onnx
+  weights_revision: 2ba1506c0380b8f0b03dd142459aac66d4421f6c
+
+license:
+  code:
+    spdx: Apache-2.0
+    status: explicit
+    evidence: https://github.com/PaddlePaddle/PaddleOCR/blob/dab3fe35379033fdcb2d0e9572fac0b36c9a9ebf/LICENSE
+  weights:
+    spdx: Apache-2.0
+    status: explicit
+    evidence: https://huggingface.co/PaddlePaddle/PP-OCRv6_tiny_det_onnx/blob/2ba1506c0380b8f0b03dd142459aac66d4421f6c/README.md
+    note: >-
+      The detector and recognizer ONNX repositories (PP-OCRv6_tiny_det_onnx, PP-OCRv6_tiny_rec_onnx) are official PaddlePaddle uploads whose
+      model cards declare license: apache-2.0.
+  dataset:
+    name: PaddleOCR internal data (not disclosed)
+    note: >-
+      PaddleOCR does not publish the training data of the PP-OCR models; the public training configs point at placeholder ICDAR2015 paths (unverified).
+  export_dependencies: []
+  runtime_dependencies:
+    - {name: pyclipper, spdx: MIT}
+
+artifacts:
+  onnx:
+    file: det.onnx
+    fetch: download_files
+    files:
+      - path: det.onnx
+        url: https://huggingface.co/PaddlePaddle/PP-OCRv6_tiny_det_onnx/resolve/2ba1506c0380b8f0b03dd142459aac66d4421f6c/inference.onnx
+        sha256: 193bab7a04fca699a6c82e6abb5b81bdb28177f0abd4062552b04908dafb19f8
+      - path: rec.onnx
+        url: https://huggingface.co/PaddlePaddle/PP-OCRv6_tiny_rec_onnx/resolve/2612ab37152ae0a677521bae4e1e3d4fb4cf7c30/inference.onnx
+        sha256: 9ef676d6ed3c88256a2d92c640c44f25b0c40947e111b14b8be8f594091563e6
+      - path: ppocrv6_tiny_dict.txt
+        url: https://raw.githubusercontent.com/PaddlePaddle/PaddleOCR/dab3fe35379033fdcb2d0e9572fac0b36c9a9ebf/ppocr/utils/dict/ppocrv6_tiny_dict.txt
+        sha256: c5cbe34ef40c29c4df07ed012bf96569cb69a2d2a01a07027e9f13cb832bd9cd
+    input_shape: [1, 3, 736, 1312]  # detector, dynamic; 1280x720 frame after DetResizeForTest
+    input_format: "detector: BGR, /255, ImageNet mean/std; recognizer: BGR text-line crops, height 48, (x/255-0.5)/0.5"
+    output: "detector probability map [1, 1, H, W]; recognizer CTC probabilities [N, T, dictionary + 2]"
+
+ocr:  # pre/post-processing from each ONNX repository's inference.yml
+  rec_file: rec.onnx
+  dict_file: ppocrv6_tiny_dict.txt
+  det_resize: {limit_type: min, limit_side_len: 736}  # DetResizeForTest defaults (inference.yml gives no arguments)
+  db: {thresh: 0.2, box_thresh: 0.4, unclip_ratio: 1.4, max_candidates: 3000}
+  rec_image_shape: [3, 48, 320]
+  drop_score: 0.5  # PaddleOCR predict_system default
+
+runtimes:
+  onnxruntime: verified
+
+reported_accuracy:
+  - metric: PaddleOCR multi-scenario benchmark det Hmean (avg)  # PaddleOCR's own benchmark, not ICDAR
+    value: 80.6
+    source: https://huggingface.co/PaddlePaddle/PP-OCRv6_tiny_det_onnx/blob/2ba1506c0380b8f0b03dd142459aac66d4421f6c/README.md
+  - metric: PaddleOCR multi-scenario benchmark rec accuracy (W-Avg)  # PaddleOCR's own benchmark, not ICDAR
+    value: 73.5
+    source: https://huggingface.co/PaddlePaddle/PP-OCRv6_tiny_rec_onnx/blob/2612ab37152ae0a677521bae4e1e3d4fb4cf7c30/README.md

@@ -1,0 +1,67 @@
+# Curated metadata. Measured numbers live in benchmarks.yaml / accuracy.yaml (tool-generated).
+name: ppocrv5_mobile_en
+display_name: PP-OCRv5-mobile-EN
+task: ocr
+languages: "English (436-entry dictionary)"
+summary: "PP-OCRv5 mobile detector + English mobile recognizer (2025, official ONNX)."
+
+source:
+  repository: https://github.com/PaddlePaddle/PaddleOCR
+  commit: dab3fe35379033fdcb2d0e9572fac0b36c9a9ebf  # HEAD when added (2026-10-01)
+  paper: https://arxiv.org/abs/2507.05595
+  weights_repository: https://huggingface.co/PaddlePaddle/PP-OCRv5_mobile_det_onnx
+  weights_revision: e6f4fa85f00e168c862bc462aebca69eef9b3d3d
+
+license:
+  code:
+    spdx: Apache-2.0
+    status: explicit
+    evidence: https://github.com/PaddlePaddle/PaddleOCR/blob/dab3fe35379033fdcb2d0e9572fac0b36c9a9ebf/LICENSE
+  weights:
+    spdx: Apache-2.0
+    status: explicit
+    evidence: https://huggingface.co/PaddlePaddle/PP-OCRv5_mobile_det_onnx/blob/e6f4fa85f00e168c862bc462aebca69eef9b3d3d/README.md
+    note: >-
+      The detector and recognizer ONNX repositories (PP-OCRv5_mobile_det_onnx, en_PP-OCRv5_mobile_rec_onnx) are official PaddlePaddle uploads whose
+      model cards declare license: apache-2.0.
+  dataset:
+    name: PaddleOCR internal data (not disclosed)
+    note: >-
+      PaddleOCR does not publish the training data of the PP-OCR models; the public training configs point at placeholder ICDAR2015 paths (unverified).
+  export_dependencies: []
+  runtime_dependencies:
+    - {name: pyclipper, spdx: MIT}
+
+artifacts:
+  onnx:
+    file: det.onnx
+    fetch: download_files
+    files:
+      - path: det.onnx
+        url: https://huggingface.co/PaddlePaddle/PP-OCRv5_mobile_det_onnx/resolve/e6f4fa85f00e168c862bc462aebca69eef9b3d3d/inference.onnx
+        sha256: a431985659dc921974177a95adcfbb90fd9e51989a5e04d70d0b75f597b6e61d
+      - path: rec.onnx
+        url: https://huggingface.co/PaddlePaddle/en_PP-OCRv5_mobile_rec_onnx/resolve/3fafbc3b5dcf93dd72add9f48368be8a3a2cd33b/inference.onnx
+        sha256: b5f833dfc5d0eb71da397b4efa06ebeee9b431b690a47d6af40d77d8eabc557f
+      - path: ppocrv5_en_dict.txt
+        url: https://raw.githubusercontent.com/PaddlePaddle/PaddleOCR/dab3fe35379033fdcb2d0e9572fac0b36c9a9ebf/ppocr/utils/dict/ppocrv5_en_dict.txt
+        sha256: e025a66d31f327ba0c232e03f407ae8d105e1e709e7ccb3f408aa778c24e70d6
+    input_shape: [1, 3, 640, 1024]  # detector, dynamic; 1280x720 frame after resize_long 960 (multiples of 128)
+    input_format: "detector: BGR, /255, ImageNet mean/std; recognizer: BGR text-line crops, height 48, (x/255-0.5)/0.5"
+    output: "detector probability map [1, 1, H, W]; recognizer CTC probabilities [N, T, dictionary + 2]"
+
+ocr:  # pre/post-processing from each ONNX repository's inference.yml
+  rec_file: rec.onnx
+  dict_file: ppocrv5_en_dict.txt
+  det_resize: {resize_long: 960}  # as the detector's inference.yml
+  db: {thresh: 0.3, box_thresh: 0.6, unclip_ratio: 1.5, max_candidates: 1000}
+  rec_image_shape: [3, 48, 320]
+  drop_score: 0.5  # PaddleOCR predict_system default
+
+runtimes:
+  onnxruntime: verified
+
+reported_accuracy:
+  - metric: PaddleOCR multi-scenario benchmark det Hmean (avg)  # PaddleOCR's own benchmark, not ICDAR
+    value: 75.2
+    source: https://huggingface.co/PaddlePaddle/PP-OCRv6_small_det_onnx/blob/28fe5895c24fd108c19eb3e8479f4ab385fbfc62/README.md  # comparison table in the PP-OCRv6 card

@@ -291,6 +291,28 @@ def face_table(models: list[Model], start: Path) -> str:
     return "\n".join(lines)
 
 
+def ocr_table(models: list[Model], start: Path) -> str:
+    cols = bench_columns(models)
+    head = ["Model", "Code license", "Weights license", "Languages",
+            "PaddleOCR benchmark det Hmean / rec acc<br>(reported, not ICDAR)",
+            "ICDAR2015 det H-mean / end-to-end H-mean<br>(measured, ONNX)",
+            "Peak VRAM<br>(measured)"] + bench_head(cols)
+    lines = ["| " + " | ".join(head) + " |", "|" + "---|" * len(head)]
+    for m in models:
+        lic = m.meta.get("license", {})
+        rep = m.meta.get("reported_accuracy", [])
+        det = next((r for r in rep if "det" in r["metric"]), None)
+        rec = next((r for r in rep if "rec" in r["metric"]), None)
+        rep_cell = " / ".join(f"[{r['value']}]({r['source']})" if r else "–" for r in (det, rec))
+        meas = next((r for r in m.accuracy if r.get("dataset") == "ICDAR2015 test"), None)
+        meas_cell = (f"**{meas['metrics']['det_hmean']} / {meas['metrics']['e2e_hmean']}**" if meas else "–")
+        row = [f"[{m.display_name}]({rel(m, start)})",
+               licenses.describe(lic.get("code")), licenses.describe(lic.get("weights")),
+               m.meta.get("languages", "?"), rep_cell, meas_cell, vram_cell(m)]
+        lines.append("| " + " | ".join(row + bench_cells(m, cols)) + " |")
+    return "\n".join(lines)
+
+
 # task -> (section title, measured metric: dataset prefix, key, higher is better, label)
 TASK_INDEX = {
     "object_detection": ("Object detection", ("COCO val2017", "AP", True, "COCO AP")),
@@ -301,6 +323,7 @@ TASK_INDEX = {
     "super_resolution": ("Super-resolution (x4)", ("SR benchmarks x4", "Urban100_PSNR_Y", True, "Urban100 PSNR-Y")),
     "background_removal": ("Background removal / matting", ("DIS5K DIS-VD", "S_measure", True, "DIS-VD S-measure")),
     "face_detection": ("Face detection", ("WIDER FACE val", "AP_hard", True, "WIDER FACE hard AP")),
+    "ocr": ("OCR (scene text)", ("ICDAR2015 test", "e2e_hmean", True, "ICDAR2015 end-to-end H-mean")),
 }
 
 
@@ -372,6 +395,9 @@ TABLES = {
     (REPO_ROOT / "face_detection" / "README.md", "face_detection_table"): ("face_detection", face_table),
     (REPO_ROOT / "face_detection" / "README.md", "face_detection_provenance"):
         ("face_detection", provenance_table),
+    (REPO_ROOT / "README.md", "ocr_table"): ("ocr", ocr_table),
+    (REPO_ROOT / "ocr" / "README.md", "ocr_table"): ("ocr", ocr_table),
+    (REPO_ROOT / "ocr" / "README.md", "ocr_provenance"): ("ocr", provenance_table),
 }
 
 

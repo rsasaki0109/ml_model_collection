@@ -33,6 +33,7 @@ from tools.mlmc.detection import draw  # noqa: E402
 from tools.mlmc.face import render as render_faces  # noqa: E402
 from tools.mlmc.flow import render as render_flow  # noqa: E402
 from tools.mlmc.matting import render as render_matte  # noqa: E402
+from tools.mlmc.ocr import render as render_ocr  # noqa: E402
 from tools.mlmc.pose import render as render_pose  # noqa: E402
 from tools.mlmc.segmentation import render as render_seg  # noqa: E402
 from tools.mlmc.sr import render as render_sr  # noqa: E402
@@ -47,6 +48,7 @@ RENDER = {
     "super_resolution": render_sr,
     "background_removal": render_matte,
     "face_detection": render_faces,
+    "ocr": render_ocr,
 }
 
 

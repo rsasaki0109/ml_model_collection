@@ -23,6 +23,7 @@ Video: "Road traffic on Stritarjeva street" by Sounds of Changes, [CC BY 3.0](ht
 | [Super-resolution (x4)](#super-resolution-x4) | 3 | 🟢3 | – | – |
 | [Background removal / matting](#background-removal--matting) | 3 | 🟢2 🟡1 | – | – |
 | [Face detection](#face-detection) | 3 | 🟢2 🔴1 | – | – |
+| [OCR (scene text)](#ocr-scene-text) | 3 | 🟢3 | – | – |
 <!-- END:task_index -->
 
 <sub>🟢 permissive · 🟡 copyleft · 🔴 non-commercial / restricted · ⚪ unknown (weights license). Accuracy and latency come from the recorded `accuracy.yaml` / `benchmarks.yaml` files; each task section below has the full table with conditions. Every task has a comparison GIF on the same clip.</sub>
@@ -161,6 +162,20 @@ Predicted alpha composited over a solid green background. BiRefNet-lite and BEN2
 
 Boxes plus five landmarks; the strip at the bottom of each tile enlarges the highest-scoring faces (faces in the demo clip are ~10 px tall). YuNet and RetinaFace run at the source resolution, SCRFD at 640×640 (its graph's outputs are fixed), each as in its upstream WIDER FACE protocol. **WIDER FACE — the training set of all three — is CC BY-NC-ND**, and **InsightFace's pretrained models (SCRFD) are non-commercial research only**; mirrors that relabel SCRFD as MIT contradict upstream. Survey: [docs/sota/face_detection.md](docs/sota/face_detection.md).
 
+## OCR (scene text)
+
+![OCR comparison on the same clip](assets/ocr_comparison.gif)
+
+<!-- BEGIN:ocr_table -->
+| Model | Code license | Weights license | Languages | PaddleOCR benchmark det Hmean / rec acc<br>(reported, not ICDAR) | ICDAR2015 det H-mean / end-to-end H-mean<br>(measured, ONNX) | Peak VRAM<br>(measured) |
+|---|---|---|---|---|---|---|
+| [PP-OCRv5-mobile-EN](ocr/ppocrv5_mobile_en) | 🟢 Apache-2.0 | 🟢 Apache-2.0 | English (436-entry dictionary) | [75.2](https://huggingface.co/PaddlePaddle/PP-OCRv6_small_det_onnx/blob/28fe5895c24fd108c19eb3e8479f4ab385fbfc62/README.md) / – | – | not measured |
+| [PP-OCRv6-small](ocr/ppocrv6_small) | 🟢 Apache-2.0 | 🟢 Apache-2.0 | multilingual (rec card: 50 languages) | [84.1](https://huggingface.co/PaddlePaddle/PP-OCRv6_small_det_onnx/blob/28fe5895c24fd108c19eb3e8479f4ab385fbfc62/README.md) / [81.3](https://huggingface.co/PaddlePaddle/PP-OCRv6_small_rec_onnx/blob/b8f84f0b80c529de40b4fbb3544b84fa7233a513/README.md) | – | not measured |
+| [PP-OCRv6-tiny](ocr/ppocrv6_tiny) | 🟢 Apache-2.0 | 🟢 Apache-2.0 | multilingual (6904-entry dictionary) | [80.6](https://huggingface.co/PaddlePaddle/PP-OCRv6_tiny_det_onnx/blob/2ba1506c0380b8f0b03dd142459aac66d4421f6c/README.md) / [73.5](https://huggingface.co/PaddlePaddle/PP-OCRv6_tiny_rec_onnx/blob/2612ab37152ae0a677521bae4e1e3d4fb4cf7c30/README.md) | – | not measured |
+<!-- END:ocr_table -->
+
+Detection (DB) + recognition (CTC) pipelines from PaddleOCR's official ONNX files, re-implemented pre/post-processing (no Paddle dependency). Speed cells: model-only = text detector; end-to-end = detection + cropping + batched recognition of every line in the demo frame. The reported numbers are PaddleOCR's own multi-scenario benchmark, not ICDAR; the measured ICDAR2015 numbers are zero-shot and penalise line-level detectors, since ICDAR2015 annotates single words. Survey: [docs/sota/ocr.md](docs/sota/ocr.md).
+
 ## Find a model
 
 ```console
@@ -248,6 +263,7 @@ ml_model_collection/
 ├── super_resolution/        same layout; runner file is upscaler.py
 ├── background_removal/      same layout; runner file is remover.py
 ├── face_detection/          same layout; runner file is face.py
+├── ocr/                     same layout; runner file is ocr.py
 ├── object_detection/
 │   └── <model>/
 │       ├── model.yaml       curated metadata: source, licenses, artifacts, reported accuracy

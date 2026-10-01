@@ -30,6 +30,10 @@ our pre/post-processing, not the upstream PyTorch model.
   official ``evaluation.m``), ``--wider-root`` = directory with
   ``WIDER_val/images/`` (Hugging Face CUHK-CSE/wider_face ``data/WIDER_val.zip``)
   and ``eval_tools/ground_truth/`` (official ``eval_tools.zip``).
+* OCR: ICDAR2015 test detection P / R / H-mean and end-to-end word match
+  (``--icdar15-root`` = directory with ``images/`` and ``gt/``; Hugging Face
+  mirror dlxjj/ICDAR2015 ``ch4_test_images.zip`` +
+  ``Challenge4_Test_Task1_GT.zip``).
 * Semantic segmentation: ADE20K val mIoU (150 classes, label 0 ignored),
   ``--ade-root`` = the extracted ADEChallengeData2016 directory
   (http://data.csail.mit.edu/places/ADEchallenge/ADEChallengeData2016.zip).
@@ -441,6 +445,78 @@ def eval_widerface(model: Model, root: Path, provider: str, limit: int | None) -
     }
 
 
+def eval_icdar15(model: Model, root: Path, provider: str, limit: int | None) -> dict:
+    """ICDAR 2015 incidental scene text (Task 4.1 test, 500 images).
+
+    Detection: PaddleOCR ``DetectionIoUEvaluator`` (eval_det_iou.py) —
+    one-to-one matching at IoU > 0.5, '###' ground truth is "don't care" and
+    detections covering a don't-care region by more than 50 % of their area
+    are ignored; P / R / H-mean over the whole set. End-to-end: a matched
+    pair also needs the recognised string to equal the transcription
+    (case-insensitive, no lexicon). ``root`` holds ``images/img_*.jpg`` and
+    ``gt/gt_img_*.txt``.
+    """
+    from shapely.geometry import Polygon
+
+    def poly(p):
+        g = Polygon(np.asarray(p, np.float64).reshape(4, 2))
+        return g if g.is_valid else g.buffer(0)
+
+    t0 = time.perf_counter()
+    runner = model.load_runner(provider=provider)
+    imgs = sorted((root / "images").glob("img_*.jpg"), key=lambda p: int(p.stem.split("_")[1]))[:limit]
+    m_det = m_e2e = n_gt = n_det = 0
+    for f in imgs:
+        gts = []
+        for line in (root / "gt" / f"gt_{f.stem}.txt").read_text(encoding="utf-8-sig").splitlines():
+            parts = line.strip().split(",")
+            if len(parts) >= 9:
+                gts.append((poly([float(v) for v in parts[:8]]), ",".join(parts[8:])))
+        res = runner(cv2.imread(str(f)))
+        dets = [(poly(p), t) for p, t in zip(res.polys, res.texts)]
+        gt_dc = {i for i, (_, t) in enumerate(gts) if t == "###"}
+        det_dc = set()
+        for j, (dp, _) in enumerate(dets):
+            for i in gt_dc:
+                if dp.area > 0 and dp.intersection(gts[i][0]).area / dp.area > 0.5:
+                    det_dc.add(j)
+                    break
+        gt_used, det_used = set(), set()
+        for i, (gp, gt_text) in enumerate(gts):
+            for j, (dp, det_text) in enumerate(dets):
+                if i in gt_used or j in det_used or i in gt_dc or j in det_dc:
+                    continue
+                inter = gp.intersection(dp).area
+                union = gp.area + dp.area - inter
+                if union > 0 and inter / union > 0.5:
+                    gt_used.add(i)
+                    det_used.add(j)
+                    m_det += 1
+                    m_e2e += int(det_text.lower() == gt_text.lower())
+        n_gt += len(gts) - len(gt_dc)
+        n_det += len(dets) - len(det_dc)
+
+    def prh(m):
+        p = m / n_det if n_det else 0.0
+        r = m / n_gt if n_gt else 0.0
+        return p, r, (2 * p * r / (p + r) if p + r else 0.0)
+
+    (dp_, dr_, dh_), (ep_, er_, eh_) = prh(m_det), prh(m_e2e)
+    return {
+        "dataset": "ICDAR2015 test" + (f" (first {limit} images)" if limit else ""),
+        "images": len(imgs),
+        "metrics": {"det_precision": round(dp_ * 100, 1), "det_recall": round(dr_ * 100, 1),
+                    "det_hmean": round(dh_ * 100, 1), "e2e_precision": round(ep_ * 100, 1),
+                    "e2e_recall": round(er_ * 100, 1), "e2e_hmean": round(eh_ * 100, 1)},
+        "settings": {"evaluator": "PaddleOCR DetectionIoUEvaluator logic (IoU > 0.5, '###' don't care, "
+                                  "area precision 0.5); e2e = case-insensitive exact word match",
+                     "drop_score": runner.drop_score,
+                     "data_source": "Hugging Face dlxjj/ICDAR2015 58ed0792a6cd437674036f21ad0488354eda4387 "
+                                    "(mirror of the RRC files; official download needs registration)"},
+        "wall_time_s": round(time.perf_counter() - t0, 1),
+    }
+
+
 def _runner_cls(model: Model):
     import importlib.util
     from tools.mlmc.catalog import RUNNERS
@@ -483,6 +559,7 @@ def main():
     ap.add_argument("--dis-root", type=Path, help="extracted DIS5K (contains DIS-VD/)")
     ap.add_argument("--wider-root", type=Path,
                     help="directory with WIDER_val/images/ and eval_tools/ground_truth/")
+    ap.add_argument("--icdar15-root", type=Path, help="directory with images/ and gt/ (ICDAR2015 test)")
     ap.add_argument("--provider", default="cuda", choices=list(PROVIDERS))
     ap.add_argument("--limit", type=int, help="evaluate only the first N images (smoke test)")
     args = ap.parse_args()
@@ -496,7 +573,8 @@ def main():
                     (["--sintel-root", str(args.sintel_root)] if args.sintel_root else []) + \
                     (["--sr-root", str(args.sr_root)] if args.sr_root else []) + \
                     (["--dis-root", str(args.dis_root)] if args.dis_root else []) + \
-                    (["--wider-root", str(args.wider_root)] if args.wider_root else [])
+                    (["--wider-root", str(args.wider_root)] if args.wider_root else []) + \
+                    (["--icdar15-root", str(args.icdar15_root)] if args.icdar15_root else [])
                 subprocess.run([sys.executable, __file__, "--model", m.name, *roots,
                                 "--provider", args.provider]
                                + (["--limit", str(args.limit)] if args.limit else []))
@@ -533,6 +611,11 @@ def main():
             raise SystemExit("--wider-root is required")
         res = eval_widerface(model, args.wider_root, args.provider, args.limit)
         ds_id = "widerface-val"
+    elif model.task == "ocr":
+        if not args.icdar15_root:
+            raise SystemExit("--icdar15-root is required")
+        res = eval_icdar15(model, args.icdar15_root, args.provider, args.limit)
+        ds_id = "icdar2015-test"
     elif model.task in ("object_detection", "segmentation"):
         if not args.coco_root:
             raise SystemExit("--coco-root is required")

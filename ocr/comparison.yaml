@@ -1,0 +1,8 @@
+# Default line-up and layout for tools/make_comparison.py --task ocr.
+models:
+  - ppocrv6_small
+  - ppocrv6_tiny
+  - ppocrv5_mobile_en
+cols: 3
+tile_width: 400
+fps: 5
