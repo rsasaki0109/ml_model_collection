@@ -187,7 +187,15 @@ def pose_table(models: list[Model], start: Path) -> str:
         row = [f"[{m.display_name}]({rel(m, start)})", m.meta.get("kind", "?"),
                licenses.describe(lic.get("code")), licenses.describe(lic.get("weights")),
                f"{shape[-2]}×{shape[-1]}", accuracy(m, "COCO"), meas_cell, vram_cell(m)]
-        lines.append("| " + " | ".join(row + bench_cells(m, cols)) + " |")
+        cells = []
+        for col in cols:
+            b = find_bench(m, col)
+            if not b:
+                cells.append("–")
+                continue
+            crops = f" ({b['input_shape'][0]} crops)" if b["input_shape"][0] > 1 else ""
+            cells.append(f"{b['latency_ms']['mean']:.1f} / {b['fps']:.0f}{crops}<br>e2e {b['e2e_ms_mean']:.1f} ms")
+        lines.append("| " + " | ".join(row + cells) + " |")
     return "\n".join(lines)
 
 
