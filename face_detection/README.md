@@ -12,7 +12,7 @@ corner) in source pixels.
 | Model | Code license | Weights license | Input | WIDER FACE val AP E / M / H<br>(reported) | WIDER FACE val AP E / M / H<br>(measured, ONNX) | Peak VRAM<br>(measured) | Tesla T4 (Colab)<br>onnxruntime-cuda FP32 · ms / FPS | Tesla T4 (Colab)<br>onnxruntime-tensorrt FP16 · ms / FPS |
 |---|---|---|---|---|---|---|---|---|
 | [RetinaFace-MV2](retinaface_mv2) | 🟢 MIT | 🟢 MIT* | source size | [94.0 / 92.3 / 83.6](https://github.com/yakhyo/retinaface-pytorch/blob/4cd6e3471e5bac794637290a530566f463db4762/README.md) | – | 569 MB (Tiny, T4 CUDA FP32)<br>439 MB (Tiny, T4 TRT FP16) | 20.2 / 50 | 6.6 / 151 |
-| [SCRFD-10G](scrfd_10g) | 🟢 MIT | 🔴 InsightFace-NC | 640×640 | [95.4 / 94.0 / 82.8](https://github.com/deepinsight/insightface/blob/1480e705287bc5d59f923b46c260ec6e3e4150f6/detection/scrfd/README.md) | – | 263 MB (Tiny, T4 CUDA FP32)<br>369 MB (Tiny, T4 TRT FP16) | 10.9 / 92 | 5.4 / 184 |
+| [SCRFD-10G](scrfd_10g) | 🟢 MIT | 🔴 InsightFace-NC | 640×640 | [95.4 / 94.0 / 82.8](https://github.com/deepinsight/insightface/blob/1480e705287bc5d59f923b46c260ec6e3e4150f6/detection/scrfd/README.md) | **95.0** / **93.6** / **82.2** | 263 MB (Tiny, T4 CUDA FP32)<br>369 MB (Tiny, T4 TRT FP16) | 10.9 / 92 | 5.4 / 184 |
 | [YuNet-n](yunet_n) | 🟢 BSD-3-Clause | 🟢 BSD-3-Clause* | source size | [89.2 / 88.3 / 81.1](https://github.com/ShiqiYu/libfacedetection.train/blob/02246e79b1e976c83d1e135a85e0628120c93769/README.md) | – | 203 MB (Tiny, T4 CUDA FP32)<br>371 MB (Tiny, T4 TRT FP16) | 7.8 / 128 | 4.5 / 223 |
 <!-- END:face_detection_table -->
 

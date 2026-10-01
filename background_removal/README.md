@@ -10,8 +10,8 @@ opacity `(H, W)` in [0, 1] at the source resolution.
 <!-- BEGIN:background_removal_table -->
 | Model | Kind | Code license | Weights license | Training data | Input | DIS-VD S<sub>α</sub> / wF<br>(reported) | DIS-VD S<sub>α</sub> / wF / MAE<br>(measured, ONNX) | Peak VRAM<br>(measured) | Tesla T4 (Colab)<br>onnxruntime-cuda FP32 · ms / FPS | Tesla T4 (Colab)<br>onnxruntime-tensorrt FP16 · ms / FPS |
 |---|---|---|---|---|---|---|---|---|---|---|
-| [BEN2-Base](ben2_base) | image (dichotomous segmentation) | 🟢 MIT | 🟢 MIT | DIS5K + 22K proprietary images | 1024×1024 | – | – | 4543 MB (Consumer, T4 CUDA FP32)<br>1525 MB (Tiny, T4 TRT FP16) | 559.9 / 2 | 161.8 / 6 |
-| [BiRefNet-lite](birefnet_lite) | image (dichotomous segmentation) | 🟢 MIT | 🟢 MIT | DIS5K, P3M-10k, DUTS, HRSOD, UHRSD, HRS10K and others (general model) | 1024×1024 | [0.882 / 0.83](https://github.com/ZhengPeng7/BiRefNet/blob/ebcc0bc8ec7fe919cec829f2dea656b3078acddc/README.md) | – | 10749 MB (Performance, T4 CUDA FP32)<br>1471 MB (Tiny, T4 TRT FP16) | 591.9 / 2 | 93.2 / 11 |
+| [BEN2-Base](ben2_base) | image (dichotomous segmentation) | 🟢 MIT | 🟢 MIT | DIS5K + 22K proprietary images | 1024×1024 | – | **0.895 / 0.834 / 0.043** | 4543 MB (Consumer, T4 CUDA FP32)<br>1525 MB (Tiny, T4 TRT FP16) | 559.9 / 2 | 161.8 / 6 |
+| [BiRefNet-lite](birefnet_lite) | image (dichotomous segmentation) | 🟢 MIT | 🟢 MIT | DIS5K, P3M-10k, DUTS, HRSOD, UHRSD, HRS10K and others (general model) | 1024×1024 | [0.882 / 0.83](https://github.com/ZhengPeng7/BiRefNet/blob/ebcc0bc8ec7fe919cec829f2dea656b3078acddc/README.md) | **0.882 / 0.831 / 0.043** | 10749 MB (Performance, T4 CUDA FP32)<br>1471 MB (Tiny, T4 TRT FP16) | 591.9 / 2 | 93.2 / 11 |
 | [RVM-MobileNetV3](rvm_mobilenetv3) | video (recurrent human matting) | 🟡 GPL-3.0 | 🟡 GPL-3.0* | VideoMatte240K, Distinctions-646, Adobe Image Matting, COCO, YouTubeVIS 2021, Supervisely Person | 720×1280 | – | – | 337 MB (Tiny, T4 CUDA FP32) | 16.6 / 60 | – |
 <!-- END:background_removal_table -->
 
@@ -40,8 +40,11 @@ All three use the official ONNX files (SHA-256 pinned).
   (`refine_foreground` is a PyTorch-only extra and not part of the ONNX.)
   **Known issue:** on a GTX 1660 Ti with ONNX Runtime 1.22 CUDA EP the graph
   returns only NaN (CPU is fine; the comparison GIF frames for BEN2 were
-  rendered on CPU). The runner raises on non-finite output instead of
+  rendered on CPU). On a Tesla T4 the CUDA EP output is finite (the DIS-VD
+  evaluation ran there). The runner raises on non-finite output instead of
   producing a matte.
+- RVM is not evaluated on DIS-VD: it is a human video-matting model, and
+  its variable-size inputs made the CUDA evaluation impractically slow.
 - **RVM-MobileNetV3** — release `rvm_mobilenetv3_fp32.onnx`. Recurrent: the
   runner keeps `r1`-`r4` across frames (reset per image in evaluation);
   `downsample_ratio = min(512 / max(h, w), 1)` (upstream's automatic rule;

@@ -17,15 +17,15 @@ Video: "Road traffic on Stritarjeva street" by Sounds of Changes, [CC BY 3.0](ht
 |---|---|---|---|---|
 | [Object detection](#object-detection) | 14 | 🟢11 🟡2 ⚪1 | COCO AP **53.5** — RT-DETRv4-M | RF-DETR-N — 3.7 ms |
 | [Segmentation](#segmentation) | 5 | 🟢4 🔴1 | COCO mask AP **40.1** — RF-DETR-Seg-N | RF-DETR-Seg-N — 5.1 ms |
-| [Depth estimation](#depth-estimation) | 4 | 🟢3 🔴1 | – | Depth-Anything-3-S — 5.2 ms |
+| [Depth estimation](#depth-estimation) | 4 | 🟢3 🔴1 | NYUv2 AbsRel **0.06** — Depth-Anything-V2-B | Depth-Anything-3-S — 5.2 ms |
 | [Pose estimation](#pose-estimation) | 3 | 🟢2 🟡1 | COCO keypoint AP **68.0** — RTMPose-s | YOLO26n-pose — 4.5 ms |
 | [Optical flow](#optical-flow) | 3 | 🟢3 | Sintel final EPE **2.777** — NeuFlow-v2 | NeuFlow-v2 — 16.5 ms |
 | [Super-resolution (x4)](#super-resolution-x4) | 3 | 🟢3 | – | realesr-general-x4v3 — 12.9 ms |
-| [Background removal / matting](#background-removal--matting) | 3 | 🟢2 🟡1 | – | BiRefNet-lite — 93.2 ms |
-| [Face detection](#face-detection) | 3 | 🟢2 🔴1 | – | YuNet-n — 4.5 ms |
-| [OCR (scene text)](#ocr-scene-text) | 3 | 🟢3 | – | – |
-| [Feature matching](#feature-matching) | 3 | 🟢2 🔴1 | – | – |
-| [Multi-object tracking](#multi-object-tracking) | 3 | 🟢3 | – | – |
+| [Background removal / matting](#background-removal--matting) | 3 | 🟢2 🟡1 | DIS-VD S-measure **0.895** — BEN2-Base | BiRefNet-lite — 93.2 ms |
+| [Face detection](#face-detection) | 3 | 🟢2 🔴1 | WIDER FACE hard AP **82.23** — SCRFD-10G | YuNet-n — 4.5 ms |
+| [OCR (scene text)](#ocr-scene-text) | 3 | 🟢3 | ICDAR2015 end-to-end H-mean **30.5** — PP-OCRv6-small | – |
+| [Feature matching](#feature-matching) | 3 | 🟢2 🔴1 | HPatches H-AUC@3px **70.1** — RaCo-ALIKED+LightGlue | SuperPoint+LightGlue — 30.8 ms |
+| [Multi-object tracking](#multi-object-tracking) | 3 | 🟢3 | MOT17-train HOTA **40.6** — ByteTrack | ByteTrack — 6.1 ms |
 <!-- END:task_index -->
 
 <sub>🟢 permissive · 🟡 copyleft · 🔴 non-commercial / restricted · ⚪ unknown (weights license). Accuracy and latency come from the recorded `accuracy.yaml` / `benchmarks.yaml` files; each task section below has the full table with conditions. Every task has a comparison GIF on the same clip.</sub>
@@ -70,10 +70,10 @@ How these models relate to the current state of the art, and which models are pl
 <!-- BEGIN:depth_estimation_table -->
 | Model | Code license | Weights license | Output | Input | NYUv2 AbsRel ↓<br>(reported) | NYUv2 AbsRel ↓ / δ1<br>(measured, ONNX, aligned) | Peak VRAM<br>(measured) | Tesla T4 (Colab)<br>onnxruntime-cuda FP32 · ms / FPS | Tesla T4 (Colab)<br>onnxruntime-tensorrt FP16 · ms / FPS |
 |---|---|---|---|---|---|---|---|---|---|
-| [Depth-Anything-3-S](depth_estimation/depth_anything_3_small) | 🟢 Apache-2.0 | 🟢 Apache-2.0 | relative (depth) | 280×504 | – | – | 507 MB (Tiny, T4 CUDA FP32)<br>447 MB (Tiny, T4 TRT FP16) | 22.1 / 45 | 5.2 / 192 |
-| [Depth-Anything-V2-B](depth_estimation/depth_anything_v2_base) | 🟢 Apache-2.0 | 🔴 CC-BY-NC-4.0 | relative (disparity) | 518×924 | [0.049](https://arxiv.org/abs/2406.09414) | – | 2099 MB (Light, T4 CUDA FP32)<br>697 MB (Tiny, T4 TRT FP16) | 297.3 / 3 | 48.1 / 21 |
-| [Depth-Anything-V2-S](depth_estimation/depth_anything_v2_small) | 🟢 Apache-2.0 | 🟢 Apache-2.0 | relative (disparity) | 518×924 | [0.053](https://arxiv.org/abs/2406.09414) | – | 1013 MB (Tiny, T4 CUDA FP32)<br>495 MB (Tiny, T4 TRT FP16) | 119.4 / 8 | 18.9 / 53 |
-| [MoGe-2-S](depth_estimation/moge2_vits) | 🟢 MIT | 🟢 MIT | metric (m) | 720×1280 | – | – | 1503 MB (Tiny, T4 CUDA FP32) | 203.4 / 5 | – |
+| [Depth-Anything-3-S](depth_estimation/depth_anything_3_small) | 🟢 Apache-2.0 | 🟢 Apache-2.0 | relative (depth) | 280×504 | – | **0.102 / 0.894** | 507 MB (Tiny, T4 CUDA FP32)<br>447 MB (Tiny, T4 TRT FP16) | 22.1 / 45 | 5.2 / 192 |
+| [Depth-Anything-V2-B](depth_estimation/depth_anything_v2_base) | 🟢 Apache-2.0 | 🔴 CC-BY-NC-4.0 | relative (disparity) | 518×924 | [0.049](https://arxiv.org/abs/2406.09414) | **0.060 / 0.959** | 2099 MB (Light, T4 CUDA FP32)<br>697 MB (Tiny, T4 TRT FP16) | 297.3 / 3 | 48.1 / 21 |
+| [Depth-Anything-V2-S](depth_estimation/depth_anything_v2_small) | 🟢 Apache-2.0 | 🟢 Apache-2.0 | relative (disparity) | 518×924 | [0.053](https://arxiv.org/abs/2406.09414) | **0.064 / 0.955** | 1013 MB (Tiny, T4 CUDA FP32)<br>495 MB (Tiny, T4 TRT FP16) | 119.4 / 8 | 18.9 / 53 |
+| [MoGe-2-S](depth_estimation/moge2_vits) | 🟢 MIT | 🟢 MIT | metric (m) | 720×1280 | – | **0.067 / 0.943**<br>metric, unaligned: 0.120 / 0.865 | 1503 MB (Tiny, T4 CUDA FP32) | 203.4 / 5 | – |
 <!-- END:depth_estimation_table -->
 
 Depth-Anything-3-S is the newest (2025-11). Depth-Anything-V2-S and -B share code and architecture, but only **S** has Apache-2.0 weights — **B** is CC-BY-NC-4.0. Relative outputs are per-frame normalised in the GIF. Survey: [docs/sota/depth_estimation.md](docs/sota/depth_estimation.md).
@@ -143,8 +143,8 @@ Each tile is a zoomed crop: left half bicubic upscaling of the low-resolution in
 <!-- BEGIN:background_removal_table -->
 | Model | Kind | Code license | Weights license | Training data | Input | DIS-VD S<sub>α</sub> / wF<br>(reported) | DIS-VD S<sub>α</sub> / wF / MAE<br>(measured, ONNX) | Peak VRAM<br>(measured) | Tesla T4 (Colab)<br>onnxruntime-cuda FP32 · ms / FPS | Tesla T4 (Colab)<br>onnxruntime-tensorrt FP16 · ms / FPS |
 |---|---|---|---|---|---|---|---|---|---|---|
-| [BEN2-Base](background_removal/ben2_base) | image (dichotomous segmentation) | 🟢 MIT | 🟢 MIT | DIS5K + 22K proprietary images | 1024×1024 | – | – | 4543 MB (Consumer, T4 CUDA FP32)<br>1525 MB (Tiny, T4 TRT FP16) | 559.9 / 2 | 161.8 / 6 |
-| [BiRefNet-lite](background_removal/birefnet_lite) | image (dichotomous segmentation) | 🟢 MIT | 🟢 MIT | DIS5K, P3M-10k, DUTS, HRSOD, UHRSD, HRS10K and others (general model) | 1024×1024 | [0.882 / 0.83](https://github.com/ZhengPeng7/BiRefNet/blob/ebcc0bc8ec7fe919cec829f2dea656b3078acddc/README.md) | – | 10749 MB (Performance, T4 CUDA FP32)<br>1471 MB (Tiny, T4 TRT FP16) | 591.9 / 2 | 93.2 / 11 |
+| [BEN2-Base](background_removal/ben2_base) | image (dichotomous segmentation) | 🟢 MIT | 🟢 MIT | DIS5K + 22K proprietary images | 1024×1024 | – | **0.895 / 0.834 / 0.043** | 4543 MB (Consumer, T4 CUDA FP32)<br>1525 MB (Tiny, T4 TRT FP16) | 559.9 / 2 | 161.8 / 6 |
+| [BiRefNet-lite](background_removal/birefnet_lite) | image (dichotomous segmentation) | 🟢 MIT | 🟢 MIT | DIS5K, P3M-10k, DUTS, HRSOD, UHRSD, HRS10K and others (general model) | 1024×1024 | [0.882 / 0.83](https://github.com/ZhengPeng7/BiRefNet/blob/ebcc0bc8ec7fe919cec829f2dea656b3078acddc/README.md) | **0.882 / 0.831 / 0.043** | 10749 MB (Performance, T4 CUDA FP32)<br>1471 MB (Tiny, T4 TRT FP16) | 591.9 / 2 | 93.2 / 11 |
 | [RVM-MobileNetV3](background_removal/rvm_mobilenetv3) | video (recurrent human matting) | 🟡 GPL-3.0 | 🟡 GPL-3.0* | VideoMatte240K, Distinctions-646, Adobe Image Matting, COCO, YouTubeVIS 2021, Supervisely Person | 720×1280 | – | – | 337 MB (Tiny, T4 CUDA FP32) | 16.6 / 60 | – |
 <!-- END:background_removal_table -->
 
@@ -158,7 +158,7 @@ Predicted alpha composited over a solid green background. BiRefNet-lite and BEN2
 | Model | Code license | Weights license | Input | WIDER FACE val AP E / M / H<br>(reported) | WIDER FACE val AP E / M / H<br>(measured, ONNX) | Peak VRAM<br>(measured) | Tesla T4 (Colab)<br>onnxruntime-cuda FP32 · ms / FPS | Tesla T4 (Colab)<br>onnxruntime-tensorrt FP16 · ms / FPS |
 |---|---|---|---|---|---|---|---|---|
 | [RetinaFace-MV2](face_detection/retinaface_mv2) | 🟢 MIT | 🟢 MIT* | source size | [94.0 / 92.3 / 83.6](https://github.com/yakhyo/retinaface-pytorch/blob/4cd6e3471e5bac794637290a530566f463db4762/README.md) | – | 569 MB (Tiny, T4 CUDA FP32)<br>439 MB (Tiny, T4 TRT FP16) | 20.2 / 50 | 6.6 / 151 |
-| [SCRFD-10G](face_detection/scrfd_10g) | 🟢 MIT | 🔴 InsightFace-NC | 640×640 | [95.4 / 94.0 / 82.8](https://github.com/deepinsight/insightface/blob/1480e705287bc5d59f923b46c260ec6e3e4150f6/detection/scrfd/README.md) | – | 263 MB (Tiny, T4 CUDA FP32)<br>369 MB (Tiny, T4 TRT FP16) | 10.9 / 92 | 5.4 / 184 |
+| [SCRFD-10G](face_detection/scrfd_10g) | 🟢 MIT | 🔴 InsightFace-NC | 640×640 | [95.4 / 94.0 / 82.8](https://github.com/deepinsight/insightface/blob/1480e705287bc5d59f923b46c260ec6e3e4150f6/detection/scrfd/README.md) | **95.0** / **93.6** / **82.2** | 263 MB (Tiny, T4 CUDA FP32)<br>369 MB (Tiny, T4 TRT FP16) | 10.9 / 92 | 5.4 / 184 |
 | [YuNet-n](face_detection/yunet_n) | 🟢 BSD-3-Clause | 🟢 BSD-3-Clause* | source size | [89.2 / 88.3 / 81.1](https://github.com/ShiqiYu/libfacedetection.train/blob/02246e79b1e976c83d1e135a85e0628120c93769/README.md) | – | 203 MB (Tiny, T4 CUDA FP32)<br>371 MB (Tiny, T4 TRT FP16) | 7.8 / 128 | 4.5 / 223 |
 <!-- END:face_detection_table -->
 
@@ -171,9 +171,9 @@ Boxes plus five landmarks; the strip at the bottom of each tile enlarges the hig
 <!-- BEGIN:ocr_table -->
 | Model | Code license | Weights license | Languages | PaddleOCR benchmark det Hmean / rec acc<br>(reported, not ICDAR) | ICDAR2015 det H-mean / end-to-end H-mean<br>(measured, ONNX) | Peak VRAM<br>(measured) |
 |---|---|---|---|---|---|---|
-| [PP-OCRv5-mobile-EN](ocr/ppocrv5_mobile_en) | 🟢 Apache-2.0 | 🟢 Apache-2.0 | English (436-entry dictionary) | [75.2](https://huggingface.co/PaddlePaddle/PP-OCRv6_small_det_onnx/blob/28fe5895c24fd108c19eb3e8479f4ab385fbfc62/README.md) / – | – | not measured |
-| [PP-OCRv6-small](ocr/ppocrv6_small) | 🟢 Apache-2.0 | 🟢 Apache-2.0 | multilingual (rec card: 50 languages) | [84.1](https://huggingface.co/PaddlePaddle/PP-OCRv6_small_det_onnx/blob/28fe5895c24fd108c19eb3e8479f4ab385fbfc62/README.md) / [81.3](https://huggingface.co/PaddlePaddle/PP-OCRv6_small_rec_onnx/blob/b8f84f0b80c529de40b4fbb3544b84fa7233a513/README.md) | – | not measured |
-| [PP-OCRv6-tiny](ocr/ppocrv6_tiny) | 🟢 Apache-2.0 | 🟢 Apache-2.0 | multilingual (6904-entry dictionary) | [80.6](https://huggingface.co/PaddlePaddle/PP-OCRv6_tiny_det_onnx/blob/2ba1506c0380b8f0b03dd142459aac66d4421f6c/README.md) / [73.5](https://huggingface.co/PaddlePaddle/PP-OCRv6_tiny_rec_onnx/blob/2612ab37152ae0a677521bae4e1e3d4fb4cf7c30/README.md) | – | not measured |
+| [PP-OCRv5-mobile-EN](ocr/ppocrv5_mobile_en) | 🟢 Apache-2.0 | 🟢 Apache-2.0 | English (436-entry dictionary) | [75.2](https://huggingface.co/PaddlePaddle/PP-OCRv6_small_det_onnx/blob/28fe5895c24fd108c19eb3e8479f4ab385fbfc62/README.md) / – | **43.2 / 25.8** | not measured |
+| [PP-OCRv6-small](ocr/ppocrv6_small) | 🟢 Apache-2.0 | 🟢 Apache-2.0 | multilingual (rec card: 50 languages) | [84.1](https://huggingface.co/PaddlePaddle/PP-OCRv6_small_det_onnx/blob/28fe5895c24fd108c19eb3e8479f4ab385fbfc62/README.md) / [81.3](https://huggingface.co/PaddlePaddle/PP-OCRv6_small_rec_onnx/blob/b8f84f0b80c529de40b4fbb3544b84fa7233a513/README.md) | **47.3 / 30.5** | not measured |
+| [PP-OCRv6-tiny](ocr/ppocrv6_tiny) | 🟢 Apache-2.0 | 🟢 Apache-2.0 | multilingual (6904-entry dictionary) | [80.6](https://huggingface.co/PaddlePaddle/PP-OCRv6_tiny_det_onnx/blob/2ba1506c0380b8f0b03dd142459aac66d4421f6c/README.md) / [73.5](https://huggingface.co/PaddlePaddle/PP-OCRv6_tiny_rec_onnx/blob/2612ab37152ae0a677521bae4e1e3d4fb4cf7c30/README.md) | **43.1 / 21.7** | not measured |
 <!-- END:ocr_table -->
 
 Detection (DB) + recognition (CTC) pipelines from PaddleOCR's official ONNX files, re-implemented pre/post-processing (no Paddle dependency). Speed cells: model-only = text detector; end-to-end = detection + cropping + batched recognition of every line in the demo frame. The reported numbers are PaddleOCR's own multi-scenario benchmark, not ICDAR; the measured ICDAR2015 numbers are zero-shot and penalise line-level detectors, since ICDAR2015 annotates single words. Survey: [docs/sota/ocr.md](docs/sota/ocr.md).
@@ -183,11 +183,11 @@ Detection (DB) + recognition (CTC) pipelines from PaddleOCR's official ONNX file
 ![Feature matching comparison on the same clip](assets/feature_matching_comparison.gif)
 
 <!-- BEGIN:feature_matching_table -->
-| Model | Code license | Weights license | Training data | HPatches H-AUC @1/3/5 px<br>(reported, DLT) | HPatches H-AUC @1/3/5 px<br>(measured, ONNX) | Peak VRAM<br>(measured) |
-|---|---|---|---|---|---|---|
-| [DISK+LightGlue](feature_matching/disk_lightglue) | 🟢 Apache-2.0 | 🟢 Apache-2.0 | MegaDepth | – | – | not measured |
-| [RaCo-ALIKED+LightGlue](feature_matching/raco_aliked_lightglue) | 🟢 Apache-2.0 | 🟢 Apache-2.0* | Oxford-Paris 1M distractors (synthetic homographies), MegaDepth | [40.4 / 71.1 / 80.5](https://github.com/cvg/RaCo/blob/35790eb48074ed14839d0fb496b8806caa4e766b/README.md) | – | not measured |
-| [SuperPoint+LightGlue](feature_matching/superpoint_lightglue) | 🟢 Apache-2.0 | 🔴 MagicLeap-NC | MS-COCO 2014 + synthetic shapes (SuperPoint); MegaDepth (LightGlue) | [35.1 / 67.2 / 77.6](https://github.com/cvg/glue-factory/blob/2d17e3b3bd7d30f0c828d4c4d3eac4ecefbf283d/README.md) | – | not measured |
+| Model | Code license | Weights license | Training data | HPatches H-AUC @1/3/5 px<br>(reported, DLT) | HPatches H-AUC @1/3/5 px<br>(measured, ONNX) | Peak VRAM<br>(measured) | Tesla T4 (Colab)<br>onnxruntime-cuda FP32 · ms / FPS | Tesla T4 (Colab)<br>onnxruntime-tensorrt FP16 · ms / FPS |
+|---|---|---|---|---|---|---|---|---|
+| [DISK+LightGlue](feature_matching/disk_lightglue) | 🟢 Apache-2.0 | 🟢 Apache-2.0 | MegaDepth | – | **28.6** / **60.5** / **72.9** | 2723 MB (Light, T4 CUDA FP32)<br>1091 MB (Tiny, T4 TRT FP16) | 214.3 / 5 | 63.8 / 16 |
+| [RaCo-ALIKED+LightGlue](feature_matching/raco_aliked_lightglue) | 🟢 Apache-2.0 | 🟢 Apache-2.0* | Oxford-Paris 1M distractors (synthetic homographies), MegaDepth | [40.4 / 71.1 / 80.5](https://github.com/cvg/RaCo/blob/35790eb48074ed14839d0fb496b8806caa4e766b/README.md) | **38.5** / **70.1** / **80.3** | 4355 MB (Consumer, T4 CUDA FP32)<br>993 MB (Tiny, T4 TRT FP16) | 1808.2 / 1 | 71.3 / 14 |
+| [SuperPoint+LightGlue](feature_matching/superpoint_lightglue) | 🟢 Apache-2.0 | 🔴 MagicLeap-NC | MS-COCO 2014 + synthetic shapes (SuperPoint); MegaDepth (LightGlue) | [35.1 / 67.2 / 77.6](https://github.com/cvg/glue-factory/blob/2d17e3b3bd7d30f0c828d4c4d3eac4ecefbf283d/README.md) | **36.2** / **68.0** / **78.0** | 905 MB (Tiny, T4 CUDA FP32)<br>865 MB (Tiny, T4 TRT FP16) | 82.3 / 12 | 30.8 / 32 |
 <!-- END:feature_matching_table -->
 
 Sparse keypoints + LightGlue between consecutive frames (each line: previous → current position, colour = match score). End-to-end ONNX pipelines from [fabio-sim/LightGlue-ONNX](https://github.com/fabio-sim/LightGlue-ONNX), 1024 keypoints, 448×800 per frame for video. HPatches uses the glue-factory protocol (short side 480, weighted DLT, corner-error AUC). **SuperPoint's weights are Magic Leap non-commercial** — included only as the classic reference; RaCo-ALIKED and DISK are permissive end to end. Survey: [docs/sota/feature_matching.md](docs/sota/feature_matching.md).
@@ -197,11 +197,11 @@ Sparse keypoints + LightGlue between consecutive frames (each line: previous →
 ![Tracking comparison on the same clip](assets/tracking_comparison.gif)
 
 <!-- BEGIN:tracking_table -->
-| Tracker | Code license | Detector | Appearance / camera motion | MOT17 test HOTA / MOTA / IDF1<br>(reported, MOT-trained detector) | MOT17 train HOTA / MOTA / IDF1<br>(measured, our detector) |
-|---|---|---|---|---|---|
-| [BoT-SORT](tracking/botsort) | 🟢 Apache-2.0 | [D-FINE-S](object_detection/dfine_s) | no ReID; sparse-flow camera motion | [64.6 / 80.6 / 79.5](https://github.com/NirAharon/BoT-SORT/blob/251985436d6712aaf682aaaf5f71edb4987224bd/README.md) | – |
-| [ByteTrack](tracking/bytetrack) | 🟢 Apache-2.0 | [D-FINE-S](object_detection/dfine_s) | motion only | [63.1 / 80.3 / 77.3](https://github.com/ifzhang/ByteTrack/blob/d1bf0191adff59bc8fcfeaa0b33d3d1642552a99/README.md) | – |
-| [OC-SORT](tracking/ocsort) | 🟢 Apache-2.0 | [D-FINE-S](object_detection/dfine_s) | motion only (observation-centric) | [63.2 / 78.0 / 77.5](https://github.com/noahcao/OC_SORT/blob/8462e7e729a93ccd3bd995c0a79a890336cb3a0b/README.md) | – |
+| Tracker | Code license | Detector | Appearance / camera motion | MOT17 test HOTA / MOTA / IDF1<br>(reported, MOT-trained detector) | MOT17 train HOTA / MOTA / IDF1<br>(measured, our detector) | Tesla T4 (Colab)<br>onnxruntime-cuda FP32 · ms / FPS | Tesla T4 (Colab)<br>onnxruntime-tensorrt FP16 · ms / FPS |
+|---|---|---|---|---|---|---|---|
+| [BoT-SORT](tracking/botsort) | 🟢 Apache-2.0 | [D-FINE-S](object_detection/dfine_s) | no ReID; sparse-flow camera motion | [64.6 / 80.6 / 79.5](https://github.com/NirAharon/BoT-SORT/blob/251985436d6712aaf682aaaf5f71edb4987224bd/README.md) | **39.6** / **33.8** / **46.0** | 17.9 / 56 | 6.1 / 163 |
+| [ByteTrack](tracking/bytetrack) | 🟢 Apache-2.0 | [D-FINE-S](object_detection/dfine_s) | motion only | [63.1 / 80.3 / 77.3](https://github.com/ifzhang/ByteTrack/blob/d1bf0191adff59bc8fcfeaa0b33d3d1642552a99/README.md) | **40.6** / **36.9** / **48.6** | 18.2 / 55 | 6.1 / 164 |
+| [OC-SORT](tracking/ocsort) | 🟢 Apache-2.0 | [D-FINE-S](object_detection/dfine_s) | motion only (observation-centric) | [63.2 / 78.0 / 77.5](https://github.com/noahcao/OC_SORT/blob/8462e7e729a93ccd3bd995c0a79a890336cb3a0b/README.md) | **37.0** / **31.8** / **42.6** | 18.1 / 55 | 6.1 / 163 |
 <!-- END:tracking_table -->
 
 Tracking by detection on D-FINE-S person boxes (Apache-2.0 detector, COCO-only). The three trackers are implemented from scratch in NumPy for this repository (`tools/mlmc/tracking.py`, Apache-2.0) from the papers and published defaults — the popular reference code is MIT but its Kalman filter comes from GPL-3.0 DeepSORT, and the common libraries (boxmot, Ultralytics) are AGPL-3.0. Speed cells: model-only = detector; end-to-end = detector + tracker. MOT17-train numbers use our COCO detector, so they compare trackers here, not with the MOTChallenge leaderboard (MOT-trained detectors). Survey: [docs/sota/tracking.md](docs/sota/tracking.md).

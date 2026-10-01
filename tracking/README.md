@@ -10,11 +10,11 @@ A tracker "model" here is an algorithm plus a detector from this collection
 ## Comparison
 
 <!-- BEGIN:tracking_table -->
-| Tracker | Code license | Detector | Appearance / camera motion | MOT17 test HOTA / MOTA / IDF1<br>(reported, MOT-trained detector) | MOT17 train HOTA / MOTA / IDF1<br>(measured, our detector) |
-|---|---|---|---|---|---|
-| [BoT-SORT](botsort) | 🟢 Apache-2.0 | [D-FINE-S](../object_detection/dfine_s) | no ReID; sparse-flow camera motion | [64.6 / 80.6 / 79.5](https://github.com/NirAharon/BoT-SORT/blob/251985436d6712aaf682aaaf5f71edb4987224bd/README.md) | – |
-| [ByteTrack](bytetrack) | 🟢 Apache-2.0 | [D-FINE-S](../object_detection/dfine_s) | motion only | [63.1 / 80.3 / 77.3](https://github.com/ifzhang/ByteTrack/blob/d1bf0191adff59bc8fcfeaa0b33d3d1642552a99/README.md) | – |
-| [OC-SORT](ocsort) | 🟢 Apache-2.0 | [D-FINE-S](../object_detection/dfine_s) | motion only (observation-centric) | [63.2 / 78.0 / 77.5](https://github.com/noahcao/OC_SORT/blob/8462e7e729a93ccd3bd995c0a79a890336cb3a0b/README.md) | – |
+| Tracker | Code license | Detector | Appearance / camera motion | MOT17 test HOTA / MOTA / IDF1<br>(reported, MOT-trained detector) | MOT17 train HOTA / MOTA / IDF1<br>(measured, our detector) | Tesla T4 (Colab)<br>onnxruntime-cuda FP32 · ms / FPS | Tesla T4 (Colab)<br>onnxruntime-tensorrt FP16 · ms / FPS |
+|---|---|---|---|---|---|---|---|
+| [BoT-SORT](botsort) | 🟢 Apache-2.0 | [D-FINE-S](../object_detection/dfine_s) | no ReID; sparse-flow camera motion | [64.6 / 80.6 / 79.5](https://github.com/NirAharon/BoT-SORT/blob/251985436d6712aaf682aaaf5f71edb4987224bd/README.md) | **39.6** / **33.8** / **46.0** | 17.9 / 56 | 6.1 / 163 |
+| [ByteTrack](bytetrack) | 🟢 Apache-2.0 | [D-FINE-S](../object_detection/dfine_s) | motion only | [63.1 / 80.3 / 77.3](https://github.com/ifzhang/ByteTrack/blob/d1bf0191adff59bc8fcfeaa0b33d3d1642552a99/README.md) | **40.6** / **36.9** / **48.6** | 18.2 / 55 | 6.1 / 164 |
+| [OC-SORT](ocsort) | 🟢 Apache-2.0 | [D-FINE-S](../object_detection/dfine_s) | motion only (observation-centric) | [63.2 / 78.0 / 77.5](https://github.com/noahcao/OC_SORT/blob/8462e7e729a93ccd3bd995c0a79a890336cb3a0b/README.md) | **37.0** / **31.8** / **42.6** | 18.1 / 55 | 6.1 / 163 |
 <!-- END:tracking_table -->
 
 ## Implementation
