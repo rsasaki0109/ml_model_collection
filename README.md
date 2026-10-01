@@ -10,6 +10,23 @@ Every number below was measured by a script in this repo, under the conditions r
 <sub>Current real-time SOTA, small sizes: same frames, same tile size, six models ([line-up](object_detection/comparison.yaml), [why these](docs/sota/object_detection.md)). Regenerate with `python tools/make_comparison.py --task object_detection --input assets/demo.mp4`.
 Video: "Road traffic on Stritarjeva street" by Sounds of Changes, [CC BY 3.0](https://creativecommons.org/licenses/by/3.0), via [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Road_traffic_on_Stritarjeva_street.webm) — trimmed, scaled, and annotated with model outputs ([details](assets/README.md)).</sub>
 
+## Tasks
+
+<!-- BEGIN:task_index -->
+| Task | Models | Weights licenses | Best measured accuracy | Fastest on T4 TensorRT FP16<br>(model-only latency) |
+|---|---|---|---|---|
+| [Object detection](#object-detection) | 14 | 🟢11 🟡2 ⚪1 | COCO AP **53.5** — RT-DETRv4-M | RF-DETR-N — 3.7 ms |
+| [Segmentation](#segmentation) | 5 | 🟢4 🔴1 | COCO mask AP **40.1** — RF-DETR-Seg-N | RF-DETR-Seg-N — 5.1 ms |
+| [Depth estimation](#depth-estimation) | 4 | 🟢3 🔴1 | – | Depth-Anything-3-S — 5.2 ms |
+| [Pose estimation](#pose-estimation) | 3 | 🟢2 🟡1 | COCO keypoint AP **68.0** — RTMPose-s | YOLO26n-pose — 4.5 ms |
+| [Optical flow](#optical-flow) | 3 | 🟢3 | Sintel final EPE **2.777** — NeuFlow-v2 | NeuFlow-v2 — 16.5 ms |
+| [Super-resolution (x4)](#super-resolution-x4) | 3 | 🟢3 | – | – |
+| [Background removal / matting](#background-removal--matting) | 3 | 🟢2 🟡1 | – | – |
+| [Face detection](#face-detection) | 3 | 🟢2 🔴1 | – | – |
+<!-- END:task_index -->
+
+<sub>🟢 permissive · 🟡 copyleft · 🔴 non-commercial / restricted · ⚪ unknown (weights license). Accuracy and latency come from the recorded `accuracy.yaml` / `benchmarks.yaml` files; each task section below has the full table with conditions. Every task has a comparison GIF on the same clip.</sub>
+
 ## Object detection
 
 <!-- BEGIN:object_detection_table -->

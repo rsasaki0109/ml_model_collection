@@ -291,6 +291,57 @@ def face_table(models: list[Model], start: Path) -> str:
     return "\n".join(lines)
 
 
+# task -> (section title, measured metric: dataset prefix, key, higher is better, label)
+TASK_INDEX = {
+    "object_detection": ("Object detection", ("COCO val2017", "AP", True, "COCO AP")),
+    "segmentation": ("Segmentation", ("COCO val2017", "AP", True, "COCO mask AP")),
+    "depth_estimation": ("Depth estimation", None),
+    "pose_estimation": ("Pose estimation", ("COCO val2017 keypoints", "AP", True, "COCO keypoint AP")),
+    "optical_flow": ("Optical flow", ("MPI-Sintel train", "final_EPE", False, "Sintel final EPE")),
+    "super_resolution": ("Super-resolution (x4)", ("SR benchmarks x4", "Urban100_PSNR_Y", True, "Urban100 PSNR-Y")),
+    "background_removal": ("Background removal / matting", ("DIS5K DIS-VD", "S_measure", True, "DIS-VD S-measure")),
+    "face_detection": ("Face detection", ("WIDER FACE val", "AP_hard", True, "WIDER FACE hard AP")),
+}
+
+
+def _anchor(title: str) -> str:
+    return "#" + "".join(c for c in title.lower().replace(" ", "-") if c.isalnum() or c == "-")
+
+
+def task_index(models: list[Model], start: Path) -> str:
+    """One row per task: model count, weights-license mix, best measured
+    accuracy and lowest T4 TensorRT FP16 latency (each from recorded files)."""
+    head = ["Task", "Models", "Weights licenses", "Best measured accuracy", "Fastest on T4 TensorRT FP16<br>(model-only latency)"]
+    lines = ["| " + " | ".join(head) + " |", "|" + "---|" * len(head)]
+    for task, (title, spec) in TASK_INDEX.items():
+        ms = [m for m in models if m.task == task]
+        if not ms:
+            continue
+        cats = {}
+        for m in ms:
+            c = licenses.category(m.meta.get("license", {}).get("weights", {}).get("spdx"))
+            cats[c] = cats.get(c, 0) + 1
+        mix = " ".join(f"{licenses.BADGE[c]}{n}" for c, n in sorted(cats.items(), key=lambda kv: -kv[1]))
+        best = "–"
+        if spec:
+            ds, key, higher, label = spec
+            vals = [(r["metrics"][key], m) for m in ms for r in m.accuracy
+                    if key in r["metrics"] and (r.get("dataset") == ds
+                                                or r.get("dataset", "").startswith(ds + " ("))]
+            if vals:
+                v, m = (max if higher else min)(vals, key=lambda t: t[0])
+                best = f"{label} **{v}** — {m.display_name}"
+        trt = [(b["latency_ms"]["mean"], m) for m in ms for b in m.benchmarks
+               if b.get("hardware", {}).get("gpu") == "Tesla T4" and b.get("runtime") == "onnxruntime-tensorrt"
+               and b.get("precision") == "fp16"]
+        fast = "–"
+        if trt:
+            t, m = min(trt, key=lambda x: x[0])
+            fast = f"{m.display_name} — {t:.1f} ms"
+        lines.append(f"| [{title}]({_anchor(title)}) | {len(ms)} | {mix} | {best} | {fast} |")
+    return "\n".join(lines)
+
+
 OD, DE, SG, PE, OF, SR, BG = ("object_detection", "depth_estimation", "segmentation",
                               "pose_estimation", "optical_flow", "super_resolution",
                               "background_removal")
@@ -304,6 +355,7 @@ TABLES = {
     (REPO_ROOT / "README.md", "segmentation_table"): (SG, segmentation_table),
     (REPO_ROOT / SG / "README.md", "segmentation_table"): (SG, segmentation_table),
     (REPO_ROOT / SG / "README.md", "segmentation_provenance"): (SG, provenance_table),
+    (REPO_ROOT / "README.md", "task_index"): (None, task_index),
     (REPO_ROOT / "README.md", "pose_estimation_table"): (PE, pose_table),
     (REPO_ROOT / PE / "README.md", "pose_estimation_table"): (PE, pose_table),
     (REPO_ROOT / PE / "README.md", "pose_estimation_provenance"): (PE, provenance_table),
