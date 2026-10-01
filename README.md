@@ -20,10 +20,10 @@ Video: "Road traffic on Stritarjeva street" by Sounds of Changes, [CC BY 3.0](ht
 | [Depth estimation](#depth-estimation) | 4 | 🟢3 🔴1 | NYUv2 AbsRel **0.06** — Depth-Anything-V2-B | Depth-Anything-3-S — 5.2 ms |
 | [Pose estimation](#pose-estimation) | 3 | 🟢2 🟡1 | COCO keypoint AP **68.0** — RTMPose-s | YOLO26n-pose — 4.5 ms |
 | [Optical flow](#optical-flow) | 3 | 🟢3 | Sintel final EPE **2.777** — NeuFlow-v2 | NeuFlow-v2 — 16.5 ms |
-| [Super-resolution (x4)](#super-resolution-x4) | 3 | 🟢3 | – | realesr-general-x4v3 — 12.9 ms |
+| [Super-resolution (x4)](#super-resolution-x4) | 3 | 🟢3 | Urban100 PSNR-Y **25.98** — SAFMN-x4 | realesr-general-x4v3 — 12.9 ms |
 | [Background removal / matting](#background-removal--matting) | 3 | 🟢2 🟡1 | DIS-VD S-measure **0.895** — BEN2-Base | BiRefNet-lite — 93.2 ms |
-| [Face detection](#face-detection) | 3 | 🟢2 🔴1 | WIDER FACE hard AP **82.23** — SCRFD-10G | YuNet-n — 4.5 ms |
-| [OCR (scene text)](#ocr-scene-text) | 3 | 🟢3 | ICDAR2015 end-to-end H-mean **30.5** — PP-OCRv6-small | – |
+| [Face detection](#face-detection) | 3 | 🟢2 🔴1 | WIDER FACE hard AP **83.73** — RetinaFace-MV2 | YuNet-n — 4.5 ms |
+| [OCR (scene text)](#ocr-scene-text) | 3 | 🟢3 | ICDAR2015 end-to-end H-mean **30.5** — PP-OCRv6-small | PP-OCRv5-mobile-EN — 5.0 ms |
 | [Feature matching](#feature-matching) | 3 | 🟢2 🔴1 | HPatches H-AUC@3px **70.1** — RaCo-ALIKED+LightGlue | SuperPoint+LightGlue — 30.8 ms |
 | [Multi-object tracking](#multi-object-tracking) | 3 | 🟢3 | MOT17-train HOTA **40.6** — ByteTrack | ByteTrack — 6.1 ms |
 <!-- END:task_index -->
@@ -129,9 +129,9 @@ Dense two-frame flow, previous frame → current frame; colour = direction, satu
 <!-- BEGIN:super_resolution_table -->
 | Model | Kind | Code license | Weights license | Training data | PSNR-Y x4 Set5 / Set14 / Urban100<br>(reported) | PSNR-Y x4 Set5 / Set14 / Urban100<br>(measured, ONNX) | Peak VRAM<br>(measured) | Tesla T4 (Colab)<br>onnxruntime-cuda FP32 · ms / FPS | Tesla T4 (Colab)<br>onnxruntime-tensorrt FP16 · ms / FPS |
 |---|---|---|---|---|---|---|---|---|---|
-| [Real-ESRGAN-x4plus](super_resolution/real_esrgan_x4plus) | real-world (GAN) | 🟢 BSD-3-Clause | 🟢 BSD-3-Clause* | DF2K (DIV2K + Flickr2K) + OST | – | – | 1435 MB (Tiny, T4 CUDA FP32)<br>881 MB (Tiny, T4 TRT FP16) | 541.4 / 2 | 203.5 / 5 |
-| [realesr-general-x4v3](super_resolution/realesr_general_x4v3) | real-world (GAN) | 🟢 BSD-3-Clause | 🟢 BSD-3-Clause* | not documented upstream | – | – | 219 MB (Tiny, T4 CUDA FP32)<br>361 MB (Tiny, T4 TRT FP16) | 35.6 / 28 | 12.9 / 77 |
-| [SAFMN-x4](super_resolution/safmn_x4) | PSNR-oriented | 🟢 Apache-2.0 | 🟢 Apache-2.0* | DF2K (DIV2K + Flickr2K) | [32.18 / 28.60 / 25.97](https://arxiv.org/abs/2302.13800) | – | 299 MB (Tiny, T4 CUDA FP32)<br>425 MB (Tiny, T4 TRT FP16) | 27.3 / 37 | 14.7 / 68 |
+| [Real-ESRGAN-x4plus](super_resolution/real_esrgan_x4plus) | real-world (GAN) | 🟢 BSD-3-Clause | 🟢 BSD-3-Clause* | DF2K (DIV2K + Flickr2K) + OST | – | **26.62** / **25.42** / **22.67** | 1435 MB (Tiny, T4 CUDA FP32)<br>881 MB (Tiny, T4 TRT FP16) | 541.4 / 2 | 203.5 / 5 |
+| [realesr-general-x4v3](super_resolution/realesr_general_x4v3) | real-world (GAN) | 🟢 BSD-3-Clause | 🟢 BSD-3-Clause* | not documented upstream | – | **26.64** / **25.19** / **22.52** | 219 MB (Tiny, T4 CUDA FP32)<br>361 MB (Tiny, T4 TRT FP16) | 35.6 / 28 | 12.9 / 77 |
+| [SAFMN-x4](super_resolution/safmn_x4) | PSNR-oriented | 🟢 Apache-2.0 | 🟢 Apache-2.0* | DF2K (DIV2K + Flickr2K) | [32.18 / 28.60 / 25.97](https://arxiv.org/abs/2302.13800) | **32.15** / **28.61** / **25.98** | 299 MB (Tiny, T4 CUDA FP32)<br>425 MB (Tiny, T4 TRT FP16) | 27.3 / 37 | 14.7 / 68 |
 <!-- END:super_resolution_table -->
 
 Each tile is a zoomed crop: left half bicubic upscaling of the low-resolution input, right half the model. Video runs and benchmarks downscale every frame to 320×180 (bicubic) and upscale it x4 to 1280×720; the graphs themselves take any size. PSNR-Y follows BasicSR (BT.601 Y, 4 px border). The Real-ESRGAN models are GAN-trained for real-world images, so PSNR is not their target. **DIV2K (in DF2K) is "for academic research purpose only"** — permissive code and weights do not change the training-data terms. Survey: [docs/sota/super_resolution.md](docs/sota/super_resolution.md).
@@ -157,9 +157,9 @@ Predicted alpha composited over a solid green background. BiRefNet-lite and BEN2
 <!-- BEGIN:face_detection_table -->
 | Model | Code license | Weights license | Input | WIDER FACE val AP E / M / H<br>(reported) | WIDER FACE val AP E / M / H<br>(measured, ONNX) | Peak VRAM<br>(measured) | Tesla T4 (Colab)<br>onnxruntime-cuda FP32 · ms / FPS | Tesla T4 (Colab)<br>onnxruntime-tensorrt FP16 · ms / FPS |
 |---|---|---|---|---|---|---|---|---|
-| [RetinaFace-MV2](face_detection/retinaface_mv2) | 🟢 MIT | 🟢 MIT* | source size | [94.0 / 92.3 / 83.6](https://github.com/yakhyo/retinaface-pytorch/blob/4cd6e3471e5bac794637290a530566f463db4762/README.md) | – | 569 MB (Tiny, T4 CUDA FP32)<br>439 MB (Tiny, T4 TRT FP16) | 20.2 / 50 | 6.6 / 151 |
+| [RetinaFace-MV2](face_detection/retinaface_mv2) | 🟢 MIT | 🟢 MIT* | source size | [94.0 / 92.3 / 83.6](https://github.com/yakhyo/retinaface-pytorch/blob/4cd6e3471e5bac794637290a530566f463db4762/README.md) | **94.0** / **92.3** / **83.7** | 569 MB (Tiny, T4 CUDA FP32)<br>439 MB (Tiny, T4 TRT FP16) | 20.2 / 50 | 6.6 / 151 |
 | [SCRFD-10G](face_detection/scrfd_10g) | 🟢 MIT | 🔴 InsightFace-NC | 640×640 | [95.4 / 94.0 / 82.8](https://github.com/deepinsight/insightface/blob/1480e705287bc5d59f923b46c260ec6e3e4150f6/detection/scrfd/README.md) | **95.0** / **93.6** / **82.2** | 263 MB (Tiny, T4 CUDA FP32)<br>369 MB (Tiny, T4 TRT FP16) | 10.9 / 92 | 5.4 / 184 |
-| [YuNet-n](face_detection/yunet_n) | 🟢 BSD-3-Clause | 🟢 BSD-3-Clause* | source size | [89.2 / 88.3 / 81.1](https://github.com/ShiqiYu/libfacedetection.train/blob/02246e79b1e976c83d1e135a85e0628120c93769/README.md) | – | 203 MB (Tiny, T4 CUDA FP32)<br>371 MB (Tiny, T4 TRT FP16) | 7.8 / 128 | 4.5 / 223 |
+| [YuNet-n](face_detection/yunet_n) | 🟢 BSD-3-Clause | 🟢 BSD-3-Clause* | source size | [89.2 / 88.3 / 81.1](https://github.com/ShiqiYu/libfacedetection.train/blob/02246e79b1e976c83d1e135a85e0628120c93769/README.md) | **89.3** / **88.5** / **81.5** | 203 MB (Tiny, T4 CUDA FP32)<br>371 MB (Tiny, T4 TRT FP16) | 7.8 / 128 | 4.5 / 223 |
 <!-- END:face_detection_table -->
 
 Boxes plus five landmarks; the strip at the bottom of each tile enlarges the highest-scoring faces (faces in the demo clip are ~10 px tall). YuNet and RetinaFace run at the source resolution, SCRFD at 640×640 (its graph's outputs are fixed), each as in its upstream WIDER FACE protocol. **WIDER FACE — the training set of all three — is CC BY-NC-ND**, and **InsightFace's pretrained models (SCRFD) are non-commercial research only**; mirrors that relabel SCRFD as MIT contradict upstream. Survey: [docs/sota/face_detection.md](docs/sota/face_detection.md).
@@ -169,11 +169,11 @@ Boxes plus five landmarks; the strip at the bottom of each tile enlarges the hig
 ![OCR comparison on the same clip](assets/ocr_comparison.gif)
 
 <!-- BEGIN:ocr_table -->
-| Model | Code license | Weights license | Languages | PaddleOCR benchmark det Hmean / rec acc<br>(reported, not ICDAR) | ICDAR2015 det H-mean / end-to-end H-mean<br>(measured, ONNX) | Peak VRAM<br>(measured) |
-|---|---|---|---|---|---|---|
-| [PP-OCRv5-mobile-EN](ocr/ppocrv5_mobile_en) | 🟢 Apache-2.0 | 🟢 Apache-2.0 | English (436-entry dictionary) | [75.2](https://huggingface.co/PaddlePaddle/PP-OCRv6_small_det_onnx/blob/28fe5895c24fd108c19eb3e8479f4ab385fbfc62/README.md) / – | **43.2 / 25.8** | not measured |
-| [PP-OCRv6-small](ocr/ppocrv6_small) | 🟢 Apache-2.0 | 🟢 Apache-2.0 | multilingual (rec card: 50 languages) | [84.1](https://huggingface.co/PaddlePaddle/PP-OCRv6_small_det_onnx/blob/28fe5895c24fd108c19eb3e8479f4ab385fbfc62/README.md) / [81.3](https://huggingface.co/PaddlePaddle/PP-OCRv6_small_rec_onnx/blob/b8f84f0b80c529de40b4fbb3544b84fa7233a513/README.md) | **47.3 / 30.5** | not measured |
-| [PP-OCRv6-tiny](ocr/ppocrv6_tiny) | 🟢 Apache-2.0 | 🟢 Apache-2.0 | multilingual (6904-entry dictionary) | [80.6](https://huggingface.co/PaddlePaddle/PP-OCRv6_tiny_det_onnx/blob/2ba1506c0380b8f0b03dd142459aac66d4421f6c/README.md) / [73.5](https://huggingface.co/PaddlePaddle/PP-OCRv6_tiny_rec_onnx/blob/2612ab37152ae0a677521bae4e1e3d4fb4cf7c30/README.md) | **43.1 / 21.7** | not measured |
+| Model | Code license | Weights license | Languages | PaddleOCR benchmark det Hmean / rec acc<br>(reported, not ICDAR) | ICDAR2015 det H-mean / end-to-end H-mean<br>(measured, ONNX) | Peak VRAM<br>(measured) | Tesla T4 (Colab)<br>onnxruntime-cuda FP32 · ms / FPS | Tesla T4 (Colab)<br>onnxruntime-tensorrt FP16 · ms / FPS |
+|---|---|---|---|---|---|---|---|---|
+| [PP-OCRv5-mobile-EN](ocr/ppocrv5_mobile_en) | 🟢 Apache-2.0 | 🟢 Apache-2.0 | English (436-entry dictionary) | [75.2](https://huggingface.co/PaddlePaddle/PP-OCRv6_small_det_onnx/blob/28fe5895c24fd108c19eb3e8479f4ab385fbfc62/README.md) / – | **43.2 / 25.8** | 353 MB (Tiny, T4 CUDA FP32)<br>445 MB (Tiny, T4 TRT FP16) | 13.0 / 77 | 5.0 / 201 |
+| [PP-OCRv6-small](ocr/ppocrv6_small) | 🟢 Apache-2.0 | 🟢 Apache-2.0 | multilingual (rec card: 50 languages) | [84.1](https://huggingface.co/PaddlePaddle/PP-OCRv6_small_det_onnx/blob/28fe5895c24fd108c19eb3e8479f4ab385fbfc62/README.md) / [81.3](https://huggingface.co/PaddlePaddle/PP-OCRv6_small_rec_onnx/blob/b8f84f0b80c529de40b4fbb3544b84fa7233a513/README.md) | **47.3 / 30.5** | 465 MB (Tiny, T4 CUDA FP32)<br>429 MB (Tiny, T4 TRT FP16) | 21.0 / 48 | 9.0 / 112 |
+| [PP-OCRv6-tiny](ocr/ppocrv6_tiny) | 🟢 Apache-2.0 | 🟢 Apache-2.0 | multilingual (6904-entry dictionary) | [80.6](https://huggingface.co/PaddlePaddle/PP-OCRv6_tiny_det_onnx/blob/2ba1506c0380b8f0b03dd142459aac66d4421f6c/README.md) / [73.5](https://huggingface.co/PaddlePaddle/PP-OCRv6_tiny_rec_onnx/blob/2612ab37152ae0a677521bae4e1e3d4fb4cf7c30/README.md) | **43.1 / 21.7** | 371 MB (Tiny, T4 CUDA FP32)<br>459 MB (Tiny, T4 TRT FP16) | 12.8 / 78 | 6.8 / 148 |
 <!-- END:ocr_table -->
 
 Detection (DB) + recognition (CTC) pipelines from PaddleOCR's official ONNX files, re-implemented pre/post-processing (no Paddle dependency). Speed cells: model-only = text detector; end-to-end = detection + cropping + batched recognition of every line in the demo frame. The reported numbers are PaddleOCR's own multi-scenario benchmark, not ICDAR; the measured ICDAR2015 numbers are zero-shot and penalise line-level detectors, since ICDAR2015 annotates single words. Survey: [docs/sota/ocr.md](docs/sota/ocr.md).
