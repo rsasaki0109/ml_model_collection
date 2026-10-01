@@ -414,12 +414,14 @@ def eval_widerface(model: Model, root: Path, provider: str, limit: int | None) -
                     elif recall[j] == 0:
                         recall[j] = 1
                 pred_recall[h] = (recall == 1).sum()
-            for t in range(thresh_num):
-                idx = np.flatnonzero(pred[:, 4] >= 1 - (t + 1) / thresh_num)
-                if len(idx):
-                    r = idx[-1]
-                    pr_curve[t, 0] += (proposal[:r + 1] == 1).sum()
-                    pr_curve[t, 1] += pred_recall[r]
+            # For each threshold, the last prediction with score >= threshold
+            # (scores are sorted descending): vectorised form of the official loop.
+            thr = 1 - (np.arange(thresh_num) + 1) / thresh_num
+            n = np.searchsorted(-pred[:, 4], -thr, side="right")
+            has = n > 0
+            r = n[has] - 1
+            pr_curve[has, 0] += np.cumsum(proposal == 1)[r]
+            pr_curve[has, 1] += pred_recall[r]
         prec = np.divide(pr_curve[:, 1], pr_curve[:, 0], out=np.zeros(thresh_num), where=pr_curve[:, 0] > 0)
         rec = pr_curve[:, 1] / max(count_face, 1)
         mrec = np.concatenate([[0.0], rec, [1.0]])
