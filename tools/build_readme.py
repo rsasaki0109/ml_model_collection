@@ -122,7 +122,8 @@ OUTPUT_LABEL = {"relative_disparity": "relative (disparity)",
 def depth_table(models: list[Model], start: Path) -> str:
     cols = bench_columns(models)
     head = ["Model", "Code license", "Weights license", "Output", "Input",
-            "NYUv2 AbsRel ↓<br>(reported)", "Peak VRAM<br>(measured)"] + bench_head(cols)
+            "NYUv2 AbsRel ↓<br>(reported)", "NYUv2 AbsRel ↓ / δ1<br>(measured, ONNX, aligned)",
+            "Peak VRAM<br>(measured)"] + bench_head(cols)
     lines = ["| " + " | ".join(head) + " |", "|" + "---|" * len(head)]
     for m in models:
         lic = m.meta.get("license", {})
@@ -130,9 +131,19 @@ def depth_table(models: list[Model], start: Path) -> str:
         row = [f"[{m.display_name}]({rel(m, start)})", licenses.describe(lic.get("code")),
                licenses.describe(lic.get("weights")),
                OUTPUT_LABEL.get(m.meta.get("output"), "?"), f"{shape[-2]}×{shape[-1]}",
-               accuracy(m, "NYUv2 AbsRel"), vram_cell(m)]
+               accuracy(m, "NYUv2 AbsRel"), nyu_cell(m), vram_cell(m)]
         lines.append("| " + " | ".join(row + bench_cells(m, cols)) + " |")
     return "\n".join(lines)
+
+
+def nyu_cell(m: Model) -> str:
+    r = next((r for r in m.accuracy if r.get("dataset") == "NYU Depth v2 test"), None)
+    if not r:
+        return "–"
+    cell = f"**{r['metrics']['AbsRel']:.3f} / {r['metrics']['delta1']:.3f}**"
+    if "metric_AbsRel" in r["metrics"]:
+        cell += f"<br>metric, unaligned: {r['metrics']['metric_AbsRel']:.3f} / {r['metrics']['metric_delta1']:.3f}"
+    return cell
 
 
 def provenance_table(models: list[Model], start: Path) -> str:
@@ -358,7 +369,7 @@ def tracking_table(models: list[Model], start: Path) -> str:
 TASK_INDEX = {
     "object_detection": ("Object detection", ("COCO val2017", "AP", True, "COCO AP")),
     "segmentation": ("Segmentation", ("COCO val2017", "AP", True, "COCO mask AP")),
-    "depth_estimation": ("Depth estimation", None),
+    "depth_estimation": ("Depth estimation", ("NYU Depth v2 test", "AbsRel", False, "NYUv2 AbsRel")),
     "pose_estimation": ("Pose estimation", ("COCO val2017 keypoints", "AP", True, "COCO keypoint AP")),
     "optical_flow": ("Optical flow", ("MPI-Sintel train", "final_EPE", False, "Sintel final EPE")),
     "super_resolution": ("Super-resolution (x4)", ("SR benchmarks x4", "Urban100_PSNR_Y", True, "Urban100 PSNR-Y")),

@@ -68,12 +68,12 @@ How these models relate to the current state of the art, and which models are pl
 ![Depth estimation comparison on the same clip](assets/depth_estimation_comparison.gif)
 
 <!-- BEGIN:depth_estimation_table -->
-| Model | Code license | Weights license | Output | Input | NYUv2 AbsRel ↓<br>(reported) | Peak VRAM<br>(measured) | Tesla T4 (Colab)<br>onnxruntime-cuda FP32 · ms / FPS | Tesla T4 (Colab)<br>onnxruntime-tensorrt FP16 · ms / FPS |
-|---|---|---|---|---|---|---|---|---|
-| [Depth-Anything-3-S](depth_estimation/depth_anything_3_small) | 🟢 Apache-2.0 | 🟢 Apache-2.0 | relative (depth) | 280×504 | – | 507 MB (Tiny, T4 CUDA FP32)<br>447 MB (Tiny, T4 TRT FP16) | 22.1 / 45 | 5.2 / 192 |
-| [Depth-Anything-V2-B](depth_estimation/depth_anything_v2_base) | 🟢 Apache-2.0 | 🔴 CC-BY-NC-4.0 | relative (disparity) | 518×924 | [0.049](https://arxiv.org/abs/2406.09414) | 2099 MB (Light, T4 CUDA FP32)<br>697 MB (Tiny, T4 TRT FP16) | 297.3 / 3 | 48.1 / 21 |
-| [Depth-Anything-V2-S](depth_estimation/depth_anything_v2_small) | 🟢 Apache-2.0 | 🟢 Apache-2.0 | relative (disparity) | 518×924 | [0.053](https://arxiv.org/abs/2406.09414) | 1013 MB (Tiny, T4 CUDA FP32)<br>495 MB (Tiny, T4 TRT FP16) | 119.4 / 8 | 18.9 / 53 |
-| [MoGe-2-S](depth_estimation/moge2_vits) | 🟢 MIT | 🟢 MIT | metric (m) | 720×1280 | – | 1503 MB (Tiny, T4 CUDA FP32) | 203.4 / 5 | – |
+| Model | Code license | Weights license | Output | Input | NYUv2 AbsRel ↓<br>(reported) | NYUv2 AbsRel ↓ / δ1<br>(measured, ONNX, aligned) | Peak VRAM<br>(measured) | Tesla T4 (Colab)<br>onnxruntime-cuda FP32 · ms / FPS | Tesla T4 (Colab)<br>onnxruntime-tensorrt FP16 · ms / FPS |
+|---|---|---|---|---|---|---|---|---|---|
+| [Depth-Anything-3-S](depth_estimation/depth_anything_3_small) | 🟢 Apache-2.0 | 🟢 Apache-2.0 | relative (depth) | 280×504 | – | – | 507 MB (Tiny, T4 CUDA FP32)<br>447 MB (Tiny, T4 TRT FP16) | 22.1 / 45 | 5.2 / 192 |
+| [Depth-Anything-V2-B](depth_estimation/depth_anything_v2_base) | 🟢 Apache-2.0 | 🔴 CC-BY-NC-4.0 | relative (disparity) | 518×924 | [0.049](https://arxiv.org/abs/2406.09414) | – | 2099 MB (Light, T4 CUDA FP32)<br>697 MB (Tiny, T4 TRT FP16) | 297.3 / 3 | 48.1 / 21 |
+| [Depth-Anything-V2-S](depth_estimation/depth_anything_v2_small) | 🟢 Apache-2.0 | 🟢 Apache-2.0 | relative (disparity) | 518×924 | [0.053](https://arxiv.org/abs/2406.09414) | – | 1013 MB (Tiny, T4 CUDA FP32)<br>495 MB (Tiny, T4 TRT FP16) | 119.4 / 8 | 18.9 / 53 |
+| [MoGe-2-S](depth_estimation/moge2_vits) | 🟢 MIT | 🟢 MIT | metric (m) | 720×1280 | – | – | 1503 MB (Tiny, T4 CUDA FP32) | 203.4 / 5 | – |
 <!-- END:depth_estimation_table -->
 
 Depth-Anything-3-S is the newest (2025-11). Depth-Anything-V2-S and -B share code and architecture, but only **S** has Apache-2.0 weights — **B** is CC-BY-NC-4.0. Relative outputs are per-frame normalised in the GIF. Survey: [docs/sota/depth_estimation.md](docs/sota/depth_estimation.md).

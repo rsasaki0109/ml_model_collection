@@ -41,6 +41,10 @@ our pre/post-processing, not the upstream PyTorch model.
   7 sequences), ``--mot17-root`` = extracted ``MOT17/train``
   (https://motchallenge.net/data/MOT17.zip). Needs ``pip install
   git+https://github.com/JonathonLuiten/TrackEval``.
+* Depth estimation: NYU Depth v2 test (654 images, Eigen crop) AbsRel /
+  delta1 after per-image affine alignment, ``--nyu-root`` = directory with
+  ``nyu_depth_v2_labeled.mat`` and ``splits.mat``
+  (http://horatio.cs.nyu.edu/mit/silberman/).
 * Semantic segmentation: ADE20K val mIoU (150 classes, label 0 ignored),
   ``--ade-root`` = the extracted ADEChallengeData2016 directory
   (http://data.csail.mit.edu/places/ADEchallenge/ADEChallengeData2016.zip).
@@ -587,6 +591,69 @@ def eval_mot17(model: Model, root: Path, provider: str, limit: int | None) -> di
     }
 
 
+def _affine_fit(x: np.ndarray, y: np.ndarray):
+    """Least-squares scale and shift so that s * x + t ~ y."""
+    A = np.stack([x, np.ones_like(x)], 1)
+    return np.linalg.lstsq(A, y, rcond=None)[0]
+
+
+def eval_nyu(model: Model, root: Path, provider: str, limit: int | None) -> dict:
+    """NYU Depth v2 official test split (654 images), Eigen crop, depth in
+    (1e-3, 10] m. Relative models are aligned per image with a least-squares
+    scale and shift in their own output space — disparity (1 / depth) for
+    disparity models, depth for depth models (affine-invariant protocol of
+    MiDaS / Depth Anything) — then AbsRel and delta1 (max ratio < 1.25).
+    Metric models get the same aligned numbers plus raw metric ones.
+
+    ``root`` holds ``nyu_depth_v2_labeled.mat`` and ``splits.mat``.
+    """
+    import h5py
+    from scipy.io import loadmat
+    from tools.mlmc.depth import DISPARITY, METRIC
+
+    t0 = time.perf_counter()
+    runner = model.load_runner(provider=provider)
+    test = loadmat(str(root / "splits.mat"))["testNdxs"].reshape(-1) - 1
+    test = test[:limit] if limit else test
+    agg = {"AbsRel": [], "delta1": [], "metric_AbsRel": [], "metric_delta1": []}
+    with h5py.File(root / "nyu_depth_v2_labeled.mat", "r") as f:
+        images, depths = f["images"], f["depths"]
+        for i in test:
+            rgb = np.asarray(images[i]).transpose(2, 1, 0)        # (480, 640, 3) RGB
+            gt = np.asarray(depths[i]).T.astype(np.float64)        # (480, 640) metres
+            pred = runner(np.ascontiguousarray(rgb[..., ::-1]))
+            p = pred.values.astype(np.float64)
+            crop = (slice(45, 471), slice(41, 601))
+            g, p = gt[crop], p[crop]
+            valid = (g > 1e-3) & (g <= 10) & np.isfinite(p)
+            g, p = g[valid], p[valid]
+            if pred.kind == DISPARITY:
+                s, t = _affine_fit(p, 1.0 / g)
+                d = 1.0 / np.maximum(s * p + t, 1 / 10.0)
+            else:
+                s, t = _affine_fit(p, g)
+                d = np.clip(s * p + t, 1e-3, 10)
+            ratio = np.maximum(d / g, g / d)
+            agg["AbsRel"].append(np.mean(np.abs(d - g) / g))
+            agg["delta1"].append(np.mean(ratio < 1.25))
+            if pred.kind == METRIC:
+                dm = np.clip(p, 1e-3, 10)
+                agg["metric_AbsRel"].append(np.mean(np.abs(dm - g) / g))
+                agg["metric_delta1"].append(np.mean(np.maximum(dm / g, g / dm) < 1.25))
+    metrics = {k: round(float(np.mean(v)), 3) for k, v in agg.items() if v}
+    shape = model.meta["artifacts"]["onnx"]["input_shape"]
+    return {
+        "dataset": "NYU Depth v2 test" + (f" (first {limit} images)" if limit else ""),
+        "images": len(test),
+        "metrics": metrics,
+        "settings": {"crop": "Eigen (rows 45:471, cols 41:601)", "depth_range_m": [0.001, 10],
+                     "alignment": "per-image least-squares scale + shift in the model's output space "
+                                  f"({model.meta.get('output')})",
+                     "input": f"640x480 frames resized to the graph's {shape[-1]}x{shape[-2]}"},
+        "wall_time_s": round(time.perf_counter() - t0, 1),
+    }
+
+
 HPATCHES_IGNORED = ("i_contruction", "i_crownnight", "i_dc", "i_pencils", "i_whitebuilding",
                     "v_artisans", "v_astronautis", "v_talent")  # glue-factory: large images
 
@@ -690,6 +757,7 @@ def main():
     ap.add_argument("--icdar15-root", type=Path, help="directory with images/ and gt/ (ICDAR2015 test)")
     ap.add_argument("--hpatches-root", type=Path, help="extracted hpatches-sequences-release/")
     ap.add_argument("--mot17-root", type=Path, help="extracted MOT17/train")
+    ap.add_argument("--nyu-root", type=Path, help="directory with nyu_depth_v2_labeled.mat and splits.mat")
     ap.add_argument("--provider", default="cuda", choices=list(PROVIDERS))
     ap.add_argument("--limit", type=int, help="evaluate only the first N images (smoke test)")
     args = ap.parse_args()
@@ -758,6 +826,11 @@ def main():
             raise SystemExit("--mot17-root is required")
         res = eval_mot17(model, args.mot17_root, args.provider, args.limit)
         ds_id = "mot17-train"
+    elif model.task == "depth_estimation":
+        if not args.nyu_root:
+            raise SystemExit("--nyu-root is required")
+        res = eval_nyu(model, args.nyu_root, args.provider, args.limit)
+        ds_id = "nyuv2-test"
     elif model.task in ("object_detection", "segmentation"):
         if not args.coco_root:
             raise SystemExit("--coco-root is required")
