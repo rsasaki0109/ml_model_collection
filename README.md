@@ -125,7 +125,7 @@ Each tile is a zoomed crop: left half bicubic upscaling of the low-resolution in
 |---|---|---|---|---|---|---|---|---|
 | [BEN2-Base](background_removal/ben2_base) | image (dichotomous segmentation) | 🟢 MIT | 🟢 MIT | DIS5K + 22K proprietary images | 1024×1024 | – | – | not measured |
 | [BiRefNet-lite](background_removal/birefnet_lite) | image (dichotomous segmentation) | 🟢 MIT | 🟢 MIT | DIS5K, P3M-10k, DUTS, HRSOD, UHRSD, HRS10K and others (general model) | 1024×1024 | [0.882 / 0.83](https://github.com/ZhengPeng7/BiRefNet/blob/ebcc0bc8ec7fe919cec829f2dea656b3078acddc/README.md) | – | not measured |
-| [RVM-MobileNetV3](background_removal/rvm_mobilenetv3) | video (recurrent human matting) | 🟡 GPL-3.0 | 🟡 GPL-3.0* | VideoMatte240K, Distinctions-646, Adobe Image Matting, COCO, YouTubeVIS 2021, Supervisely Person | 720×1280 | – | **0.390 / 0.007 / 0.184** | not measured |
+| [RVM-MobileNetV3](background_removal/rvm_mobilenetv3) | video (recurrent human matting) | 🟡 GPL-3.0 | 🟡 GPL-3.0* | VideoMatte240K, Distinctions-646, Adobe Image Matting, COCO, YouTubeVIS 2021, Supervisely Person | 720×1280 | – | – | not measured |
 <!-- END:background_removal_table -->
 
 Predicted alpha composited over a solid green background. BiRefNet-lite and BEN2 are single-image dichotomous-segmentation models (any salient object, 1024×1024 input); RVM is a recurrent *human* video matting model (source resolution, state carried across frames), so DIS-VD — a general-object benchmark — is outside what it was trained for. **DIS5K, used by BiRefNet and BEN2, is non-commercial**; RMBG-2.0 (same architecture as BiRefNet) has CC BY-NC 4.0 weights and is not included. Survey: [docs/sota/background_removal.md](docs/sota/background_removal.md).
