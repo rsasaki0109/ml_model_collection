@@ -74,9 +74,12 @@ def measured_seg(model: Model) -> str:
 def vram_cell(m: Model) -> str:
     vram = [b for b in m.benchmarks if b.get("peak_vram_mb") is not None]
     short = {"onnxruntime-cuda": "CUDA", "onnxruntime-tensorrt": "TRT", "onnxruntime-cpu": "CPU"}
-    cells = [f"{b['peak_vram_mb']} MB ({b['vram_tier']}, "
+    def hw(b):  # short hardware name, e.g. "T4" / "GTX 1660 Ti"
+        return b["hardware"]["label"].replace(" (Colab)", "").replace(" Laptop", "").replace("Tesla ", "")
+
+    cells = [f"{b['peak_vram_mb']} MB ({b['vram_tier']}, {hw(b)} "
              f"{short.get(b['runtime'], b['runtime'])} {b.get('precision', 'fp32').upper()})"
-             for b in vram]
+             for b in sorted(vram, key=lambda b: (b["hardware"]["label"], b["runtime"]))]
     return "<br>".join(cells) or "not measured"
 
 

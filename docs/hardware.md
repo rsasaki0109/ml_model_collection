@@ -37,11 +37,14 @@ Set by the person running the benchmark with `--hardware-class`. Guidelines:
 | `workstation` | RTX A-series / data-center GPUs |
 | `cpu_only` | Records measured on the CPU execution provider |
 
-Current records: NVIDIA Tesla T4 on Google Colab (`workstation`), measured
-with `tools/colab_benchmark.ipynb`. Records for a GTX 1660 Ti laptop
-(`gaming_laptop`) and its Core i7-9750H CPU (`cpu_only`) are pending: the
-first attempt was discarded because other workloads were running on the
-machine (see the idle guard in `tools/benchmark.py`).
+Current records:
+
+- NVIDIA Tesla T4 on Google Colab (`workstation`), CUDA FP32 and TensorRT
+  FP16, measured with `tools/colab_benchmark.ipynb` — all models.
+- GTX 1660 Ti laptop (`gaming_laptop`, Core i7-9750H), CUDA FP32 — partial:
+  only runs that passed the idle guard in `tools/benchmark.py` are kept (the
+  machine is shared with other workloads; a first attempt was discarded).
+  CPU (`cpu_only`) records are still pending for the same reason.
 
 ## How VRAM is measured
 
