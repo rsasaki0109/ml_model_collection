@@ -96,6 +96,42 @@ def render(frame: np.ndarray, res: SRImage, crop=CROP) -> np.ndarray:
     return out
 
 
+def _cubic(x):
+    ax = np.abs(x)
+    ax2, ax3 = ax ** 2, ax ** 3
+    return ((1.5 * ax3 - 2.5 * ax2 + 1) * (ax <= 1)
+            + (-0.5 * ax3 + 2.5 * ax2 - 4 * ax + 2) * ((ax > 1) & (ax <= 2)))
+
+
+def _resize_weights(in_len: int, out_len: int, scale: float):
+    """MATLAB imresize contributions (bicubic, antialiasing when shrinking)."""
+    kernel_width = 4.0 / scale if scale < 1 else 4.0
+    x = np.arange(1, out_len + 1, dtype=np.float64)
+    u = x / scale + 0.5 * (1 - 1 / scale)
+    left = np.floor(u - kernel_width / 2)
+    p = int(np.ceil(kernel_width)) + 2
+    idx = left[:, None] + np.arange(p)[None, :]
+    dist = u[:, None] - idx
+    w = scale * _cubic(dist * scale) if scale < 1 else _cubic(dist)
+    w /= w.sum(1, keepdims=True)
+    aux = np.r_[np.arange(in_len), np.arange(in_len)[::-1]]  # MATLAB's symmetric border
+    idx = aux[np.mod(idx.astype(int) - 1, len(aux))]
+    return w, idx
+
+
+def imresize_matlab(img: np.ndarray, scale: float) -> np.ndarray:
+    """MATLAB ``imresize(img, scale, 'bicubic')`` (with antialiasing) for uint8
+    images, as used to make the x4 low-resolution benchmark inputs."""
+    x = img.astype(np.float64)
+    h, w = x.shape[:2]
+    oh, ow = int(np.ceil(h * scale)), int(np.ceil(w * scale))
+    wh, ih = _resize_weights(h, oh, scale)
+    ww, iw = _resize_weights(w, ow, scale)
+    x = np.einsum("op,op...->o...", wh, x[ih])               # rows
+    x = np.einsum("op,xop...->xo...", ww, x[:, iw])          # columns
+    return np.clip(np.round(x), 0, 255).astype(np.uint8)
+
+
 def psnr_y(a_bgr: np.ndarray, b_bgr: np.ndarray, crop: int) -> float:
     """PSNR on the BT.601 Y channel (MATLAB ``rgb2ycbcr``), ``crop`` px border removed."""
     def y(img):

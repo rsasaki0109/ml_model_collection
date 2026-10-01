@@ -42,7 +42,8 @@ PyTorch to within 1.5e-5 on a 176x320 frame.
   dynamic-shape ONNX form and is exported as `max_pool2d(kernel = stride = 2^i)`,
   identical for sides that are multiples of 8; the runner reflect-pads to
   multiples of 8 and crops (upstream's ONNX script also requires multiples
-  of 8). Set5 on a local check: 32.15 dB vs 32.18 reported.
+  of 8). A local check with the evaluation protocol below: Set5 32.15 dB /
+  Set14 28.61 dB vs 32.18 / 28.60 reported.
 - **realesr-general-x4v3** — `SRVGGNetCompact(num_conv=32, act_type='prelu')`.
   Upstream's CLI blends it with the `-wdn` (denoise) checkpoint at
   `--denoise_strength 0.5` by default; this is the plain model (strength 1).
@@ -55,4 +56,10 @@ PyTorch to within 1.5e-5 on a 176x320 frame.
 | DIV2K | "made available for academic research purpose only" |
 | Flickr2K, OST | no license found (unverified) |
 | Set5 / Set14 (evaluation) | HF cards: "academic use only" / license other |
+
+Evaluation regenerates the low-resolution inputs from the HR images (crop to
+a multiple of 4, MATLAB-compatible bicubic `imresize`, `tools/mlmc/sr.py`).
+The LR images shipped in the Hugging Face archives differ from MATLAB's by up
+to ~16 levels and are misaligned for HR sizes that are not multiples of 4
+(Set14 comic / zebra / flowers / ppt3), which cost SAFMN 1.1 dB on Set14.
 | Urban100 (evaluation) | HF card: images from Flickr, CC BY 4.0 |

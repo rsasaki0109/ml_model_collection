@@ -161,3 +161,10 @@ def test_trackers_keep_ids():
             out = trk.update(boxes, np.array([0.9, 0.9]), ["person", "person"])
             ids.append(sorted(t.id for t in out))
         assert ids[-1] == ids[-5] and len(ids[-1]) == 2
+
+
+def test_imresize_matlab():
+    from tools.mlmc.sr import imresize_matlab
+    img = np.full((40, 48, 3), 77, np.uint8)
+    out = imresize_matlab(img, 0.25)
+    assert out.shape == (10, 12, 3) and (out == 77).all()

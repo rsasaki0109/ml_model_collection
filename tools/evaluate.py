@@ -292,10 +292,13 @@ SR_SETS = ("Set5", "Set14", "Urban100")
 
 def eval_sr(model: Model, root: Path, provider: str, limit: int | None) -> dict:
     """x4 PSNR on the Y channel (BasicSR convention: BT.601 Y, 4 px border
-    cropped, HR cropped to the SR size). ``root`` holds ``<Set>_HR/`` and
-    ``<Set>_LR_x4/`` (Hugging Face eugenesiow/<Set> archives); the LR images
-    are used as provided, each runs through the graph at its own size."""
-    from tools.mlmc.sr import psnr_y
+    cropped). ``root`` holds ``<Set>_HR/`` (Hugging Face eugenesiow/<Set>
+    archives). The HR image is cropped to a multiple of 4 and the LR input is
+    generated from it with MATLAB-compatible bicubic ``imresize`` (the
+    standard protocol); the archives' own LR images are not used — for HR
+    sizes that are not multiples of 4 they are misaligned (e.g. Set14 comic,
+    zebra). Each LR image runs through the graph at its own size."""
+    from tools.mlmc.sr import imresize_matlab, psnr_y
 
     t0 = time.perf_counter()
     runner = model.load_runner(provider=provider)
@@ -307,9 +310,9 @@ def eval_sr(model: Model, root: Path, provider: str, limit: int | None) -> dict:
         vals = []
         for f in hr_files:
             hr = cv2.imread(str(f))
-            sr = runner.upscale(cv2.imread(str(root / f"{name}_LR_x4" / f.name)))
-            h, w = min(hr.shape[0], sr.shape[0]), min(hr.shape[1], sr.shape[1])
-            vals.append(psnr_y(sr[:h, :w], hr[:h, :w], crop=4))
+            hr = hr[:hr.shape[0] // 4 * 4, :hr.shape[1] // 4 * 4]
+            sr = runner.upscale(imresize_matlab(hr, 0.25))
+            vals.append(psnr_y(sr, hr, crop=4))
         metrics[f"{name}_PSNR_Y"] = round(float(np.mean(vals)), 2)
         n_img += len(vals)
     if not metrics:
@@ -319,7 +322,8 @@ def eval_sr(model: Model, root: Path, provider: str, limit: int | None) -> dict:
                    + (f" (first {limit} images each)" if limit else ""),
         "images": n_img,
         "metrics": metrics,
-        "settings": {"lr_source": "Hugging Face eugenesiow/<Set> LR_x4 archives, used as provided",
+        "settings": {"lr_source": "HR (eugenesiow/<Set>) cropped to a multiple of 4, MATLAB-compatible "
+                                   "bicubic imresize x1/4 (tools/mlmc/sr.py)",
                      "evaluator": "PSNR on BT.601 Y, 4 px border cropped, mean over images (BasicSR)"},
         "wall_time_s": round(time.perf_counter() - t0, 1),
     }
