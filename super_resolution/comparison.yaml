@@ -1,0 +1,8 @@
+# Default line-up and layout for tools/make_comparison.py --task super_resolution.
+models:
+  - safmn_x4
+  - realesr_general_x4v3
+  - real_esrgan_x4plus
+cols: 3
+tile_width: 400
+fps: 5

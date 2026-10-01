@@ -16,7 +16,7 @@ import yaml
 from . import REPO_ROOT
 
 TASKS = ("object_detection", "segmentation", "depth_estimation",
-         "pose_estimation", "optical_flow")
+         "pose_estimation", "optical_flow", "super_resolution")
 
 # task -> (runner module in the model directory, class name)
 RUNNERS = {
@@ -25,6 +25,7 @@ RUNNERS = {
     "segmentation": ("segmenter.py", "Segmenter"),
     "pose_estimation": ("pose.py", "PoseEstimator"),
     "optical_flow": ("flow.py", "FlowEstimator"),
+    "super_resolution": ("upscaler.py", "Upscaler"),
 }
 
 

@@ -102,6 +102,20 @@ COCO-17 keypoints. Speed cells are model-only ms / FPS plus end-to-end ms per fr
 
 Dense two-frame flow, previous frame → current frame; colour = direction, saturation = magnitude (≥ 20 px fully saturated), blended over the grayscale frame. All three checkpoints were trained without Sintel, so the Sintel-train EPE is zero-shot; upstream evaluates at the native 1024×436, the measured column runs the deployed fixed 432×768 graph. **Every released flow checkpoint is trained on FlyingChairs / FlyingThings3D, whose terms are research-only** — the code and weights licenses do not change that. Survey: [docs/sota/optical_flow.md](docs/sota/optical_flow.md).
 
+## Super-resolution (x4)
+
+![Super-resolution comparison on the same clip](assets/super_resolution_comparison.gif)
+
+<!-- BEGIN:super_resolution_table -->
+| Model | Kind | Code license | Weights license | Training data | PSNR-Y x4 Set5 / Set14 / Urban100<br>(reported) | PSNR-Y x4 Set5 / Set14 / Urban100<br>(measured, ONNX) | Peak VRAM<br>(measured) |
+|---|---|---|---|---|---|---|---|
+| [Real-ESRGAN-x4plus](super_resolution/real_esrgan_x4plus) | real-world (GAN) | 🟢 BSD-3-Clause | 🟢 BSD-3-Clause* | DF2K (DIV2K + Flickr2K) + OST | – | – | not measured |
+| [realesr-general-x4v3](super_resolution/realesr_general_x4v3) | real-world (GAN) | 🟢 BSD-3-Clause | 🟢 BSD-3-Clause* | not documented upstream | – | – | not measured |
+| [SAFMN-x4](super_resolution/safmn_x4) | PSNR-oriented | 🟢 Apache-2.0 | 🟢 Apache-2.0* | DF2K (DIV2K + Flickr2K) | [32.18 / 28.60 / 25.97](https://arxiv.org/abs/2302.13800) | – | not measured |
+<!-- END:super_resolution_table -->
+
+Each tile is a zoomed crop: left half bicubic upscaling of the low-resolution input, right half the model. Video runs and benchmarks downscale every frame to 320×180 (bicubic) and upscale it x4 to 1280×720; the graphs themselves take any size. PSNR-Y follows BasicSR (BT.601 Y, 4 px border). The Real-ESRGAN models are GAN-trained for real-world images, so PSNR is not their target. **DIV2K (in DF2K) is "for academic research purpose only"** — permissive code and weights do not change the training-data terms. Survey: [docs/sota/super_resolution.md](docs/sota/super_resolution.md).
+
 ## Find a model
 
 ```console
@@ -186,6 +200,7 @@ ml_model_collection/
 ├── segmentation/            same layout; runner file is segmenter.py
 ├── pose_estimation/         same layout; runner file is pose.py
 ├── optical_flow/            same layout; runner file is flow.py
+├── super_resolution/        same layout; runner file is upscaler.py
 ├── object_detection/
 │   └── <model>/
 │       ├── model.yaml       curated metadata: source, licenses, artifacts, reported accuracy

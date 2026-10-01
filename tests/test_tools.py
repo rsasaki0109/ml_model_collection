@@ -115,3 +115,14 @@ def test_flow_render_and_flo(tmp_path):
         np.array([10, 8], np.int32).tofile(fh)
         uv.tofile(fh)
     assert np.array_equal(read_flo(f), uv)
+
+
+def test_sr_psnr_and_render():
+    from tools.mlmc.sr import SRImage, psnr_y, render
+    a = np.full((16, 16, 3), 100, np.uint8)
+    b = a.copy()
+    b[8:, :] = 110
+    assert psnr_y(a, a, crop=4) == float("inf")
+    assert 20 < psnr_y(a, b, crop=4) < 40
+    out = render(np.zeros((40, 80, 3), np.uint8), SRImage(np.zeros((40, 80, 3), np.uint8), np.zeros((10, 20, 3), np.uint8)))
+    assert out.shape == (40, 80, 3)

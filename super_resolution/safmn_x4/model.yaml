@@ -1,0 +1,54 @@
+# Curated metadata. Measured numbers live in benchmarks.yaml / accuracy.yaml (tool-generated).
+name: safmn_x4
+display_name: SAFMN-x4
+task: super_resolution
+kind: PSNR-oriented
+scale: 4
+summary: "SAFMN (ICCV 2023): spatially-adaptive feature modulation, efficient x4 SR (0.24M params)."
+
+source:
+  repository: https://github.com/sunny2109/SAFMN
+  commit: 1a412066e927da640bc7e2a53ea60f9ffc134241  # HEAD when added (2026-10-01)
+  paper: https://arxiv.org/abs/2302.13800
+  weights_repository: https://github.com/sunny2109/SAFMN/releases/tag/v0
+
+license:
+  code:
+    spdx: Apache-2.0
+    status: explicit
+    evidence: https://github.com/sunny2109/SAFMN/blob/1a412066e927da640bc7e2a53ea60f9ffc134241/LICENSE/LICENSE
+    note: >-
+      The repository is a BasicSR fork; its LICENSE/LICENSE file (Apache-2.0) is inherited from BasicSR and the README states no license.
+  weights:
+    spdx: Apache-2.0
+    status: repository_license
+    evidence: https://github.com/sunny2109/SAFMN/blob/1a412066e927da640bc7e2a53ea60f9ffc134241/LICENSE/LICENSE
+    note: >-
+      SAFMN_DF2K_x4.pth is a release asset of the repository; the Hugging Face mirror Meloo/SAFMN (f3ae915508fae452051728b99f069d1817d37b01) is tagged apache-2.0.
+  dataset:
+    name: DF2K (DIV2K + Flickr2K)
+    note: >-
+      DIV2K: 'made available for academic research purpose only ... copyright belongs to the original owners' (https://data.vision.ee.ethz.ch/cvl/DIV2K/). Flickr2K: no license found (unverified).
+
+artifacts:
+  onnx:
+    file: safmn_x4.onnx
+    fetch: export
+    script: export.py
+    input_shape: [1, 3, 180, 320]  # deployment setting used for video and benchmarks; the graph is dynamic
+    input_format: RGB [0,1], reflect-padded to multiples of 8; frames are first downscaled (bicubic) to 320x180
+    output: "sr [1, 3, 4h, 4w] RGB [0,1] (720x1280 for the deployment setting)"
+
+runtimes:
+  onnxruntime: verified
+
+reported_accuracy:
+  - metric: Set5 x4 PSNR-Y
+    value: 32.18
+    source: https://arxiv.org/abs/2302.13800
+  - metric: Set14 x4 PSNR-Y
+    value: 28.6
+    source: https://arxiv.org/abs/2302.13800
+  - metric: Urban100 x4 PSNR-Y
+    value: 25.97
+    source: https://arxiv.org/abs/2302.13800

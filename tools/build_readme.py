@@ -222,8 +222,33 @@ def flow_table(models: list[Model], start: Path) -> str:
     return "\n".join(lines)
 
 
-OD, DE, SG, PE, OF = ("object_detection", "depth_estimation", "segmentation", "pose_estimation",
-                      "optical_flow")
+def sr_table(models: list[Model], start: Path) -> str:
+    cols = bench_columns(models)
+    sets = ("Set5", "Set14", "Urban100")
+    head = ["Model", "Kind", "Code license", "Weights license", "Training data",
+            "PSNR-Y x4 Set5 / Set14 / Urban100<br>(reported)",
+            "PSNR-Y x4 Set5 / Set14 / Urban100<br>(measured, ONNX)",
+            "Peak VRAM<br>(measured)"] + bench_head(cols)
+    lines = ["| " + " | ".join(head) + " |", "|" + "---|" * len(head)]
+    for m in models:
+        lic = m.meta.get("license", {})
+        rep = {r["metric"].split()[0]: r for r in m.meta.get("reported_accuracy", [])}
+        rep_cell = "–"
+        if rep:
+            vals = " / ".join(f"{rep[s]['value']:.2f}" if s in rep else "–" for s in sets)
+            rep_cell = f"[{vals}]({next(iter(rep.values()))['source']})"
+        meas = next((r for r in m.accuracy if r.get("dataset", "").startswith("SR benchmarks x4")), None)
+        meas_cell = (" / ".join(f"**{meas['metrics'][f'{s}_PSNR_Y']:.2f}**" if f"{s}_PSNR_Y" in meas["metrics"]
+                                else "–" for s in sets) if meas else "–")
+        row = [f"[{m.display_name}]({rel(m, start)})", m.meta.get("kind", "?"),
+               licenses.describe(lic.get("code")), licenses.describe(lic.get("weights")),
+               lic.get("dataset", {}).get("name", "?"), rep_cell, meas_cell, vram_cell(m)]
+        lines.append("| " + " | ".join(row + bench_cells(m, cols)) + " |")
+    return "\n".join(lines)
+
+
+OD, DE, SG, PE, OF, SR = ("object_detection", "depth_estimation", "segmentation", "pose_estimation",
+                          "optical_flow", "super_resolution")
 TABLES = {
     (REPO_ROOT / "README.md", "object_detection_table"): (OD, comparison_table),
     (REPO_ROOT / "README.md", "depth_estimation_table"): (DE, depth_table),
@@ -240,6 +265,9 @@ TABLES = {
     (REPO_ROOT / "README.md", "optical_flow_table"): (OF, flow_table),
     (REPO_ROOT / OF / "README.md", "optical_flow_table"): (OF, flow_table),
     (REPO_ROOT / OF / "README.md", "optical_flow_provenance"): (OF, provenance_table),
+    (REPO_ROOT / "README.md", "super_resolution_table"): (SR, sr_table),
+    (REPO_ROOT / SR / "README.md", "super_resolution_table"): (SR, sr_table),
+    (REPO_ROOT / SR / "README.md", "super_resolution_provenance"): (SR, provenance_table),
 }
 
 

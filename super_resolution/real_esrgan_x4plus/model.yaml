@@ -1,0 +1,45 @@
+# Curated metadata. Measured numbers live in benchmarks.yaml / accuracy.yaml (tool-generated).
+name: real_esrgan_x4plus
+display_name: Real-ESRGAN-x4plus
+task: super_resolution
+kind: real-world (GAN)
+scale: 4
+summary: "Real-ESRGAN x4plus (2021): RRDBNet trained with synthetic real-world degradations and a GAN loss (16.7M params)."
+
+source:
+  repository: https://github.com/xinntao/Real-ESRGAN
+  commit: a4abfb2979a7bbff3f69f58f58ae324608821e27  # HEAD when added (2026-10-01)
+  paper: https://arxiv.org/abs/2107.10833
+  weights_repository: https://github.com/xinntao/Real-ESRGAN/releases/tag/v0.1.0
+
+license:
+  code:
+    spdx: BSD-3-Clause
+    status: explicit
+    evidence: https://github.com/xinntao/Real-ESRGAN/blob/a4abfb2979a7bbff3f69f58f58ae324608821e27/LICENSE
+    note: >-
+      The RRDBNet architecture file is BasicSR's (Apache-2.0, https://github.com/XPixelGroup/BasicSR/blob/8d56e3a045f9fb3e1d8872f92ee4a4f07f886b0a/LICENSE.txt).
+  weights:
+    spdx: BSD-3-Clause
+    status: repository_license
+    evidence: https://github.com/xinntao/Real-ESRGAN/blob/a4abfb2979a7bbff3f69f58f58ae324608821e27/LICENSE
+    note: >-
+      RealESRGAN_x4plus.pth is a release asset of the BSD-3-Clause repository; no separate weights license is stated.
+  dataset:
+    name: DF2K (DIV2K + Flickr2K) + OST
+    note: >-
+      DIV2K: 'made available for academic research purpose only ... copyright belongs to the original owners' (https://data.vision.ee.ethz.ch/cvl/DIV2K/). Flickr2K: no license found (unverified). OST: no license found (unverified). Training data per https://github.com/xinntao/Real-ESRGAN/blob/a4abfb2979a7bbff3f69f58f58ae324608821e27/docs/Training.md
+
+artifacts:
+  onnx:
+    file: real_esrgan_x4plus.onnx
+    fetch: export
+    script: export.py
+    input_shape: [1, 3, 180, 320]  # deployment setting used for video and benchmarks; the graph is dynamic
+    input_format: RGB [0,1]; frames are first downscaled (bicubic) to 320x180, the low-resolution input
+    output: "sr [1, 3, 4h, 4w] RGB [0,1] (720x1280 for the deployment setting)"
+
+runtimes:
+  onnxruntime: verified
+
+reported_accuracy: []  # GAN-trained / no PSNR table upstream

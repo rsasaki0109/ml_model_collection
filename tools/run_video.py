@@ -33,6 +33,7 @@ from tools.mlmc.detection import draw  # noqa: E402
 from tools.mlmc.flow import render as render_flow  # noqa: E402
 from tools.mlmc.pose import render as render_pose  # noqa: E402
 from tools.mlmc.segmentation import render as render_seg  # noqa: E402
+from tools.mlmc.sr import render as render_sr  # noqa: E402
 
 
 # task -> render(source frame, runner result) -> BGR frame of the same size
@@ -41,6 +42,7 @@ RENDER = {
     "segmentation": render_seg,
     "pose_estimation": render_pose,
     "optical_flow": render_flow,
+    "super_resolution": render_sr,
 }
 
 

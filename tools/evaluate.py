@@ -19,6 +19,9 @@ our pre/post-processing, not the upstream PyTorch model.
   ``--sintel-root`` = directory with ``training/{clean,final,flow}``
   (https://files.is.tue.mpg.de/sintel/MPI-Sintel-training_images.zip and
   MPI-Sintel-training_extras.zip).
+* Super-resolution: x4 PSNR-Y on Set5 / Set14 / Urban100, ``--sr-root`` =
+  directory with ``<Set>_HR/`` and ``<Set>_LR_x4/`` (Hugging Face
+  eugenesiow/Set5, eugenesiow/Set14, eugenesiow/Urban100 ``data/*.tar.gz``).
 * Semantic segmentation: ADE20K val mIoU (150 classes, label 0 ignored),
   ``--ade-root`` = the extracted ADEChallengeData2016 directory
   (http://data.csail.mit.edu/places/ADEchallenge/ADEChallengeData2016.zip).
@@ -260,6 +263,44 @@ def eval_sintel(model: Model, root: Path, provider: str, limit: int | None) -> d
     }
 
 
+SR_SETS = ("Set5", "Set14", "Urban100")
+
+
+def eval_sr(model: Model, root: Path, provider: str, limit: int | None) -> dict:
+    """x4 PSNR on the Y channel (BasicSR convention: BT.601 Y, 4 px border
+    cropped, HR cropped to the SR size). ``root`` holds ``<Set>_HR/`` and
+    ``<Set>_LR_x4/`` (Hugging Face eugenesiow/<Set> archives); the LR images
+    are used as provided, each runs through the graph at its own size."""
+    from tools.mlmc.sr import psnr_y
+
+    t0 = time.perf_counter()
+    runner = model.load_runner(provider=provider)
+    metrics, n_img = {}, 0
+    for name in SR_SETS:
+        hr_files = sorted((root / f"{name}_HR").glob("*.png"))[:limit]
+        if not hr_files:
+            continue
+        vals = []
+        for f in hr_files:
+            hr = cv2.imread(str(f))
+            sr = runner.upscale(cv2.imread(str(root / f"{name}_LR_x4" / f.name)))
+            h, w = min(hr.shape[0], sr.shape[0]), min(hr.shape[1], sr.shape[1])
+            vals.append(psnr_y(sr[:h, :w], hr[:h, :w], crop=4))
+        metrics[f"{name}_PSNR_Y"] = round(float(np.mean(vals)), 2)
+        n_img += len(vals)
+    if not metrics:
+        raise SystemExit(f"no <Set>_HR/ directories under {root}")
+    return {
+        "dataset": "SR benchmarks x4 (" + ", ".join(k.split("_")[0] for k in metrics) + ")"
+                   + (f" (first {limit} images each)" if limit else ""),
+        "images": n_img,
+        "metrics": metrics,
+        "settings": {"lr_source": "Hugging Face eugenesiow/<Set> LR_x4 archives, used as provided",
+                     "evaluator": "PSNR on BT.601 Y, 4 px border cropped, mean over images (BasicSR)"},
+        "wall_time_s": round(time.perf_counter() - t0, 1),
+    }
+
+
 def _runner_cls(model: Model):
     import importlib.util
     from tools.mlmc.catalog import RUNNERS
@@ -298,6 +339,7 @@ def main():
     ap.add_argument("--coco-root", type=Path)
     ap.add_argument("--ade-root", type=Path)
     ap.add_argument("--sintel-root", type=Path, help="extracted MPI-Sintel (contains training/)")
+    ap.add_argument("--sr-root", type=Path, help="directory with <Set>_HR/ and <Set>_LR_x4/")
     ap.add_argument("--provider", default="cuda", choices=list(PROVIDERS))
     ap.add_argument("--limit", type=int, help="evaluate only the first N images (smoke test)")
     args = ap.parse_args()
@@ -308,7 +350,8 @@ def main():
                 print(f"== {m.name}", flush=True)
                 roots = (["--coco-root", str(args.coco_root)] if args.coco_root else []) + \
                     (["--ade-root", str(args.ade_root)] if args.ade_root else []) + \
-                    (["--sintel-root", str(args.sintel_root)] if args.sintel_root else [])
+                    (["--sintel-root", str(args.sintel_root)] if args.sintel_root else []) + \
+                    (["--sr-root", str(args.sr_root)] if args.sr_root else [])
                 subprocess.run([sys.executable, __file__, "--model", m.name, *roots,
                                 "--provider", args.provider]
                                + (["--limit", str(args.limit)] if args.limit else []))
@@ -330,6 +373,11 @@ def main():
             raise SystemExit("--sintel-root is required")
         res = eval_sintel(model, args.sintel_root, args.provider, args.limit)
         ds_id = "sintel-train"
+    elif model.task == "super_resolution":
+        if not args.sr_root:
+            raise SystemExit("--sr-root is required")
+        res = eval_sr(model, args.sr_root, args.provider, args.limit)
+        ds_id = "sr-x4"
     elif model.task in ("object_detection", "segmentation"):
         if not args.coco_root:
             raise SystemExit("--coco-root is required")
