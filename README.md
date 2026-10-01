@@ -24,6 +24,7 @@ Video: "Road traffic on Stritarjeva street" by Sounds of Changes, [CC BY 3.0](ht
 | [Background removal / matting](#background-removal--matting) | 3 | 🟢2 🟡1 | – | – |
 | [Face detection](#face-detection) | 3 | 🟢2 🔴1 | – | – |
 | [OCR (scene text)](#ocr-scene-text) | 3 | 🟢3 | – | – |
+| [Feature matching](#feature-matching) | 3 | 🟢2 🔴1 | – | – |
 <!-- END:task_index -->
 
 <sub>🟢 permissive · 🟡 copyleft · 🔴 non-commercial / restricted · ⚪ unknown (weights license). Accuracy and latency come from the recorded `accuracy.yaml` / `benchmarks.yaml` files; each task section below has the full table with conditions. Every task has a comparison GIF on the same clip.</sub>
@@ -176,6 +177,20 @@ Boxes plus five landmarks; the strip at the bottom of each tile enlarges the hig
 
 Detection (DB) + recognition (CTC) pipelines from PaddleOCR's official ONNX files, re-implemented pre/post-processing (no Paddle dependency). Speed cells: model-only = text detector; end-to-end = detection + cropping + batched recognition of every line in the demo frame. The reported numbers are PaddleOCR's own multi-scenario benchmark, not ICDAR; the measured ICDAR2015 numbers are zero-shot and penalise line-level detectors, since ICDAR2015 annotates single words. Survey: [docs/sota/ocr.md](docs/sota/ocr.md).
 
+## Feature matching
+
+![Feature matching comparison on the same clip](assets/feature_matching_comparison.gif)
+
+<!-- BEGIN:feature_matching_table -->
+| Model | Code license | Weights license | Training data | HPatches H-AUC @1/3/5 px<br>(reported, DLT) | HPatches H-AUC @1/3/5 px<br>(measured, ONNX) | Peak VRAM<br>(measured) |
+|---|---|---|---|---|---|---|
+| [DISK+LightGlue](feature_matching/disk_lightglue) | 🟢 Apache-2.0 | 🟢 Apache-2.0 | MegaDepth | – | – | not measured |
+| [RaCo-ALIKED+LightGlue](feature_matching/raco_aliked_lightglue) | 🟢 Apache-2.0 | 🟢 Apache-2.0* | Oxford-Paris 1M distractors (synthetic homographies), MegaDepth | [40.4 / 71.1 / 80.5](https://github.com/cvg/RaCo/blob/35790eb48074ed14839d0fb496b8806caa4e766b/README.md) | – | not measured |
+| [SuperPoint+LightGlue](feature_matching/superpoint_lightglue) | 🟢 Apache-2.0 | 🔴 MagicLeap-NC | MS-COCO 2014 + synthetic shapes (SuperPoint); MegaDepth (LightGlue) | [35.1 / 67.2 / 77.6](https://github.com/cvg/glue-factory/blob/2d17e3b3bd7d30f0c828d4c4d3eac4ecefbf283d/README.md) | – | not measured |
+<!-- END:feature_matching_table -->
+
+Sparse keypoints + LightGlue between consecutive frames (each line: previous → current position, colour = match score). End-to-end ONNX pipelines from [fabio-sim/LightGlue-ONNX](https://github.com/fabio-sim/LightGlue-ONNX), 1024 keypoints, 448×800 per frame for video. HPatches uses the glue-factory protocol (short side 480, weighted DLT, corner-error AUC). **SuperPoint's weights are Magic Leap non-commercial** — included only as the classic reference; RaCo-ALIKED and DISK are permissive end to end. Survey: [docs/sota/feature_matching.md](docs/sota/feature_matching.md).
+
 ## Find a model
 
 ```console
@@ -264,6 +279,7 @@ ml_model_collection/
 ├── background_removal/      same layout; runner file is remover.py
 ├── face_detection/          same layout; runner file is face.py
 ├── ocr/                     same layout; runner file is ocr.py
+├── feature_matching/        same layout; runner file is matcher.py
 ├── object_detection/
 │   └── <model>/
 │       ├── model.yaml       curated metadata: source, licenses, artifacts, reported accuracy

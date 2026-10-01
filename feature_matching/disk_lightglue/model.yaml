@@ -1,0 +1,47 @@
+# Curated metadata. Measured numbers live in benchmarks.yaml / accuracy.yaml (tool-generated).
+name: disk_lightglue
+display_name: DISK+LightGlue
+task: feature_matching
+summary: "DISK keypoints/descriptors (NeurIPS 2020) + LightGlue (ICCV 2023), 1024 keypoints, end-to-end ONNX (fabio-sim v2.0)."
+
+source:
+  repository: https://github.com/fabio-sim/LightGlue-ONNX
+  commit: d12b4ba1632f558234e3f084e1f3d8bdf9147890  # HEAD when added (2026-10-01)
+  paper: https://arxiv.org/abs/2306.13643
+
+license:
+  code:
+    spdx: Apache-2.0
+    status: explicit
+    evidence: https://github.com/fabio-sim/LightGlue-ONNX/blob/d12b4ba1632f558234e3f084e1f3d8bdf9147890/LICENSE
+    note: >-
+      Export code Apache-2.0; DISK (cvlab-epfl/disk 8dc6d4d) Apache-2.0; LightGlue Apache-2.0.
+  weights:
+    spdx: Apache-2.0
+    status: explicit
+    evidence: https://github.com/cvg/LightGlue/blob/eb42fee2d71449efb0aa5c10549752b5d75384d8/README.md
+    note: >-
+      The LightGlue README lists the DISK and LightGlue weights as Apache-2.0.
+  dataset:
+    name: MegaDepth
+    note: >-
+      Depth maps / SfM models CC BY 4.0, original photos keep their own licenses (https://www.cs.cornell.edu/projects/megadepth/).
+
+artifacts:
+  onnx:
+    file: disk_lightglue.onnx
+    fetch: download
+    url: https://github.com/fabio-sim/LightGlue-ONNX/releases/download/v2.0/disk_lightglue_pipeline.ort.onnx
+    sha256: 20b35e9d3c4e505ae718f25fc4a95a5ec666c001f18308e600a93d158b43b5a8
+    input_shape: [2, 3, 448, 800]  # one pair; dynamic, deployment size for 16:9 video
+    input_format: RGB /255 (DISK's convention; fabio-sim's DISKPreprocessor passes BGR), H and W multiples of 16
+    output: "keypoints [2B, 1024, 2] int64; uses com.microsoft.MultiHeadAttention (CUDA / CPU EPs); matches [M, 3] (pair, idx0, idx1); mscores [M]"
+
+matching:
+  channels: rgb
+  multiple: 16
+
+runtimes:
+  onnxruntime: verified
+
+reported_accuracy: []  # HPatches not reported upstream for this pipeline

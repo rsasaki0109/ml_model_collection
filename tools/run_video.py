@@ -32,6 +32,7 @@ from tools.mlmc.depth import colorize  # noqa: E402
 from tools.mlmc.detection import draw  # noqa: E402
 from tools.mlmc.face import render as render_faces  # noqa: E402
 from tools.mlmc.flow import render as render_flow  # noqa: E402
+from tools.mlmc.matching import render as render_matches  # noqa: E402
 from tools.mlmc.matting import render as render_matte  # noqa: E402
 from tools.mlmc.ocr import render as render_ocr  # noqa: E402
 from tools.mlmc.pose import render as render_pose  # noqa: E402
@@ -49,6 +50,7 @@ RENDER = {
     "background_removal": render_matte,
     "face_detection": render_faces,
     "ocr": render_ocr,
+    "feature_matching": render_matches,
 }
 
 

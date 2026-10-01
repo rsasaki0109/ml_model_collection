@@ -140,3 +140,13 @@ def test_face_render_and_matte():
     a[:2] = 1
     comp = render_matte(frame, AlphaMatte(a))
     assert (comp[:2] == 200).all() and (comp[2:] != 200).any()
+
+
+def test_matching_dlt_and_auc():
+    from tools.mlmc.matching import corner_error, error_auc, homography_dlt
+    H = np.array([[1.1, 0.05, 10], [-0.02, 0.95, 5], [1e-4, 2e-4, 1]])
+    p0 = np.random.default_rng(0).uniform(0, 400, (50, 2))
+    q = np.c_[p0, np.ones(50)] @ H.T
+    p1 = q[:, :2] / q[:, 2:]
+    assert corner_error(homography_dlt(p0, p1), H, 400, 300) < 1e-6
+    assert error_auc([0.0, 0.0], [1])[0] > 0.99 and error_auc([10.0, 10.0], [1, 3, 5]) == [0.0, 0.0, 0.0]

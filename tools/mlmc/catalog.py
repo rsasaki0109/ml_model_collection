@@ -17,7 +17,7 @@ from . import REPO_ROOT
 
 TASKS = ("object_detection", "segmentation", "depth_estimation",
          "pose_estimation", "optical_flow", "super_resolution", "background_removal",
-         "face_detection", "ocr")
+         "face_detection", "ocr", "feature_matching")
 
 # task -> (runner module in the model directory, class name)
 RUNNERS = {
@@ -30,6 +30,7 @@ RUNNERS = {
     "background_removal": ("remover.py", "Remover"),
     "face_detection": ("face.py", "FaceDetector"),
     "ocr": ("ocr.py", "OCR"),
+    "feature_matching": ("matcher.py", "Matcher"),
 }
 
 

@@ -34,6 +34,9 @@ our pre/post-processing, not the upstream PyTorch model.
   (``--icdar15-root`` = directory with ``images/`` and ``gt/``; Hugging Face
   mirror dlxjj/ICDAR2015 ``ch4_test_images.zip`` +
   ``Challenge4_Test_Task1_GT.zip``).
+* Feature matching: HPatches homography AUC@1/3/5 px (glue-factory
+  protocol, DLT), ``--hpatches-root`` = extracted
+  ``hpatches-sequences-release`` (Hugging Face vbalnt/hpatches).
 * Semantic segmentation: ADE20K val mIoU (150 classes, label 0 ignored),
   ``--ade-root`` = the extracted ADEChallengeData2016 directory
   (http://data.csail.mit.edu/places/ADEchallenge/ADEChallengeData2016.zip).
@@ -517,6 +520,64 @@ def eval_icdar15(model: Model, root: Path, provider: str, limit: int | None) -> 
     }
 
 
+HPATCHES_IGNORED = ("i_contruction", "i_crownnight", "i_dc", "i_pencils", "i_whitebuilding",
+                    "v_artisans", "v_astronautis", "v_talent")  # glue-factory: large images
+
+
+def eval_hpatches(model: Model, root: Path, provider: str, limit: int | None) -> dict:
+    """HPatches sequences, homography estimation as in glue-factory
+    (``gluefactory/eval/hpatches.py``): image 1 vs. images 2-6 of each scene
+    (8 large scenes skipped), both resized to a short side of 480, DLT on all
+    matches weighted by match score, error = mean corner distance, AUC of the
+    cumulative error curve at 1 / 3 / 5 px. Both images are additionally
+    rounded to the graph's size multiple and zero-padded to a common size so
+    they fit one pair tensor (keypoints are mapped back exactly)."""
+    from tools.mlmc.matching import corner_error, error_auc, homography_dlt, to_tensor
+
+    t0 = time.perf_counter()
+    runner = model.load_runner(provider=provider)
+    mult = model.meta["matching"]["multiple"]
+
+    def load(p):
+        img = cv2.imread(str(p))
+        h, w = img.shape[:2]
+        s = 480 / min(h, w)
+        nh, nw = max(mult, round(h * s / mult) * mult), max(mult, round(w * s / mult) * mult)
+        img = cv2.resize(img, (nw, nh), interpolation=cv2.INTER_AREA)
+        return img, np.diag([nw / w, nh / h, 1.0])
+
+    errs, n_pairs = [], 0
+    for seq in sorted(p for p in root.iterdir() if p.is_dir() and p.name not in HPATCHES_IGNORED):
+        img0, S0 = load(seq / "1.ppm")
+        for i in range(2, 7):
+            if limit and n_pairs >= limit:
+                break
+            img1, S1 = load(seq / f"{i}.ppm")
+            H = S1 @ np.loadtxt(seq / f"H_1_{i}") @ np.linalg.inv(S0)
+            hh, ww = max(img0.shape[0], img1.shape[0]), max(img0.shape[1], img1.shape[1])
+            pair = np.zeros((2, 3 if runner.channels == "rgb" else 1, hh, ww), np.float32)
+            for k, img in enumerate((img0, img1)):
+                t = to_tensor(img, runner.channels)
+                pair[k, :, :t.shape[1], :t.shape[2]] = t
+            k0, k1, sc = runner.match_pair(pair)
+            try:
+                err = corner_error(homography_dlt(k0, k1, sc), H, img0.shape[1], img0.shape[0])
+            except (ValueError, np.linalg.LinAlgError):
+                err = float("inf")
+            errs.append(err)
+            n_pairs += 1
+    aucs = error_auc(errs, (1, 3, 5))
+    return {
+        "dataset": "HPatches" + (f" (first {limit} pairs)" if limit else ""),
+        "images": n_pairs,
+        "metrics": {f"H_AUC@{t}px": round(a * 100, 1) for t, a in zip((1, 3, 5), aucs)},
+        "settings": {"keypoints": 1024, "resize": "short side 480, rounded to the graph multiple",
+                     "estimator": "weighted DLT on all matches (no RANSAC)",
+                     "evaluator": "glue-factory protocol (mean corner error, cumulative AUC)"},
+        "wall_time_s": round(time.perf_counter() - t0, 1),
+    }
+
+
 def _runner_cls(model: Model):
     import importlib.util
     from tools.mlmc.catalog import RUNNERS
@@ -560,6 +621,7 @@ def main():
     ap.add_argument("--wider-root", type=Path,
                     help="directory with WIDER_val/images/ and eval_tools/ground_truth/")
     ap.add_argument("--icdar15-root", type=Path, help="directory with images/ and gt/ (ICDAR2015 test)")
+    ap.add_argument("--hpatches-root", type=Path, help="extracted hpatches-sequences-release/")
     ap.add_argument("--provider", default="cuda", choices=list(PROVIDERS))
     ap.add_argument("--limit", type=int, help="evaluate only the first N images (smoke test)")
     args = ap.parse_args()
@@ -574,7 +636,8 @@ def main():
                     (["--sr-root", str(args.sr_root)] if args.sr_root else []) + \
                     (["--dis-root", str(args.dis_root)] if args.dis_root else []) + \
                     (["--wider-root", str(args.wider_root)] if args.wider_root else []) + \
-                    (["--icdar15-root", str(args.icdar15_root)] if args.icdar15_root else [])
+                    (["--icdar15-root", str(args.icdar15_root)] if args.icdar15_root else []) + \
+                    (["--hpatches-root", str(args.hpatches_root)] if args.hpatches_root else [])
                 subprocess.run([sys.executable, __file__, "--model", m.name, *roots,
                                 "--provider", args.provider]
                                + (["--limit", str(args.limit)] if args.limit else []))
@@ -616,6 +679,11 @@ def main():
             raise SystemExit("--icdar15-root is required")
         res = eval_icdar15(model, args.icdar15_root, args.provider, args.limit)
         ds_id = "icdar2015-test"
+    elif model.task == "feature_matching":
+        if not args.hpatches_root:
+            raise SystemExit("--hpatches-root is required")
+        res = eval_hpatches(model, args.hpatches_root, args.provider, args.limit)
+        ds_id = "hpatches"
     elif model.task in ("object_detection", "segmentation"):
         if not args.coco_root:
             raise SystemExit("--coco-root is required")

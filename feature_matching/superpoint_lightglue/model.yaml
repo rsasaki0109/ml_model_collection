@@ -1,0 +1,56 @@
+# Curated metadata. Measured numbers live in benchmarks.yaml / accuracy.yaml (tool-generated).
+name: superpoint_lightglue
+display_name: SuperPoint+LightGlue
+task: feature_matching
+summary: "SuperPoint (2018) + LightGlue, 1024 keypoints, end-to-end ONNX (fabio-sim v2.0). SuperPoint weights are non-commercial."
+
+source:
+  repository: https://github.com/fabio-sim/LightGlue-ONNX
+  commit: d12b4ba1632f558234e3f084e1f3d8bdf9147890  # HEAD when added (2026-10-01)
+  paper: https://arxiv.org/abs/2306.13643
+
+license:
+  code:
+    spdx: Apache-2.0
+    status: explicit
+    evidence: https://github.com/fabio-sim/LightGlue-ONNX/blob/d12b4ba1632f558234e3f084e1f3d8bdf9147890/LICENSE
+    note: >-
+      Export code and LightGlue Apache-2.0; LightGlue's superpoint.py is under the Magic Leap license (LightGlue README).
+  weights:
+    spdx: LicenseRef-MagicLeap-NC
+    status: explicit
+    evidence: https://github.com/magicleap/SuperPointPretrainedNetwork/blob/1fda796addba9b6f8e79d586a3699700a86b1cea/LICENSE
+    note: >-
+      SuperPoint weights: Magic Leap 'Academic or Non-Profit Organization Noncommercial Research Use Only'; the LightGlue matcher weights alone are Apache-2.0. Included as the accuracy reference.
+  dataset:
+    name: MS-COCO 2014 + synthetic shapes (SuperPoint); MegaDepth (LightGlue)
+    note: >-
+      COCO images are subject to Flickr terms; MegaDepth CC BY 4.0 (photos keep their own licenses).
+
+artifacts:
+  onnx:
+    file: superpoint_lightglue.onnx
+    fetch: download
+    url: https://github.com/fabio-sim/LightGlue-ONNX/releases/download/v2.0/superpoint_lightglue_pipeline.ort.onnx
+    sha256: 7b5cb6605589c65ff563670d57a7c4a1367ae36d2a60efcde955247a32ebd491
+    input_shape: [2, 1, 448, 800]  # one pair; dynamic, deployment size for 16:9 video
+    input_format: grayscale 0.299 R + 0.587 G + 0.114 B, /255, H and W multiples of 8
+    output: "keypoints [2B, 1024, 2] int64; uses com.microsoft.MultiHeadAttention (CUDA / CPU EPs); matches [M, 3] (pair, idx0, idx1); mscores [M]"
+
+matching:
+  channels: gray
+  multiple: 8
+
+runtimes:
+  onnxruntime: verified
+
+reported_accuracy:
+  - metric: HPatches homography AUC@1px (DLT, 1024 kp)
+    value: 35.1
+    source: https://github.com/cvg/glue-factory/blob/2d17e3b3bd7d30f0c828d4c4d3eac4ecefbf283d/README.md  # SuperPoint+LightGlue
+  - metric: HPatches homography AUC@3px (DLT, 1024 kp)
+    value: 67.2
+    source: https://github.com/cvg/glue-factory/blob/2d17e3b3bd7d30f0c828d4c4d3eac4ecefbf283d/README.md  # SuperPoint+LightGlue
+  - metric: HPatches homography AUC@5px (DLT, 1024 kp)
+    value: 77.6
+    source: https://github.com/cvg/glue-factory/blob/2d17e3b3bd7d30f0c828d4c4d3eac4ecefbf283d/README.md  # SuperPoint+LightGlue

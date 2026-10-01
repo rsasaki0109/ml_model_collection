@@ -1,0 +1,56 @@
+# Curated metadata. Measured numbers live in benchmarks.yaml / accuracy.yaml (tool-generated).
+name: raco_aliked_lightglue
+display_name: RaCo-ALIKED+LightGlue
+task: feature_matching
+summary: "RaCo keypoints (3DV 2026) + ALIKED descriptors + LightGlue+, 1024 keypoints, end-to-end ONNX (fabio-sim v3.0)."
+
+source:
+  repository: https://github.com/fabio-sim/LightGlue-ONNX
+  commit: d12b4ba1632f558234e3f084e1f3d8bdf9147890  # HEAD when added (2026-10-01)
+  paper: https://arxiv.org/abs/2602.15755
+
+license:
+  code:
+    spdx: Apache-2.0
+    status: explicit
+    evidence: https://github.com/fabio-sim/LightGlue-ONNX/blob/d12b4ba1632f558234e3f084e1f3d8bdf9147890/LICENSE
+    note: >-
+      Export code (LightGlue-ONNX) Apache-2.0; RaCo (cvg/RaCo 35790eb48074ed14839d0fb496b8806caa4e766b) Apache-2.0; ALIKED (Shiaoming/ALIKED 683d7c6) BSD-3-Clause; LightGlue (cvg/LightGlue) Apache-2.0.
+  weights:
+    spdx: Apache-2.0
+    status: repository_license
+    evidence: https://github.com/cvg/RaCo/blob/35790eb48074ed14839d0fb496b8806caa4e766b/README.md
+    note: >-
+      RaCo weights are released with the Apache-2.0 project (no separate statement); ALIKED weights are in the BSD-3-Clause repository; LightGlue README: the pre-trained LightGlue weights are released under Apache-2.0 (https://github.com/cvg/LightGlue/blob/eb42fee2d71449efb0aa5c10549752b5d75384d8/README.md).
+  dataset:
+    name: Oxford-Paris 1M distractors (synthetic homographies), MegaDepth
+    note: >-
+      MegaDepth: depth maps / SfM models CC BY 4.0, original photos keep their own licenses (https://www.cs.cornell.edu/projects/megadepth/). Oxford-Paris distractor images: terms not restated (unverified).
+
+artifacts:
+  onnx:
+    file: raco_aliked_lightglue.onnx
+    fetch: download
+    url: https://github.com/fabio-sim/LightGlue-ONNX/releases/download/v3.0/raco_aliked_lightglue_pipeline_k1024.onnx
+    sha256: 575e1746138204e19027cb37541cd840c7fc9f2c932b844e9685354a3913bda1
+    input_shape: [2, 3, 448, 800]  # one pair; dynamic, deployment size for 16:9 video
+    input_format: RGB /255 (fabio-sim RaCoPreprocessor), H and W multiples of 32
+    output: "keypoints [2B, 1024, 2] float32; matches [M, 3] (pair, idx0, idx1); mscores [M]"
+
+matching:
+  channels: rgb
+  multiple: 32
+
+runtimes:
+  onnxruntime: verified
+
+reported_accuracy:
+  - metric: HPatches homography AUC@1px (DLT, 1024 kp)
+    value: 40.4
+    source: https://github.com/cvg/RaCo/blob/35790eb48074ed14839d0fb496b8806caa4e766b/README.md  # RaCo+ALIKED+LightGlue+
+  - metric: HPatches homography AUC@3px (DLT, 1024 kp)
+    value: 71.1
+    source: https://github.com/cvg/RaCo/blob/35790eb48074ed14839d0fb496b8806caa4e766b/README.md  # RaCo+ALIKED+LightGlue+
+  - metric: HPatches homography AUC@5px (DLT, 1024 kp)
+    value: 80.5
+    source: https://github.com/cvg/RaCo/blob/35790eb48074ed14839d0fb496b8806caa4e766b/README.md  # RaCo+ALIKED+LightGlue+
