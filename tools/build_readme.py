@@ -457,6 +457,27 @@ def wholebody_table(models: list[Model], start: Path) -> str:
     return "\n".join(lines)
 
 
+def vpr_table(models: list[Model], start: Path) -> str:
+    cols = bench_columns(models)
+    head = ["Model", "Code license", "Weights license", "Training data", "Descriptor", "Input",
+            "Pitts30k / Tokyo24/7 R@1<br>(reported)", "SPED R@1 / R@5<br>(measured, ONNX)",
+            "Peak VRAM<br>(measured)"] + bench_head(cols)
+    lines = ["| " + " | ".join(head) + " |", "|" + "---|" * len(head)]
+    for m in models:
+        lic = m.meta.get("license", {})
+        rep = m.meta.get("reported_accuracy") or []
+        rep_cell = f"[{' / '.join(str(r['value']) for r in rep)}]({rep[0]['source']})" if rep else "–"
+        meas = next((r for r in m.accuracy if r.get("dataset") == "SPED test"), None)
+        meas_cell = f"**{meas['metrics']['R@1']} / {meas['metrics']['R@5']}**" if meas else "–"
+        cfg = m.meta["place_recognition"]
+        inp = f"{cfg['resize']}×{cfg['resize']}" if cfg.get("resize") else "native"
+        row = [f"[{m.display_name}]({rel(m, start)})", licenses.describe(lic.get("code")),
+               licenses.describe(lic.get("weights")), lic.get("dataset", {}).get("name", "?"),
+               f"{m.meta['descriptor_dim']}-D", inp, rep_cell, meas_cell, vram_cell(m)]
+        lines.append("| " + " | ".join(row + bench_cells(m, cols)) + " |")
+    return "\n".join(lines)
+
+
 # task -> (section title, measured metric: dataset prefix, key, higher is better, label)
 TASK_INDEX = {
     "object_detection": ("Object detection", ("COCO val2017", "AP", True, "COCO AP")),
@@ -474,6 +495,7 @@ TASK_INDEX = {
     "point_tracking": ("Point tracking", ("TAP-Vid DAVIS (first)", "AJ", True, "TAP-Vid DAVIS AJ")),
     "image_captioning": ("Image captioning", ("COCO Karpathy test", "CIDEr", True, "COCO CIDEr")),
     "wholebody_pose": ("Whole-body pose", ("COCO-WholeBody val", "whole_AP", True, "COCO-WholeBody whole AP")),
+    "place_recognition": ("Visual place recognition", ("SPED test", "R@1", True, "SPED R@1")),
 }
 
 
@@ -567,6 +589,9 @@ TABLES = {
     (REPO_ROOT / "README.md", "wholebody_pose_table"): ("wholebody_pose", wholebody_table),
     (REPO_ROOT / "wholebody_pose" / "README.md", "wholebody_pose_table"): ("wholebody_pose", wholebody_table),
     (REPO_ROOT / "wholebody_pose" / "README.md", "wholebody_pose_provenance"): ("wholebody_pose", provenance_table),
+    (REPO_ROOT / "README.md", "place_recognition_table"): ("place_recognition", vpr_table),
+    (REPO_ROOT / "place_recognition" / "README.md", "place_recognition_table"): ("place_recognition", vpr_table),
+    (REPO_ROOT / "place_recognition" / "README.md", "place_recognition_provenance"): ("place_recognition", provenance_table),
     (REPO_ROOT / "tracking" / "README.md", "tracking_table"): ("tracking", tracking_table),
 }
 

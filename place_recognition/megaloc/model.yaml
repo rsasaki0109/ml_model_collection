@@ -1,0 +1,54 @@
+# Curated metadata. Measured numbers live in benchmarks.yaml / accuracy.yaml (tool-generated).
+name: megaloc
+display_name: MegaLoc
+task: place_recognition
+descriptor_dim: 8448
+summary: "MegaLoc (CVPR 2025 workshop): DINOv2-B + SALAD-style optimal-transport aggregation trained on five datasets, 8448-D; official ONNX."
+
+source:
+  repository: https://github.com/gmberton/MegaLoc
+  commit: 5fe0dd697c4a70ba3e23607f6716ab3c606b16db  # HEAD when added (2026-10-02)
+  paper: https://arxiv.org/abs/2502.17237
+  weights_repository: https://huggingface.co/gberton/MegaLoc
+  weights_revision: a0f34722c4297ff787e022433799250180860af7
+
+license:
+  code:
+    spdx: MIT
+    status: explicit
+    evidence: https://github.com/gmberton/MegaLoc/blob/5fe0dd697c4a70ba3e23607f6716ab3c606b16db/LICENSE
+  weights:
+    spdx: MIT
+    status: explicit
+    evidence: https://huggingface.co/gberton/MegaLoc/blob/a0f34722c4297ff787e022433799250180860af7/README.md
+    note: >-
+      The Hugging Face card declares license: mit (LICENSE file in the repository); megaloc.onnx is the official export
+      (opset 18, mixed fp16 / fp32 initializers). The training data mixes non-commercial and gated sets (see dataset).
+  dataset:
+    name: SF-XL, GSV-Cities, MSLS, MegaScenes, ScanNet
+    note: >-
+      GSV-Cities: CC BY-NC-ND 4.0 (Kaggle listing); MSLS: login, non-commercial terms claimed (unverified); ScanNet: gated Terms of Use; SF-XL: research-purpose form. DINOv2 backbone Apache-2.0.
+
+artifacts:
+  onnx:
+    file: megaloc.onnx
+    fetch: download
+    url: https://huggingface.co/gberton/MegaLoc/resolve/a0f34722c4297ff787e022433799250180860af7/megaloc.onnx
+    sha256: 9304d7d2473b006d2664736b5c56135c8404ff351d4592cfd9dcb4d7e8f12355
+    input_shape: [1, 3, 322, 322]
+    input_format: RGB resized to 322x322 (antialiased bilinear), ImageNet mean/std
+    output: "descriptor [B, 8448], L2-normalised"
+
+place_recognition:
+  resize: 322
+
+runtimes:
+  onnxruntime: verified
+
+reported_accuracy:
+  - metric: Pitts30k-test R@1
+    value: 94.1
+    source: https://arxiv.org/abs/2502.17237  # Table 1
+  - metric: Tokyo24/7 R@1
+    value: 96.5
+    source: https://arxiv.org/abs/2502.17237  # Table 1

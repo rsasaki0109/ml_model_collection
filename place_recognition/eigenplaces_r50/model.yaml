@@ -1,0 +1,52 @@
+# Curated metadata. Measured numbers live in benchmarks.yaml / accuracy.yaml (tool-generated).
+name: eigenplaces_r50
+display_name: EigenPlaces-R50
+task: place_recognition
+descriptor_dim: 2048
+summary: "EigenPlaces (ICCV 2023): viewpoint-robust place recognition, ResNet-50 + GeM, 2048-D."
+
+source:
+  repository: https://github.com/gmberton/EigenPlaces
+  commit: a2969f71d5ea31017443af490b15273ca4c50af1  # HEAD when added (2026-10-02)
+  paper: https://arxiv.org/abs/2308.10832
+
+license:
+  code:
+    spdx: MIT
+    status: explicit
+    evidence: https://github.com/gmberton/EigenPlaces/blob/a2969f71d5ea31017443af490b15273ca4c50af1/LICENSE
+  weights:
+    spdx: MIT
+    status: repository_license
+    evidence: https://github.com/gmberton/EigenPlaces/blob/a2969f71d5ea31017443af490b15273ca4c50af1/LICENSE
+    note: >-
+      Release asset v1.0 of the MIT repository (ResNet50_2048_eigenplaces.pth, SHA-256 pinned in export.py); no separate
+      weights license. The training data is research-only (see dataset).
+  dataset:
+    name: SF-XL (San Francisco eXtra Large)
+    note: >-
+      Distributed via a Google Form as 'publicly available for research purposes'; no formal license (https://forms.gle/wpyDzhDyoWLQygAT9). ImageNet-pretrained backbone initialisation.
+
+artifacts:
+  onnx:
+    file: eigenplaces_r50.onnx
+    fetch: export
+    script: export.py
+    input_shape: [1, 3, 360, 640]  # dynamic H, W; video frames capped at 640 px, evaluation at native resolution
+    input_format: RGB, ImageNet mean/std, native resolution (no resize)
+    output: "descriptor [B, 2048], L2-normalised"
+
+place_recognition:
+  resize: null
+  max_side: 640
+
+runtimes:
+  onnxruntime: verified
+
+reported_accuracy:
+  - metric: Pitts30k-test R@1
+    value: 92.5
+    source: https://arxiv.org/abs/2502.17237  # Table 1
+  - metric: Tokyo24/7 R@1
+    value: 93.0
+    source: https://arxiv.org/abs/2502.17237  # Table 1

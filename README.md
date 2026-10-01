@@ -30,6 +30,7 @@ Video: "Road traffic on Stritarjeva street" by Sounds of Changes, [CC BY 3.0](ht
 | [Point tracking](#point-tracking) | 2 | 🟢2 | – | – |
 | [Image captioning](#image-captioning) | 2 | 🟢2 | – | – |
 | [Whole-body pose](#whole-body-pose) | 3 | 🟢3 | – | – |
+| [Visual place recognition](#visual-place-recognition) | 3 | 🟢3 | – | – |
 <!-- END:task_index -->
 
 <sub>🟢 permissive · 🟡 copyleft · 🔴 non-commercial / restricted · ⚪ unknown (weights license). Accuracy and latency come from the recorded `accuracy.yaml` / `benchmarks.yaml` files; each task section below has the full table with conditions. Every task has a comparison GIF on the same clip.</sub>
@@ -265,6 +266,20 @@ Small vision-language models run from plain ONNX Runtime + `tokenizers` (no tran
 
 COCO-WholeBody 133 keypoints (body, feet, 68 face, 2x21 hand) from official mmpose ONNX files, top-down on D-FINE-N person boxes (same runner as RTMPose-s). **COCO-WholeBody is research / non-commercial only, and RTMW's Cocktail14 adds more non-commercial sets (Human-Art, LaPa, InterHand2.6M)** — the Apache-2.0 code and weights do not lift that. Note: the mmpose README's "RTMW-m" ONNX link points to an s-width model. Survey: [docs/sota/wholebody_pose.md](docs/sota/wholebody_pose.md).
 
+## Visual place recognition
+
+![Place recognition comparison on the same clip](assets/place_recognition_comparison.gif)
+
+<!-- BEGIN:place_recognition_table -->
+| Model | Code license | Weights license | Training data | Descriptor | Input | Pitts30k / Tokyo24/7 R@1<br>(reported) | SPED R@1 / R@5<br>(measured, ONNX) | Peak VRAM<br>(measured) |
+|---|---|---|---|---|---|---|---|---|
+| [CosPlace-R50](place_recognition/cosplace_r50) | 🟢 MIT | 🟢 MIT* | SF-XL (San Francisco eXtra Large) | 2048-D | native | [90.9 / 87.3](https://arxiv.org/abs/2502.17237) | – | not measured |
+| [EigenPlaces-R50](place_recognition/eigenplaces_r50) | 🟢 MIT | 🟢 MIT* | SF-XL (San Francisco eXtra Large) | 2048-D | native | [92.5 / 93.0](https://arxiv.org/abs/2502.17237) | – | not measured |
+| [MegaLoc](place_recognition/megaloc) | 🟢 MIT | 🟢 MIT | SF-XL, GSV-Cities, MSLS, MegaScenes, ScanNet | 8448-D | 322×322 | [94.1 / 96.5](https://arxiv.org/abs/2502.17237) | – | not measured |
+<!-- END:place_recognition_table -->
+
+Global image descriptors for retrieval / SLAM loop closure; the GIF insets the most similar frame at least 1 s earlier. CosPlace and EigenPlaces are exported from the official code (the ONNX accepts any input size; evaluation at native resolution); MegaLoc is the official ONNX. **Every released VPR model is trained on research-only or non-commercial data** (SF-XL research form, GSV-Cities CC BY-NC-ND, MSLS, ScanNet terms) — MIT code and weights notwithstanding; SALAD / CliqueMining are GPL-3.0 and MixVPR has no license. Survey: [docs/sota/place_recognition.md](docs/sota/place_recognition.md).
+
 ## Find a model
 
 ```console
@@ -359,6 +374,7 @@ ml_model_collection/
 ├── point_tracking/          same layout; runner file is tracker.py
 ├── image_captioning/        same layout; runner file is captioner.py
 ├── wholebody_pose/          same layout; runner file is pose.py
+├── place_recognition/       same layout; runner file is descriptor.py
 ├── object_detection/
 │   └── <model>/
 │       ├── model.yaml       curated metadata: source, licenses, artifacts, reported accuracy

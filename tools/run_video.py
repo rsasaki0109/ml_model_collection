@@ -86,6 +86,9 @@ def run(model: Model, video: Path, provider: str = "cuda",
     elif model.task == "point_tracking":
         from tools.mlmc.point_tracking import TrackTrails
         render = TrackTrails()
+    elif model.task == "place_recognition":
+        from tools.mlmc.place_recognition import RetrievalView
+        render = RetrievalView()
     else:
         render = RENDER.get(model.task)
     is_det = model.task == "object_detection"

@@ -57,6 +57,8 @@ our pre/post-processing, not the upstream PyTorch model.
 * Whole-body pose: COCO-WholeBody v1.0 val body / foot / face / hand /
   whole AP (xtcocotools, per-part sigmas), ``--coco-root`` (val2017 images)
   + ``--wholebody-json`` (coco_wholebody_val_v1.0.json, research / NC terms).
+* Place recognition: SPED test Recall@1/5/10 (``--sped-root``; 44 MB from
+  surfdrive via gmberton/VPR-datasets-downloader, license unverified).
 * Semantic segmentation: ADE20K val mIoU (150 classes, label 0 ignored),
   ``--ade-root`` = the extracted ADEChallengeData2016 directory
   (http://data.csail.mit.edu/places/ADEchallenge/ADEChallengeData2016.zip).
@@ -852,6 +854,30 @@ def eval_coco_karpathy(model: Model, root: Path, provider: str, limit: int | Non
     }
 
 
+def eval_sped(model: Model, root: Path, provider: str, limit: int | None) -> dict:
+    """SPED test (607 query / 607 reference images, seasonal and day-night
+    changes): Recall@1/5/10 by cosine similarity of the global descriptors;
+    query i matches reference i (``ground_truth_new.npy``; VPR-datasets-
+    downloader assigns the same mock position). ``root`` = ``SPEDTEST``."""
+    from tools.mlmc.place_recognition import recall_at_n
+
+    t0 = time.perf_counter()
+    runner = model.load_runner(provider=provider)
+    gt = np.load(root / "ground_truth_new.npy", allow_pickle=True)[:limit]
+    names = sorted(p.name for p in (root / "ref").glob("*.jpg"))
+    db = np.stack([runner(cv2.imread(str(root / "ref" / n))).vector for n in names])
+    q = np.stack([runner(cv2.imread(str(root / "query" / names[int(i)]))).vector for i, _ in gt])
+    pos = [[names.index(names[int(j)]) for j in p] for _, p in gt]
+    return {
+        "dataset": "SPED test" + (f" (first {limit} queries)" if limit else ""),
+        "images": len(names) + len(q),
+        "metrics": recall_at_n(q, db, pos),
+        "settings": {"input": "as the runner (model.yaml place_recognition:)",
+                     "evaluator": "Recall@N, cosine similarity on L2-normalised descriptors (as VPR-methods-evaluation)"},
+        "wall_time_s": round(time.perf_counter() - t0, 1),
+    }
+
+
 HPATCHES_IGNORED = ("i_contruction", "i_crownnight", "i_dc", "i_pencils", "i_whitebuilding",
                     "v_artisans", "v_astronautis", "v_talent")  # glue-factory: large images
 
@@ -963,6 +989,7 @@ def main():
     ap.add_argument("--tapvid-root", type=Path, help="directory with tapvid_davis.pkl")
     ap.add_argument("--coco-captions-root", type=Path, help="directory with dataset_coco.json and val2014/")
     ap.add_argument("--wholebody-json", type=Path, help="coco_wholebody_val_v1.0.json (with --coco-root)")
+    ap.add_argument("--sped-root", type=Path, help="extracted SPEDTEST (query/, ref/, ground_truth_new.npy)")
     ap.add_argument("--provider", default="cuda", choices=list(PROVIDERS))
     ap.add_argument("--limit", type=int, help="evaluate only the first N images (smoke test)")
     args = ap.parse_args()
@@ -984,7 +1011,8 @@ def main():
                     (["--imagenetv2-root", str(args.imagenetv2_root)] if args.imagenetv2_root else []) + \
                     (["--tapvid-root", str(args.tapvid_root)] if args.tapvid_root else []) + \
                     (["--coco-captions-root", str(args.coco_captions_root)] if args.coco_captions_root else []) + \
-                    (["--wholebody-json", str(args.wholebody_json)] if args.wholebody_json else [])
+                    (["--wholebody-json", str(args.wholebody_json)] if args.wholebody_json else []) + \
+                    (["--sped-root", str(args.sped_root)] if args.sped_root else [])
                 subprocess.run([sys.executable, __file__, "--model", m.name, *roots,
                                 "--provider", args.provider]
                                + (["--limit", str(args.limit)] if args.limit else []))
@@ -1061,6 +1089,11 @@ def main():
             raise SystemExit("--coco-root and --wholebody-json are required")
         res = eval_coco_wholebody(model, args.coco_root, args.wholebody_json, args.provider, args.limit)
         ds_id = "coco-wholebody-val"
+    elif model.task == "place_recognition":
+        if not args.sped_root:
+            raise SystemExit("--sped-root is required")
+        res = eval_sped(model, args.sped_root, args.provider, args.limit)
+        ds_id = "sped-test"
     elif model.task in ("object_detection", "segmentation"):
         if not args.coco_root:
             raise SystemExit("--coco-root is required")

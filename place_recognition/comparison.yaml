@@ -1,0 +1,8 @@
+# Default line-up and layout for tools/make_comparison.py --task place_recognition.
+models:
+  - cosplace_r50
+  - eigenplaces_r50
+  - megaloc
+cols: 3
+tile_width: 400
+fps: 5
