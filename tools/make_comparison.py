@@ -128,6 +128,8 @@ def main():
     ap.add_argument("--duration", type=float, help="seconds (default: whole clip)")
     ap.add_argument("--provider", default="cuda", choices=["cuda", "cpu", "tensorrt", "tensorrt-fp16"])
     ap.add_argument("--rerun", action="store_true", help="re-run inference")
+    ap.add_argument("--stride", type=int, help="run models on every N-th frame only (slow models); "
+                                               "must divide the GIF frame step")
     ap.add_argument("--gif", type=Path, help="default: assets/<task>_comparison.gif")
     ap.add_argument("--mp4", type=Path, help="also write an MP4")
     args = ap.parse_args()
@@ -138,6 +140,7 @@ def main():
     args.cols = args.cols or cfg.get("cols", 2)
     args.tile_width = args.tile_width or cfg.get("tile_width", 480)
     args.fps = args.fps or cfg.get("fps", 5)
+    args.stride = args.stride or cfg.get("stride", 1)
 
     video = args.input.resolve()
     if args.models:
@@ -153,7 +156,7 @@ def main():
     marker = "detections.jsonl" if is_det else "annotated.mp4"
     for m in models:
         if args.rerun or not (output_dir(m, video) / marker).exists():
-            run(m, video, args.provider)
+            run(m, video, args.provider, stride=args.stride)
 
     cap = cv2.VideoCapture(str(video))
     src_fps = cap.get(cv2.CAP_PROP_FPS) or 25

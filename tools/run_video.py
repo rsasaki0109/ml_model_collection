@@ -55,7 +55,11 @@ def output_dir(model: Model, video: Path) -> Path:
 
 
 def run(model: Model, video: Path, provider: str = "cuda",
-        max_frames: int | None = None, prompts: list[str] | None = None) -> Path:
+        max_frames: int | None = None, prompts: list[str] | None = None,
+        stride: int = 1) -> Path:
+    """``stride`` > 1 runs the model on every ``stride``-th frame only and
+    repeats its rendering in between (for slow models when only sampled frames
+    are needed, e.g. the comparison GIF). Not used for object detection."""
     out_dir = output_dir(model, video)
     if prompts:
         out_dir = out_dir.with_name(out_dir.name + "_prompts")
@@ -76,20 +80,27 @@ def run(model: Model, video: Path, provider: str = "cuda",
     writer = cv2.VideoWriter(str(out_dir / "annotated.mp4"),
                              cv2.VideoWriter_fourcc(*"mp4v"), fps, (w, h))
 
-    n, t_total = 0, 0.0
+    n, n_run, t_total, last = 0, 0, 0.0, None
+    stride = 1 if is_det else max(1, stride)
     jf = open(out_dir / "detections.jsonl", "w") if is_det else None
     while max_frames is None or n < max_frames:
         ok, frame = cap.read()
         if not ok:
             break
+        if n % stride:
+            writer.write(last)
+            n += 1
+            continue
         t0 = time.perf_counter()
         res = runner(frame)
         t_total += time.perf_counter() - t0
+        n_run += 1
         if is_det:
             writer.write(draw(frame, res))
             jf.write(json.dumps({"frame": n, "detections": res.to_json()}) + "\n")
         else:
-            writer.write(RENDER[model.task](frame, res))
+            last = RENDER[model.task](frame, res)
+            writer.write(last)
         n += 1
     if jf:
         jf.close()
@@ -99,10 +110,10 @@ def run(model: Model, video: Path, provider: str = "cuda",
     prov_file = model.weights_dir / "provenance.json"
     prov = json.loads(prov_file.read_text()) if prov_file.exists() else {}
     (out_dir / "run.json").write_text(json.dumps({
-        "model": model.name, "input": video.name, "frames": n, "provider": provider,
+        "model": model.name, "input": video.name, "frames": n, "stride": stride, "provider": provider,
         "artifact_sha256": prov.get("sha256"),
         # Wall time incl. pre/post-processing; NOT a benchmark (see benchmark.py).
-        "mean_wall_ms_per_frame": round(1000 * t_total / max(n, 1), 2),
+        "mean_wall_ms_per_frame": round(1000 * t_total / max(n_run, 1), 2),
     }, indent=2))
     print(f"[{model.name}] {n} frames -> {out_dir}")
     return out_dir

@@ -38,6 +38,10 @@ All three use the official ONNX files (SHA-256 pinned).
   official `onnx_run.py`: RGB, 1024x1024, /255 without mean/std; the output
   is float16 alpha; upsampled bilinearly and min-max rescaled per image.
   (`refine_foreground` is a PyTorch-only extra and not part of the ONNX.)
+  **Known issue:** on a GTX 1660 Ti with ONNX Runtime 1.22 CUDA EP the graph
+  returns only NaN (CPU is fine; the comparison GIF frames for BEN2 were
+  rendered on CPU). The runner raises on non-finite output instead of
+  producing a matte.
 - **RVM-MobileNetV3** — release `rvm_mobilenetv3_fp32.onnx`. Recurrent: the
   runner keeps `r1`-`r4` across frames (reset per image in evaluation);
   `downsample_ratio = min(512 / max(h, w), 1)` (upstream's automatic rule;

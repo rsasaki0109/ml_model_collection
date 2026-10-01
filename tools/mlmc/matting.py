@@ -56,6 +56,10 @@ class SquareMatting:
 
     def postprocess(self, out, size):
         a = out[0, 0].astype(np.float32)
+        if not np.isfinite(a).all():
+            # e.g. BEN2's mixed-precision graph on some CUDA EP setups; never
+            # turn that into an alpha matte or an accuracy number.
+            raise RuntimeError(f"non-finite model output ({int((~np.isfinite(a)).sum())} values)")
         if self.output == "logits":
             a = 1.0 / (1.0 + np.exp(-a))
         a = cv2.resize(a, (size[1], size[0]), interpolation=cv2.INTER_LINEAR)

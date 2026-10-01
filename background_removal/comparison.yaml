@@ -6,3 +6,4 @@ models:
 cols: 3
 tile_width: 400
 fps: 5
+stride: 5  # BiRefNet / BEN2 are slow on small GPUs; only the GIF frames (every 5th) are needed
