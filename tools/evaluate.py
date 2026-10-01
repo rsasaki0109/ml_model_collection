@@ -68,6 +68,7 @@ import argparse
 import datetime as dt
 import inspect
 import json
+import os
 import subprocess
 import sys
 import time
@@ -743,6 +744,9 @@ def save(model: Model, rec: dict):
 
 
 def main():
+    # Accuracy runs feed variable-size images; cuDNN's exhaustive search would
+    # re-run per shape (it only affects speed, not results).
+    os.environ.setdefault("MLMC_CUDNN_SEARCH", "HEURISTIC")
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--model")

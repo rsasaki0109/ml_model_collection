@@ -7,6 +7,7 @@ coordinates with COCO class names, so tools can treat all models the same.
 
 from __future__ import annotations
 
+import os
 from dataclasses import dataclass
 
 import cv2
@@ -78,6 +79,13 @@ def ort_session(path, provider: str = "cuda"):
         # Load CUDA/cuDNN DLLs shipped with PyTorch or nvidia-* wheels, if any.
         ort.preload_dlls()
     providers, precision = PROVIDERS[provider]
+    # cuDNN's exhaustive algorithm search re-runs for every new input shape;
+    # evaluation on variable-size images sets MLMC_CUDNN_SEARCH=HEURISTIC.
+    search = os.environ.get("MLMC_CUDNN_SEARCH")
+    if search:
+        providers = [("CUDAExecutionProvider", {**p[1], "cudnn_conv_algo_search": search})
+                     if isinstance(p, tuple) and p[0] == "CUDAExecutionProvider" else p
+                     for p in providers]
     if provider.startswith("tensorrt"):
         from pathlib import Path
         cache = Path(path).parent / "trt_cache"
