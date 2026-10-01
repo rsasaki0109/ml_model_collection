@@ -1,0 +1,8 @@
+# Default line-up and layout for tools/make_comparison.py --task pose_estimation.
+models:
+  - rtmpose_s
+  - rtmo_s
+  - yolo26n_pose
+cols: 3
+tile_width: 400
+fps: 5

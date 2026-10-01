@@ -104,6 +104,22 @@ def fetch(model: Model, python: str, force: bool, update_hash: bool):
                 dest.unlink()
                 raise SystemExit(f"[{model.name}] sha256 mismatch for {f['path']}: {digest}")
             prov["files"][f["path"]] = {"url": f["url"], "sha256": digest}
+    elif art["fetch"] == "download_zip":
+        # Upstream ships the ONNX inside an archive: pin both the archive and
+        # the extracted member.
+        import zipfile
+        zpath = out.parent / Path(art["url"]).name
+        print(f"[{model.name}] downloading {art['url']}")
+        urllib.request.urlretrieve(art["url"], zpath)
+        if sha256(zpath) != art["zip_sha256"]:
+            raise SystemExit(f"[{model.name}] sha256 mismatch for {zpath.name}")
+        with zipfile.ZipFile(zpath) as z:
+            out.write_bytes(z.read(art["member"]))
+        zpath.unlink()
+        if sha256(out) != art["sha256"]:
+            out.unlink()
+            raise SystemExit(f"[{model.name}] sha256 mismatch for {art['member']}")
+        prov.update({"url": art["url"], "zip_sha256": art["zip_sha256"], "member": art["member"]})
     else:
         raise SystemExit(f"unknown fetch method {art['fetch']!r}")
 

@@ -1,0 +1,45 @@
+# Curated metadata. Measured numbers live in benchmarks.yaml / accuracy.yaml (tool-generated).
+name: yolo26n_pose
+display_name: YOLO26n-pose
+task: pose_estimation
+kind: one-stage
+keypoints: coco17
+summary: "Ultralytics YOLO26n-pose: smallest NMS-free one-stage pose model. AGPL-3.0 (copyleft)."
+
+source:
+  repository: https://github.com/ultralytics/ultralytics
+  commit: 50ca85e03bc669c694c474ab91168f9b5425d9a8  # HEAD when added (2026-10-01)
+
+license:
+  code:
+    spdx: AGPL-3.0
+    status: explicit
+    evidence: https://github.com/ultralytics/ultralytics/blob/50ca85e03bc669c694c474ab91168f9b5425d9a8/LICENSE
+  weights:
+    spdx: AGPL-3.0
+    status: explicit
+    evidence: https://github.com/ultralytics/ultralytics/blob/50ca85e03bc669c694c474ab91168f9b5425d9a8/docs/en/models/yolo26.md
+    note: >-
+      Ultralytics docs: "YOLO26 code, models, and documentation are available ... under AGPL-3.0 and Enterprise licenses"; the ONNX metadata also embeds the AGPL-3.0 license string.
+  dataset:
+    name: COCO 2017 keypoints
+    note: >-
+      Annotations CC BY 4.0; images are subject to Flickr terms of use (https://cocodataset.org/#termsofuse).
+
+artifacts:
+  onnx:
+    file: yolo26n_pose.onnx
+    fetch: download
+    url: https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo26n-pose.onnx
+    sha256: 93fc5e1d6b7690f33b4e1d60d6e9aec1cea14bdbc361bfae11778969be662078
+    input_shape: [1, 3, 640, 640]
+    input_format: RGB, centered letterbox pad 114, scaled to [0, 1]
+    output: "output0 [1,300,57]: x1 y1 x2 y2 score class + 17 x (x y conf), letterboxed pixels, NMS-free"
+
+runtimes:
+  onnxruntime: verified
+
+reported_accuracy:
+  - metric: COCO val2017 keypoint AP (end-to-end head, upstream)
+    value: 57.2
+    source: https://docs.ultralytics.com/tasks/pose/

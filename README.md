@@ -74,6 +74,20 @@ Depth-Anything-3-S is the newest (2025-11). Depth-Anything-V2-S and -B share cod
 
 Instance (RF-DETR-Seg) and semantic (ADE20K, 150 classes) models side by side. SegFormer-B0 is tiny and has a ready-made ONNX on the Hub, but its code **and** weights are NVIDIA non-commercial — it is here as a license-trap example. Survey: [docs/sota/segmentation.md](docs/sota/segmentation.md).
 
+## Pose estimation
+
+![Pose estimation comparison on the same clip](assets/pose_estimation_comparison.gif)
+
+<!-- BEGIN:pose_estimation_table -->
+| Model | Kind | Code license | Weights license | Input | COCO kpt AP<br>(reported) | COCO kpt AP<br>(measured, ONNX) | Peak VRAM<br>(measured) |
+|---|---|---|---|---|---|---|---|
+| [RTMO-s](pose_estimation/rtmo_s) | one-stage | 🟢 Apache-2.0 | 🟢 Apache-2.0* | 640×640 | [68.6](https://github.com/open-mmlab/mmpose/blob/759b39c13fea6ba094afc1fa932f51dc1b11cbf9/projects/rtmo/README.md) | – | not measured |
+| [RTMPose-s](pose_estimation/rtmpose_s) | top-down | 🟢 Apache-2.0 | 🟢 Apache-2.0* | 256×192 | [69.7](https://github.com/open-mmlab/mmpose/blob/759b39c13fea6ba094afc1fa932f51dc1b11cbf9/projects/rtmpose/README.md) | – | not measured |
+| [YOLO26n-pose](pose_estimation/yolo26n_pose) | one-stage | 🟡 AGPL-3.0 | 🟡 AGPL-3.0 | 640×640 | [57.2](https://docs.ultralytics.com/tasks/pose/) | – | not measured |
+<!-- END:pose_estimation_table -->
+
+COCO-17 keypoints. RTMPose is top-down (person boxes from D-FINE-N, so its numbers cover the whole pipeline); RTMO and YOLO26n-pose are one-stage. The mmpose ONNX files are **Body7** weights (7 datasets, each with its own terms). Survey: [docs/sota/pose_estimation.md](docs/sota/pose_estimation.md).
+
 ## Find a model
 
 ```console
@@ -156,6 +170,7 @@ ml_model_collection/
 ├── docs/                    licenses, hardware/VRAM, metadata, adding a model
 ├── depth_estimation/        same layout; runner file is estimator.py
 ├── segmentation/            same layout; runner file is segmenter.py
+├── pose_estimation/         same layout; runner file is pose.py
 ├── object_detection/
 │   └── <model>/
 │       ├── model.yaml       curated metadata: source, licenses, artifacts, reported accuracy
@@ -167,7 +182,7 @@ ml_model_collection/
 └── tools/                   fetch, run, compare, benchmark, find, validate, build_readme
 ```
 
-Other tasks (`pose_estimation/`, `optical_flow/`) will be added when there are models for them. The inner structure of `object_detection/` is deliberately flat for now and will be revisited once more models show what is actually shared ([docs/metadata.md](docs/metadata.md)).
+Other tasks (`optical_flow/`, ...) will be added when there are models for them. The inner structure of `object_detection/` is deliberately flat for now and will be revisited once more models show what is actually shared ([docs/metadata.md](docs/metadata.md)).
 
 ## Contributing
 

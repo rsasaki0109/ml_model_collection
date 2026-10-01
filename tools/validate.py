@@ -60,6 +60,8 @@ def check_model(m) -> list[str]:
             errs.append("artifacts.onnx.script does not exist")
         if art.get("fetch") == "download" and not art.get("sha256"):
             errs.append("artifacts.onnx.sha256 missing for a download")
+        if art.get("fetch") == "download_zip" and not all(art.get(k) for k in ("url", "zip_sha256", "member", "sha256")):
+            errs.append("artifacts.onnx needs url, zip_sha256, member and sha256 for download_zip")
         if art.get("fetch") == "download_files":
             files = art.get("files") or []
             if not files or any(not (f.get("url") and f.get("sha256") and f.get("path")) for f in files):

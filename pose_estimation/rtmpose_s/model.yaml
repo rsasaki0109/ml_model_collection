@@ -1,0 +1,49 @@
+# Curated metadata. Measured numbers live in benchmarks.yaml / accuracy.yaml (tool-generated).
+name: rtmpose_s
+display_name: RTMPose-s
+task: pose_estimation
+kind: top-down
+keypoints: coco17
+person_detector: dfine_n  # source of person boxes (top-down)
+summary: "mmpose RTMPose-s (SimCC, 5.5M params), Body7 weights; person boxes from D-FINE-N."
+
+source:
+  repository: https://github.com/open-mmlab/mmpose
+  commit: 759b39c13fea6ba094afc1fa932f51dc1b11cbf9  # HEAD when added (2026-10-01)
+  paper: https://arxiv.org/abs/2303.07399
+
+license:
+  code:
+    spdx: Apache-2.0
+    status: explicit
+    evidence: https://github.com/open-mmlab/mmpose/blob/759b39c13fea6ba094afc1fa932f51dc1b11cbf9/LICENSE
+  weights:
+    spdx: Apache-2.0
+    status: repository_license
+    evidence: https://github.com/open-mmlab/mmpose/blob/759b39c13fea6ba094afc1fa932f51dc1b11cbf9/projects/rtmpose/README.md
+    note: >-
+      The ONNX SDK archive is linked from the mmpose RTMPose README (download.openmmlab.com); no separate weights license is stated.
+  dataset:
+    name: Body7 (AIC, COCO, CrowdPose, MPII, sub-JHMDB, Halpe, PoseTrack18)
+    note: >-
+      Seven datasets with separate terms of use (COCO annotations CC BY 4.0); the other datasets' terms are not restated here (unverified).
+
+artifacts:
+  onnx:
+    file: rtmpose_s.onnx
+    fetch: download_zip
+    url: https://download.openmmlab.com/mmpose/v1/projects/rtmposev1/onnx_sdk/rtmpose-s_simcc-body7_pt-body7_420e-256x192-acd4a1ef_20230504.zip
+    zip_sha256: 7673922e531014906ca4f0f239b7e233b740146a10b632deaa2a28d45470d802
+    member: 20230831/rtmpose_onnx/rtmpose-s_simcc-body7_pt-body7_420e-256x192-acd4a1ef_20230504/end2end.onnx
+    sha256: 9aeb635b83f86aea45cf45d85798f7eba1a162de8e0d721c44e54fe5eebaf47d
+    input_shape: [-1, 3, 256, 192]  # batch of person crops
+    input_format: per person box - padding 1.25, aspect 192:256, affine warp, RGB, mean (123.675,116.28,103.53) std (58.395,57.12,57.375)
+    output: "simcc_x [B,17,384], simcc_y [B,17,512] (split ratio 2)"
+
+runtimes:
+  onnxruntime: verified
+
+reported_accuracy:
+  - metric: COCO val2017 keypoint AP (detector boxes, Body7 weights)
+    value: 69.7
+    source: https://github.com/open-mmlab/mmpose/blob/759b39c13fea6ba094afc1fa932f51dc1b11cbf9/projects/rtmpose/README.md

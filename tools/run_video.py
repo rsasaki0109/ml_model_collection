@@ -30,6 +30,7 @@ from tools.mlmc import REPO_ROOT  # noqa: E402
 from tools.mlmc.catalog import Model, get_model  # noqa: E402
 from tools.mlmc.depth import colorize  # noqa: E402
 from tools.mlmc.detection import draw  # noqa: E402
+from tools.mlmc.pose import render as render_pose  # noqa: E402
 from tools.mlmc.segmentation import render as render_seg  # noqa: E402
 
 
@@ -73,6 +74,8 @@ def run(model: Model, video: Path, provider: str = "cuda",
             jf.write(json.dumps({"frame": n, "detections": res.to_json()}) + "\n")
         elif model.task == "segmentation":
             writer.write(render_seg(frame, res))
+        elif model.task == "pose_estimation":
+            writer.write(render_pose(frame, res))
         else:
             writer.write(colorize(res))
         n += 1

@@ -91,3 +91,13 @@ def test_segmentation_render():
     assert out.shape == frame.shape and out[7, 7].any() and not out[15, 25].any()
     sem = SemanticMap(np.ones((20, 30), np.int64), ["bg", "road"])
     assert render(frame, sem).any()
+
+
+def test_pose_render():
+    from tools.mlmc.pose import COCO17, SKELETON, Poses, render
+    assert len(COCO17) == 17 and all(0 <= a < 17 and 0 <= b < 17 for a, b in SKELETON)
+    kps = np.tile(np.linspace(5, 25, 17)[:, None], (1, 2))[None].astype(np.float32)
+    p = Poses(kps, np.ones((1, 17), np.float32), np.array([[0, 0, 30, 30]], np.float32),
+              np.array([0.9], np.float32))
+    out = render(np.zeros((30, 30, 3), np.uint8), p)
+    assert out.any()

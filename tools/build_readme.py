@@ -143,7 +143,9 @@ def provenance_table(models: list[Model], start: Path) -> str:
         commit = src.get("commit", "")
         repo = src["repository"]
         art = m.meta["artifacts"]["onnx"]
-        how = (f"download `{art['url'].rsplit('/', 1)[-1]}` (sha256 pinned)"
+        how = (f"download `{art['url'].rsplit('/', 1)[-1]}`, extract `{art['member'].rsplit('/', 1)[-1]}` (sha256 pinned)"
+               if art["fetch"] == "download_zip"
+               else f"download `{art['url'].rsplit('/', 1)[-1]}` (sha256 pinned)"
                if art["fetch"] == "download"
                else f"download {len(art['files'])} files (sha256 pinned)"
                if art["fetch"] == "download_files"
@@ -170,7 +172,26 @@ def segmentation_table(models: list[Model], start: Path) -> str:
     return "\n".join(lines)
 
 
-OD, DE, SG = "object_detection", "depth_estimation", "segmentation"
+def pose_table(models: list[Model], start: Path) -> str:
+    cols = bench_columns(models)
+    head = ["Model", "Kind", "Code license", "Weights license", "Input",
+            "COCO kpt AP<br>(reported)", "COCO kpt AP<br>(measured, ONNX)", "Peak VRAM<br>(measured)"] + bench_head(cols)
+    lines = ["| " + " | ".join(head) + " |", "|" + "---|" * len(head)]
+    for m in models:
+        lic = m.meta.get("license", {})
+        shape = m.meta["artifacts"]["onnx"]["input_shape"]
+        meas = next((r for r in m.accuracy if r.get("dataset") == "COCO val2017 keypoints"), None)
+        meas_cell = f"**{meas['metrics']['AP']}**" if meas else "–"
+        if meas and meas["settings"].get("person_boxes"):
+            meas_cell += f" (persons {meas['settings']['person_boxes']})"
+        row = [f"[{m.display_name}]({rel(m, start)})", m.meta.get("kind", "?"),
+               licenses.describe(lic.get("code")), licenses.describe(lic.get("weights")),
+               f"{shape[-2]}×{shape[-1]}", accuracy(m, "COCO"), meas_cell, vram_cell(m)]
+        lines.append("| " + " | ".join(row + bench_cells(m, cols)) + " |")
+    return "\n".join(lines)
+
+
+OD, DE, SG, PE = "object_detection", "depth_estimation", "segmentation", "pose_estimation"
 TABLES = {
     (REPO_ROOT / "README.md", "object_detection_table"): (OD, comparison_table),
     (REPO_ROOT / "README.md", "depth_estimation_table"): (DE, depth_table),
@@ -181,6 +202,9 @@ TABLES = {
     (REPO_ROOT / "README.md", "segmentation_table"): (SG, segmentation_table),
     (REPO_ROOT / SG / "README.md", "segmentation_table"): (SG, segmentation_table),
     (REPO_ROOT / SG / "README.md", "segmentation_provenance"): (SG, provenance_table),
+    (REPO_ROOT / "README.md", "pose_estimation_table"): (PE, pose_table),
+    (REPO_ROOT / PE / "README.md", "pose_estimation_table"): (PE, pose_table),
+    (REPO_ROOT / PE / "README.md", "pose_estimation_provenance"): (PE, provenance_table),
 }
 
 

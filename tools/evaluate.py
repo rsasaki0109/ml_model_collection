@@ -12,6 +12,9 @@ our pre/post-processing, not the upstream PyTorch model.
 * Object detection: COCO val2017 box AP (pycocotools).
 * Instance / promptable segmentation: COCO val2017 mask AP (segm) plus box AP.
   Promptable models use their default prompt detector's boxes.
+* Pose estimation: COCO val2017 keypoint AP (OKS, pycocotools, needs
+  ``annotations/person_keypoints_val2017.json``). Top-down models use their
+  default person detector, so the number covers the whole pipeline.
 * Semantic segmentation: ADE20K val mIoU (150 classes, label 0 ignored),
   ``--ade-root`` = the extracted ADEChallengeData2016 directory
   (http://data.csail.mit.edu/places/ADEchallenge/ADEChallengeData2016.zip).
@@ -124,6 +127,54 @@ def eval_coco_detection(model: Model, coco_root: Path, provider: str,
     return out
 
 
+def eval_coco_keypoints(model: Model, coco_root: Path, provider: str,
+                        limit: int | None) -> dict:
+    from pycocotools.coco import COCO
+    from pycocotools.cocoeval import COCOeval
+
+    gt = COCO(str(coco_root / "annotations" / "person_keypoints_val2017.json"))
+    img_ids = sorted(gt.getImgIds())[:limit] if limit else sorted(gt.getImgIds())
+    params = inspect.signature(_runner_cls(model)).parameters
+    kwargs = {"provider": provider}
+    if "score_thr" in params:
+        kwargs["score_thr"] = SCORE_THR
+    est = model.load_runner(**kwargs)
+    results, t0 = [], time.perf_counter()
+    for k, img_id in enumerate(img_ids):
+        info = gt.loadImgs(img_id)[0]
+        poses = est(cv2.imread(str(coco_root / "val2017" / info["file_name"])))
+        order = np.argsort(-poses.box_scores)[:20]   # COCO keypoint maxDets = 20
+        for i in order:
+            kps = np.concatenate([poses.keypoints[i], poses.scores[i][:, None]], 1)
+            # instance score as in mmpose: box score x mean confident keypoint score
+            conf = poses.scores[i][poses.scores[i] > 0.2]
+            score = float(poses.box_scores[i]) * (float(conf.mean()) if len(conf) else 0.0)
+            results.append({"image_id": img_id, "category_id": 1,
+                            "keypoints": [round(float(v), 2) for v in kps.reshape(-1)],
+                            "score": round(score, 5)})
+        if (k + 1) % 1000 == 0:
+            print(f"  {k + 1}/{len(img_ids)} images", flush=True)
+    elapsed = time.perf_counter() - t0
+    if not results:
+        raise SystemExit("no poses")
+    ev = COCOeval(gt, gt.loadRes(results), "keypoints")
+    ev.params.imgIds = img_ids
+    ev.evaluate(); ev.accumulate(); ev.summarize()
+    names = ["AP", "AP50", "AP75", "AP_medium", "AP_large"]
+    out = {
+        "dataset": "COCO val2017 keypoints" + (f" (first {limit} images)" if limit else ""),
+        "images": len(img_ids),
+        "metrics": {n: round(float(v) * 100, 1) for n, v in zip(names, ev.stats[:5])},
+        "settings": {"score_threshold": SCORE_THR, "max_dets": 20,
+                     "instance_score": "box score x mean keypoint score (> 0.2)",
+                     "evaluator": "pycocotools COCOeval (keypoints, OKS)"},
+        "wall_time_s": round(elapsed, 1),
+    }
+    if model.meta.get("person_detector"):
+        out["settings"]["person_boxes"] = f"from {model.meta['person_detector']}"
+    return out
+
+
 def eval_ade20k(model: Model, ade_root: Path, provider: str, limit: int | None) -> dict:
     """ADE20K val mIoU: 150 classes, label 0 (other / unlabelled) ignored."""
     seg = model.load_runner(provider=provider)
@@ -213,6 +264,11 @@ def main():
             raise SystemExit("--ade-root is required for semantic segmentation")
         res = eval_ade20k(model, args.ade_root, args.provider, args.limit)
         ds_id = "ade20k-val"
+    elif model.task == "pose_estimation":
+        if not args.coco_root:
+            raise SystemExit("--coco-root is required")
+        res = eval_coco_keypoints(model, args.coco_root, args.provider, args.limit)
+        ds_id = "coco-val2017-keypoints"
     elif model.task in ("object_detection", "segmentation"):
         if not args.coco_root:
             raise SystemExit("--coco-root is required")

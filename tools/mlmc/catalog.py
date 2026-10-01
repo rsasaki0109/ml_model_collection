@@ -23,6 +23,7 @@ RUNNERS = {
     "object_detection": ("detector.py", "Detector"),
     "depth_estimation": ("estimator.py", "Estimator"),
     "segmentation": ("segmenter.py", "Segmenter"),
+    "pose_estimation": ("pose.py", "PoseEstimator"),
 }
 
 
