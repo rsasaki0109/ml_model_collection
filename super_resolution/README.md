@@ -12,11 +12,11 @@ benchmark LR images at their own sizes.
 ## Comparison
 
 <!-- BEGIN:super_resolution_table -->
-| Model | Kind | Code license | Weights license | Training data | PSNR-Y x4 Set5 / Set14 / Urban100<br>(reported) | PSNR-Y x4 Set5 / Set14 / Urban100<br>(measured, ONNX) | Peak VRAM<br>(measured) |
-|---|---|---|---|---|---|---|---|
-| [Real-ESRGAN-x4plus](real_esrgan_x4plus) | real-world (GAN) | 🟢 BSD-3-Clause | 🟢 BSD-3-Clause* | DF2K (DIV2K + Flickr2K) + OST | – | – | not measured |
-| [realesr-general-x4v3](realesr_general_x4v3) | real-world (GAN) | 🟢 BSD-3-Clause | 🟢 BSD-3-Clause* | not documented upstream | – | – | not measured |
-| [SAFMN-x4](safmn_x4) | PSNR-oriented | 🟢 Apache-2.0 | 🟢 Apache-2.0* | DF2K (DIV2K + Flickr2K) | [32.18 / 28.60 / 25.97](https://arxiv.org/abs/2302.13800) | – | not measured |
+| Model | Kind | Code license | Weights license | Training data | PSNR-Y x4 Set5 / Set14 / Urban100<br>(reported) | PSNR-Y x4 Set5 / Set14 / Urban100<br>(measured, ONNX) | Peak VRAM<br>(measured) | Tesla T4 (Colab)<br>onnxruntime-cuda FP32 · ms / FPS | Tesla T4 (Colab)<br>onnxruntime-tensorrt FP16 · ms / FPS |
+|---|---|---|---|---|---|---|---|---|---|
+| [Real-ESRGAN-x4plus](real_esrgan_x4plus) | real-world (GAN) | 🟢 BSD-3-Clause | 🟢 BSD-3-Clause* | DF2K (DIV2K + Flickr2K) + OST | – | – | 1435 MB (Tiny, T4 CUDA FP32)<br>881 MB (Tiny, T4 TRT FP16) | 541.4 / 2 | 203.5 / 5 |
+| [realesr-general-x4v3](realesr_general_x4v3) | real-world (GAN) | 🟢 BSD-3-Clause | 🟢 BSD-3-Clause* | not documented upstream | – | – | 219 MB (Tiny, T4 CUDA FP32)<br>361 MB (Tiny, T4 TRT FP16) | 35.6 / 28 | 12.9 / 77 |
+| [SAFMN-x4](safmn_x4) | PSNR-oriented | 🟢 Apache-2.0 | 🟢 Apache-2.0* | DF2K (DIV2K + Flickr2K) | [32.18 / 28.60 / 25.97](https://arxiv.org/abs/2302.13800) | – | 299 MB (Tiny, T4 CUDA FP32)<br>425 MB (Tiny, T4 TRT FP16) | 27.3 / 37 | 14.7 / 68 |
 <!-- END:super_resolution_table -->
 
 ## Provenance
