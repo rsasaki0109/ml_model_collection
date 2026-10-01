@@ -1,0 +1,54 @@
+# Curated metadata. Measured numbers live in benchmarks.yaml / accuracy.yaml (tool-generated).
+name: repvit_m1_1
+display_name: RepViT-M1.1
+task: image_classification
+kind: supervised (ImageNet-1k)
+summary: "RepViT-M1.1 (CVPR 2024): re-parameterised mobile CNN with ViT design, distilled (8.8M params)."
+
+source:
+  repository: https://github.com/THU-MIG/RepViT
+  commit: 298f42075eda5d2e6102559fad260c970769d34e  # HEAD when added (2026-10-02)
+  paper: https://arxiv.org/abs/2307.09283
+  weights_repository: https://huggingface.co/timm/repvit_m1_1.dist_450e_in1k
+  weights_revision: ff441038a42982fff1c8c75be7c794f9ba76db72
+
+license:
+  code:
+    spdx: Apache-2.0
+    status: explicit
+    evidence: https://github.com/THU-MIG/RepViT/blob/298f42075eda5d2e6102559fad260c970769d34e/LICENSE
+  weights:
+    spdx: Apache-2.0
+    status: explicit
+    evidence: https://huggingface.co/timm/repvit_m1_1.dist_450e_in1k/blob/ff441038a42982fff1c8c75be7c794f9ba76db72/README.md
+    note: >-
+      The timm model card declares license: apache-2.0. Exported from timm with re-parameterisation.
+  dataset:
+    name: ImageNet-1k
+    note: >-
+      ImageNet: 'non-commercial research and educational purposes' (terms of access); the timm README notes 'one should assume that the original dataset license applies to the weights' (https://github.com/huggingface/pytorch-image-models/blob/92dbd9e3f9b5d61c4d008223410781da983239fc/README.md#licenses).
+
+artifacts:
+  onnx:
+    file: repvit_m1_1.onnx
+    fetch: export
+    script: export.py
+    input_shape: [1, 3, 224, 224]
+    input_format: RGB, shorter side resized to size / crop_pct (PIL bicubic), centre crop, ImageNet mean/std
+    output: "logits [B, 1000] (ImageNet-1k class index order)"
+
+classification:
+  size: 224
+  crop_pct: 0.95
+  interpolation: bicubic
+
+runtimes:
+  onnxruntime: verified
+
+reported_accuracy:
+  - metric: ImageNet-1k val top-1 (timm results)
+    value: 81.314
+    source: https://github.com/huggingface/pytorch-image-models/blob/92dbd9e3f9b5d61c4d008223410781da983239fc/results/results-imagenet.csv
+  - metric: ImageNetV2 matched-frequency top-1 (timm results)
+    value: 70.37
+    source: https://github.com/huggingface/pytorch-image-models/blob/92dbd9e3f9b5d61c4d008223410781da983239fc/results/results-imagenetv2-matched-frequency.csv

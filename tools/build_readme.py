@@ -365,6 +365,71 @@ def tracking_table(models: list[Model], start: Path) -> str:
     return "\n".join(lines)
 
 
+def classification_table(models: list[Model], start: Path) -> str:
+    cols = bench_columns(models)
+    head = ["Model", "Kind", "Code license", "Weights license", "Training data", "Input",
+            "ImageNet-1k top-1<br>(reported)", "ImageNetV2 top-1<br>(reported)", "ImageNetV2 top-1 / top-5<br>(measured, ONNX)",
+            "Peak VRAM<br>(measured)"] + bench_head(cols)
+    lines = ["| " + " | ".join(head) + " |", "|" + "---|" * len(head)]
+    for m in models:
+        lic = m.meta.get("license", {})
+        rep = m.meta.get("reported_accuracy", [])
+        r_in = next((r for r in rep if r["metric"].startswith("ImageNet-1k")), None)
+        r_v2 = next((r for r in rep if r["metric"].startswith("ImageNetV2")), None)
+        cell = lambda r: f"[{r['value']}]({r['source']})" if r else "–"  # noqa: E731
+        meas = next((r for r in m.accuracy if r.get("dataset") == "ImageNetV2 matched-frequency"), None)
+        meas_cell = f"**{meas['metrics']['top1']} / {meas['metrics']['top5']}**" if meas else "–"
+        shape = m.meta["artifacts"]["onnx"]["input_shape"]
+        row = [f"[{m.display_name}]({rel(m, start)})", m.meta.get("kind", "?"),
+               licenses.describe(lic.get("code")), licenses.describe(lic.get("weights")),
+               lic.get("dataset", {}).get("name", "?"), f"{shape[-2]}×{shape[-1]}",
+               cell(r_in), cell(r_v2), meas_cell, vram_cell(m)]
+        lines.append("| " + " | ".join(row + bench_cells(m, cols)) + " |")
+    return "\n".join(lines)
+
+
+def point_tracking_table(models: list[Model], start: Path) -> str:
+    cols = bench_columns(models)
+    head = ["Model", "Kind", "Code license", "Weights license", "Input",
+            "TAP-Vid DAVIS first AJ<br>(reported)", "TAP-Vid DAVIS first AJ / δavg / OA<br>(measured, ONNX)",
+            "Peak VRAM<br>(measured)"] + bench_head(cols)
+    lines = ["| " + " | ".join(head) + " |", "|" + "---|" * len(head)]
+    for m in models:
+        lic = m.meta.get("license", {})
+        rep = m.meta.get("reported_accuracy") or []
+        rep_cell = f"[{rep[0]['value']}]({rep[0]['source']})" if rep else "–"
+        meas = next((r for r in m.accuracy if r.get("dataset") == "TAP-Vid DAVIS (first)"), None)
+        meas_cell = (f"**{meas['metrics']['AJ']} / {meas['metrics']['delta_avg']} / {meas['metrics']['OA']}**"
+                     if meas else "–")
+        shape = m.meta["artifacts"]["onnx"]["input_shape"]
+        row = [f"[{m.display_name}]({rel(m, start)})", m.meta.get("kind", "?"),
+               licenses.describe(lic.get("code")), licenses.describe(lic.get("weights")),
+               f"{shape[-2]}×{shape[-1]}, {m.meta['point_tracking']['num_points']} points",
+               rep_cell, meas_cell, vram_cell(m)]
+        lines.append("| " + " | ".join(row + bench_cells(m, cols)) + " |")
+    return "\n".join(lines)
+
+
+def captioning_table(models: list[Model], start: Path) -> str:
+    cols = bench_columns(models)
+    head = ["Model", "Code license", "Weights license", "Training data", "Input",
+            "COCO Karpathy CIDEr<br>(reported)", "COCO Karpathy CIDEr / BLEU-4<br>(measured, ONNX, greedy)",
+            "Peak VRAM<br>(measured)"] + bench_head(cols)
+    lines = ["| " + " | ".join(head) + " |", "|" + "---|" * len(head)]
+    for m in models:
+        lic = m.meta.get("license", {})
+        rep = m.meta.get("reported_accuracy") or []
+        rep_cell = f"[{rep[0]['value']}]({rep[0]['source']})" if rep else "–"
+        meas = next((r for r in m.accuracy if r.get("dataset") == "COCO Karpathy test"), None)
+        meas_cell = f"**{meas['metrics']['CIDEr']} / {meas['metrics']['BLEU4']}**" if meas else "–"
+        shape = m.meta["artifacts"]["onnx"]["input_shape"]
+        row = [f"[{m.display_name}]({rel(m, start)})", licenses.describe(lic.get("code")),
+               licenses.describe(lic.get("weights")), lic.get("dataset", {}).get("name", "?"),
+               f"{shape[-2]}×{shape[-1]}", rep_cell, meas_cell, vram_cell(m)]
+        lines.append("| " + " | ".join(row + bench_cells(m, cols)) + " |")
+    return "\n".join(lines)
+
+
 # task -> (section title, measured metric: dataset prefix, key, higher is better, label)
 TASK_INDEX = {
     "object_detection": ("Object detection", ("COCO val2017", "AP", True, "COCO AP")),
@@ -378,6 +443,9 @@ TASK_INDEX = {
     "ocr": ("OCR (scene text)", ("ICDAR2015 test", "e2e_hmean", True, "ICDAR2015 end-to-end H-mean")),
     "feature_matching": ("Feature matching", ("HPatches", "H_AUC@3px", True, "HPatches H-AUC@3px")),
     "tracking": ("Multi-object tracking", ("MOT17 train", "HOTA", True, "MOT17-train HOTA")),
+    "image_classification": ("Image classification", ("ImageNetV2 matched-frequency", "top1", True, "ImageNetV2 top-1")),
+    "point_tracking": ("Point tracking", ("TAP-Vid DAVIS (first)", "AJ", True, "TAP-Vid DAVIS AJ")),
+    "image_captioning": ("Image captioning", ("COCO Karpathy test", "CIDEr", True, "COCO CIDEr")),
 }
 
 
@@ -457,6 +525,17 @@ TABLES = {
     (REPO_ROOT / "feature_matching" / "README.md", "feature_matching_provenance"):
         ("feature_matching", provenance_table),
     (REPO_ROOT / "README.md", "tracking_table"): ("tracking", tracking_table),
+    (REPO_ROOT / "README.md", "image_classification_table"): ("image_classification", classification_table),
+    (REPO_ROOT / "image_classification" / "README.md", "image_classification_table"):
+        ("image_classification", classification_table),
+    (REPO_ROOT / "image_classification" / "README.md", "image_classification_provenance"):
+        ("image_classification", provenance_table),
+    (REPO_ROOT / "README.md", "point_tracking_table"): ("point_tracking", point_tracking_table),
+    (REPO_ROOT / "point_tracking" / "README.md", "point_tracking_table"): ("point_tracking", point_tracking_table),
+    (REPO_ROOT / "point_tracking" / "README.md", "point_tracking_provenance"): ("point_tracking", provenance_table),
+    (REPO_ROOT / "README.md", "image_captioning_table"): ("image_captioning", captioning_table),
+    (REPO_ROOT / "image_captioning" / "README.md", "image_captioning_table"): ("image_captioning", captioning_table),
+    (REPO_ROOT / "image_captioning" / "README.md", "image_captioning_provenance"): ("image_captioning", provenance_table),
     (REPO_ROOT / "tracking" / "README.md", "tracking_table"): ("tracking", tracking_table),
 }
 

@@ -1,0 +1,8 @@
+# Default line-up and layout for tools/make_comparison.py --task image_classification.
+models:
+  - mobilenetv4_conv_small
+  - repvit_m1_1
+  - siglip2_b16_224
+cols: 3
+tile_width: 400
+fps: 5

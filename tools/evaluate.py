@@ -45,6 +45,15 @@ our pre/post-processing, not the upstream PyTorch model.
   delta1 after per-image affine alignment, ``--nyu-root`` = directory with
   ``nyu_depth_v2_labeled.mat`` and ``splits.mat``
   (http://horatio.cs.nyu.edu/mit/silberman/).
+* Image classification: ImageNetV2 matched-frequency top-1 / top-5
+  (``--imagenetv2-root``; Hugging Face vaishaal/ImageNetV2, not gated, MIT
+  tag). ImageNet-1k val itself is gated behind its terms of access.
+* Point tracking: TAP-Vid DAVIS 'first' AJ / delta_avg / OA at 256x256
+  (``--tapvid-root`` with ``tapvid_davis.pkl`` from
+  https://storage.googleapis.com/dm-tapnet/tapvid_davis.zip).
+* Image captioning: COCO Karpathy test (5000 val2014 images) CIDEr-D /
+  BLEU-4 with pycocoevalcap (needs Java), ``--coco-captions-root`` =
+  directory with ``dataset_coco.json`` (Karpathy split) and ``val2014/``.
 * Semantic segmentation: ADE20K val mIoU (150 classes, label 0 ignored),
   ``--ade-root`` = the extracted ADEChallengeData2016 directory
   (http://data.csail.mit.edu/places/ADEchallenge/ADEChallengeData2016.zip).
@@ -659,6 +668,130 @@ def eval_nyu(model: Model, root: Path, provider: str, limit: int | None) -> dict
     }
 
 
+def eval_imagenetv2(model: Model, root: Path, provider: str, limit: int | None) -> dict:
+    """ImageNetV2 matched-frequency (10,000 images), top-1 / top-5. The label
+    is the integer folder name (ImageNet class index); folders must not be
+    sorted as strings. ``root`` = ``imagenetv2-matched-frequency-format-val``."""
+    t0 = time.perf_counter()
+    runner = model.load_runner(provider=provider, top_k=5)
+    top1 = top5 = n = 0
+    for k in range(1000):
+        files = sorted((root / str(k)).glob("*.jpeg")) + sorted((root / str(k)).glob("*.jpg"))
+        for f in files[:limit]:
+            res = runner(cv2.imread(str(f)))
+            top1 += int(res.indices[0] == k)
+            top5 += int(k in res.indices[:5])
+            n += 1
+    return {
+        "dataset": "ImageNetV2 matched-frequency" + (f" (first {limit} images per class)" if limit else ""),
+        "images": n,
+        "metrics": {"top1": round(100 * top1 / max(n, 1), 2), "top5": round(100 * top5 / max(n, 1), 2)},
+        "settings": {"preprocessing": "as the runner (model.yaml classification:)",
+                     "labels": "integer folder name = ImageNet class index"},
+        "wall_time_s": round(time.perf_counter() - t0, 1),
+    }
+
+
+def eval_tapvid_davis(model: Model, root: Path, provider: str, limit: int | None) -> dict:
+    """TAP-Vid DAVIS (30 videos), 'first' query mode at 256x256, as tapnet's
+    evaluation: each point is queried at its first visible frame; AJ,
+    delta_avg (1/2/4/8/16 px) and occlusion accuracy over the frames after
+    the query, averaged over videos. The online tracker runs causally from
+    frame 0; query features are taken from each query's own frame (padded /
+    chunked to the graph's fixed number of points).
+    ``root`` = directory with ``tapvid_davis.pkl``."""
+    import pickle
+
+    from tools.mlmc.point_tracking import tapvid_metrics
+
+    t0 = time.perf_counter()
+    runner = model.load_runner(provider=provider)
+    n_graph = model.meta["point_tracking"]["num_points"]
+    res = runner.res
+    with open(root / "tapvid_davis.pkl", "rb") as f:
+        data = pickle.load(f)
+    per_video, n_frames = [], 0
+    for name in sorted(data)[:limit]:
+        v = data[name]
+        frames = np.stack([cv2.resize(fr, (res, res), interpolation=cv2.INTER_AREA) for fr in v["video"]])
+        T = len(frames)
+        xs = np.ascontiguousarray((frames.astype(np.float32) / 255 * 2 - 1).transpose(0, 3, 1, 2))
+        gt_tracks = v["points"].astype(np.float64) * res            # (N, T, 2) x y
+        gt_occ = v["occluded"].astype(bool)                          # (N, T)
+        keep = np.flatnonzero((~gt_occ).any(1))
+        gt_tracks, gt_occ = gt_tracks[keep], gt_occ[keep]
+        q_t = np.argmax(~gt_occ, axis=1)
+        q_xy = gt_tracks[np.arange(len(q_t)), q_t]                   # x y at the query frame
+        pred = np.zeros_like(gt_tracks)
+        pred_vis = np.zeros(gt_occ.shape, bool)
+        for s in range(0, len(q_t), n_graph):
+            idx = np.arange(s, min(s + n_graph, len(q_t)))
+            pad = n_graph - len(idx)
+            yx = np.concatenate([q_xy[idx][:, ::-1] / res, np.full((pad, 2), 0.5)])
+            qt = np.concatenate([q_t[idx], np.zeros(pad, int)])
+            qf = np.zeros((1, n_graph, 256), np.float32)
+            hqf = np.zeros((1, n_graph, 128), np.float32)
+            for t in np.unique(qt):                                  # query features at each query frame
+                f_t, h_t = runner.encode(yx, xs[t:t + 1])
+                sel = qt == t
+                qf[:, sel], hqf[:, sel] = f_t[:, sel], h_t[:, sel]
+            state = runner.zero_state(n_graph)
+            for t in range(T):
+                tracks, vis, state, _, _ = runner.step(xs[t:t + 1], qf, hqf, state)
+                pred[idx, t] = tracks[0, :len(idx)]
+                pred_vis[idx, t] = vis[0, :len(idx)].astype(bool)
+        m = tapvid_metrics(np.stack([q_t, q_xy[:, 1], q_xy[:, 0]], 1), gt_occ, gt_tracks,
+                           ~pred_vis, pred, "first")
+        per_video.append(m)
+        n_frames += T
+    agg = {k: round(float(np.mean([m[k] for m in per_video])) * 100, 1)
+           for k in ("average_jaccard", "delta_avg", "occlusion_accuracy")}
+    return {
+        "dataset": "TAP-Vid DAVIS (first)" + (f" (first {limit} videos)" if limit else ""),
+        "images": n_frames,
+        "metrics": {"AJ": agg["average_jaccard"], "delta_avg": agg["delta_avg"], "OA": agg["occlusion_accuracy"]},
+        "settings": {"query_mode": "first", "resolution": f"{res}x{res} (cv2 INTER_AREA resize)",
+                     "evaluator": "port of tapnet compute_tapvid_metrics (thresholds 1/2/4/8/16 px), mean over videos"},
+        "wall_time_s": round(time.perf_counter() - t0, 1),
+    }
+
+
+def eval_coco_karpathy(model: Model, root: Path, provider: str, limit: int | None) -> dict:
+    """COCO Captions, Karpathy test split (5000 val2014 images): CIDEr-D and
+    BLEU-4 with pycocoevalcap (PTB tokenizer, needs Java). Greedy decoding,
+    zero-shot (no COCO fine-tuning in these checkpoints' caption heads unless
+    stated). ``root`` holds ``dataset_coco.json`` (Karpathy split file) and
+    ``val2014/``."""
+    from pycocoevalcap.bleu.bleu import Bleu
+    from pycocoevalcap.cider.cider import Cider
+    from pycocoevalcap.tokenizer.ptbtokenizer import PTBTokenizer
+
+    t0 = time.perf_counter()
+    runner = model.load_runner(provider=provider)
+    split = json.loads((root / "dataset_coco.json").read_text(encoding="utf-8"))
+    imgs = [im for im in split["images"] if im["split"] == "test"][:limit]
+    gts, res = {}, {}
+    for im in imgs:
+        cap = runner(cv2.imread(str(root / im["filepath"] / im["filename"])))
+        gts[im["cocoid"]] = [{"caption": s["raw"]} for s in im["sentences"]]
+        res[im["cocoid"]] = [{"caption": cap.text}]
+    tok = PTBTokenizer()
+    gts_t, res_t = tok.tokenize(gts), tok.tokenize(res)
+    cider, _ = Cider().compute_score(gts_t, res_t)
+    bleu, _ = Bleu(4).compute_score(gts_t, res_t)
+    mean_tokens = float(np.mean([len(r[0]["caption"].split()) for r in res.values()]))
+    return {
+        "dataset": "COCO Karpathy test" + (f" (first {limit} images)" if limit else ""),
+        "images": len(imgs),
+        "metrics": {"CIDEr": round(cider * 100, 1), "BLEU4": round(bleu[3] * 100, 1),
+                    "mean_words": round(mean_tokens, 1)},
+        "settings": {"decoding": f"greedy, max {runner.max_new} new tokens",
+                     "prompt": model.meta["captioning"]["prompt"],
+                     "evaluator": "pycocoevalcap (PTBTokenizer, CIDEr-D, BLEU-4)"},
+        "wall_time_s": round(time.perf_counter() - t0, 1),
+    }
+
+
 HPATCHES_IGNORED = ("i_contruction", "i_crownnight", "i_dc", "i_pencils", "i_whitebuilding",
                     "v_artisans", "v_astronautis", "v_talent")  # glue-factory: large images
 
@@ -766,6 +899,9 @@ def main():
     ap.add_argument("--hpatches-root", type=Path, help="extracted hpatches-sequences-release/")
     ap.add_argument("--mot17-root", type=Path, help="extracted MOT17/train")
     ap.add_argument("--nyu-root", type=Path, help="directory with nyu_depth_v2_labeled.mat and splits.mat")
+    ap.add_argument("--imagenetv2-root", type=Path, help="extracted imagenetv2-matched-frequency-format-val")
+    ap.add_argument("--tapvid-root", type=Path, help="directory with tapvid_davis.pkl")
+    ap.add_argument("--coco-captions-root", type=Path, help="directory with dataset_coco.json and val2014/")
     ap.add_argument("--provider", default="cuda", choices=list(PROVIDERS))
     ap.add_argument("--limit", type=int, help="evaluate only the first N images (smoke test)")
     args = ap.parse_args()
@@ -782,7 +918,11 @@ def main():
                     (["--wider-root", str(args.wider_root)] if args.wider_root else []) + \
                     (["--icdar15-root", str(args.icdar15_root)] if args.icdar15_root else []) + \
                     (["--hpatches-root", str(args.hpatches_root)] if args.hpatches_root else []) + \
-                    (["--mot17-root", str(args.mot17_root)] if args.mot17_root else [])
+                    (["--mot17-root", str(args.mot17_root)] if args.mot17_root else []) + \
+                    (["--nyu-root", str(args.nyu_root)] if args.nyu_root else []) + \
+                    (["--imagenetv2-root", str(args.imagenetv2_root)] if args.imagenetv2_root else []) + \
+                    (["--tapvid-root", str(args.tapvid_root)] if args.tapvid_root else []) + \
+                    (["--coco-captions-root", str(args.coco_captions_root)] if args.coco_captions_root else [])
                 subprocess.run([sys.executable, __file__, "--model", m.name, *roots,
                                 "--provider", args.provider]
                                + (["--limit", str(args.limit)] if args.limit else []))
@@ -839,6 +979,21 @@ def main():
             raise SystemExit("--nyu-root is required")
         res = eval_nyu(model, args.nyu_root, args.provider, args.limit)
         ds_id = "nyuv2-test"
+    elif model.task == "image_classification":
+        if not args.imagenetv2_root:
+            raise SystemExit("--imagenetv2-root is required")
+        res = eval_imagenetv2(model, args.imagenetv2_root, args.provider, args.limit)
+        ds_id = "imagenetv2-mf"
+    elif model.task == "point_tracking":
+        if not args.tapvid_root:
+            raise SystemExit("--tapvid-root is required")
+        res = eval_tapvid_davis(model, args.tapvid_root, args.provider, args.limit)
+        ds_id = "tapvid-davis-first"
+    elif model.task == "image_captioning":
+        if not args.coco_captions_root:
+            raise SystemExit("--coco-captions-root is required")
+        res = eval_coco_karpathy(model, args.coco_captions_root, args.provider, args.limit)
+        ds_id = "coco-karpathy-test"
     elif model.task in ("object_detection", "segmentation"):
         if not args.coco_root:
             raise SystemExit("--coco-root is required")

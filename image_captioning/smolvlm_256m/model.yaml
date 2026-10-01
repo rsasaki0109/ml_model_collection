@@ -1,0 +1,64 @@
+# Curated metadata. Measured numbers live in benchmarks.yaml / accuracy.yaml (tool-generated).
+name: smolvlm_256m
+display_name: SmolVLM-256M
+task: image_captioning
+summary: "SmolVLM-256M-Instruct (Hugging Face, 2025): SigLIP-B/16-512 + SmolLM2-135M chat VLM, official ONNX; prompted for one short sentence."
+
+source:
+  repository: https://huggingface.co/HuggingFaceTB/SmolVLM-256M-Instruct
+  commit: 7e3e67edbbed1bf9888184d9df282b700a323964  # HF revision when added (2026-10-02)
+  paper: https://arxiv.org/abs/2504.05299
+
+license:
+  code:
+    spdx: Apache-2.0
+    status: explicit
+    evidence: https://huggingface.co/HuggingFaceTB/SmolVLM-256M-Instruct/blob/7e3e67edbbed1bf9888184d9df282b700a323964/README.md
+  weights:
+    spdx: Apache-2.0
+    status: explicit
+    evidence: https://huggingface.co/HuggingFaceTB/SmolVLM-256M-Instruct/blob/7e3e67edbbed1bf9888184d9df282b700a323964/README.md
+    note: >-
+      The model card declares license: apache-2.0; the ONNX graphs are the official files in the same repository.
+  dataset:
+    name: The Cauldron, Docmatix (and SmolLM2 / SigLIP pre-training)
+    note: >-
+      The Cauldron combines ~50 datasets with their own licenses (incl. COCO-image subsets); Docmatix is MIT (per survey; unverified per subset).
+  runtime_dependencies:
+    - {name: tokenizers, spdx: Apache-2.0}
+
+artifacts:
+  onnx:
+    file: vision_encoder.onnx
+    fetch: download_files
+    files:
+      - path: vision_encoder.onnx
+        url: https://huggingface.co/HuggingFaceTB/SmolVLM-256M-Instruct/resolve/7e3e67edbbed1bf9888184d9df282b700a323964/onnx/vision_encoder.onnx
+        sha256: e27ad810eabfa7c881b409e1ca357e7a951541019add228ff73c72718fcf6218
+      - path: embed_tokens.onnx
+        url: https://huggingface.co/HuggingFaceTB/SmolVLM-256M-Instruct/resolve/7e3e67edbbed1bf9888184d9df282b700a323964/onnx/embed_tokens.onnx
+        sha256: a68ea4058524059ed0e2873fdbc4f33b93e13ae3d3204938d32d0566d390ae00
+      - path: decoder_model_merged.onnx
+        url: https://huggingface.co/HuggingFaceTB/SmolVLM-256M-Instruct/resolve/7e3e67edbbed1bf9888184d9df282b700a323964/onnx/decoder_model_merged.onnx
+        sha256: 5ae6a66fdf47680433aa6bcc512ae8f0b98c2db01bea055fc76ee37bb0389b78
+      - path: tokenizer.json
+        url: https://huggingface.co/HuggingFaceTB/SmolVLM-256M-Instruct/resolve/7e3e67edbbed1bf9888184d9df282b700a323964/tokenizer.json
+        sha256: 5ece781dc8d2b2f3e2f289ca0ae50b17cfc27dd27bfe7971bb8241e0b964331a
+    input_shape: [1, 1, 3, 512, 512]
+    input_format: RGB, resized to 512x512 (PIL bilinear, no image splitting), (x/255 - 0.5) / 0.5
+    output: "image features for the language model; captions by greedy decoding with a KV cache"
+
+captioning:
+  embed_file: embed_tokens.onnx
+  decoder_file: decoder_model_merged.onnx
+  tokenizer_file: tokenizer.json
+  image_size: 512
+  image_tokens: 64
+  prompt: Describe the image in one short sentence.
+  max_new_tokens: 40
+
+runtimes:
+  onnxruntime: verified
+
+reported_accuracy:
+  []  # no COCO caption number published

@@ -30,6 +30,8 @@ from tools.mlmc import REPO_ROOT  # noqa: E402
 from tools.mlmc.catalog import Model, get_model  # noqa: E402
 from tools.mlmc.depth import colorize  # noqa: E402
 from tools.mlmc.detection import draw  # noqa: E402
+from tools.mlmc.captioning import render as render_caption  # noqa: E402
+from tools.mlmc.classification import render as render_classes  # noqa: E402
 from tools.mlmc.face import render as render_faces  # noqa: E402
 from tools.mlmc.flow import render as render_flow  # noqa: E402
 from tools.mlmc.matching import render as render_matches  # noqa: E402
@@ -52,6 +54,8 @@ RENDER = {
     "face_detection": render_faces,
     "ocr": render_ocr,
     "feature_matching": render_matches,
+    "image_classification": render_classes,
+    "image_captioning": render_caption,
 }
 
 
@@ -75,7 +79,13 @@ def run(model: Model, video: Path, provider: str = "cuda",
             raise SystemExit(f"{model.name} does not take runtime prompts")
         kwargs["prompts"] = prompts
     runner = model.load_runner(**kwargs)
-    render = TrackRenderer() if model.task == "tracking" else RENDER.get(model.task)  # trails are per video
+    if model.task == "tracking":  # trails are per video
+        render = TrackRenderer()
+    elif model.task == "point_tracking":
+        from tools.mlmc.point_tracking import TrackTrails
+        render = TrackTrails()
+    else:
+        render = RENDER.get(model.task)
     is_det = model.task == "object_detection"
 
     cap = cv2.VideoCapture(str(video))

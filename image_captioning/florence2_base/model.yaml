@@ -1,0 +1,69 @@
+# Curated metadata. Measured numbers live in benchmarks.yaml / accuracy.yaml (tool-generated).
+name: florence2_base
+display_name: Florence-2-base
+task: image_captioning
+summary: "Florence-2 base (Microsoft, 0.23B): prompt-based encoder-decoder VLM; here the <CAPTION> task."
+
+source:
+  repository: https://huggingface.co/microsoft/Florence-2-base
+  commit: 5ca5edf5bd017b9919c05d08aebef5e4c7ac3bac  # HF revision when added (2026-10-02)
+  paper: https://arxiv.org/abs/2311.06242
+
+license:
+  code:
+    spdx: MIT
+    status: explicit
+    evidence: https://huggingface.co/microsoft/Florence-2-base/blob/5ca5edf5bd017b9919c05d08aebef5e4c7ac3bac/LICENSE
+  weights:
+    spdx: MIT
+    status: explicit
+    evidence: https://huggingface.co/microsoft/Florence-2-base/blob/5ca5edf5bd017b9919c05d08aebef5e4c7ac3bac/README.md
+    note: >-
+      The model card declares license: mit (LICENSE file in the repository). ONNX graphs from onnx-community/Florence-2-base (d59e079711c57174f29265539fb4cc9f0f335916); its fp16 merged decoder does not load in ONNX Runtime 1.22 and its decoder_with_past declares a static length, so the fp32 merged decoder is used.
+  dataset:
+    name: FLD-5B (Microsoft, not released)
+    note: >-
+      Training data is not public; terms not stated (unverified).
+  runtime_dependencies:
+    - {name: tokenizers, spdx: Apache-2.0}
+
+artifacts:
+  onnx:
+    file: vision_encoder.onnx
+    fetch: download_files
+    files:
+      - path: vision_encoder.onnx
+        url: https://huggingface.co/onnx-community/Florence-2-base/resolve/d59e079711c57174f29265539fb4cc9f0f335916/onnx/vision_encoder.onnx
+        sha256: 2c7464fce495ea43b415b48afe7dbe84a9ebbe0cfe3c31fdd81c6dd66b39ff75
+      - path: encoder_model.onnx
+        url: https://huggingface.co/onnx-community/Florence-2-base/resolve/d59e079711c57174f29265539fb4cc9f0f335916/onnx/encoder_model.onnx
+        sha256: b155b5a0e56a4244c62060751bb1b70dfe481015d0dbfa6d19b1912d9e58da0d
+      - path: embed_tokens.onnx
+        url: https://huggingface.co/onnx-community/Florence-2-base/resolve/d59e079711c57174f29265539fb4cc9f0f335916/onnx/embed_tokens.onnx
+        sha256: fec0fd20276af861afb6a23a11544bf1378c05e2a41001b610cc281e244c4b20
+      - path: decoder_model_merged.onnx
+        url: https://huggingface.co/onnx-community/Florence-2-base/resolve/d59e079711c57174f29265539fb4cc9f0f335916/onnx/decoder_model_merged.onnx
+        sha256: 6d6e1266d7f94f5d4ec9cc07d9c1f7b3e47049c9b0de7bbe82a91e62dfd152af
+      - path: tokenizer.json
+        url: https://huggingface.co/onnx-community/Florence-2-base/resolve/d59e079711c57174f29265539fb4cc9f0f335916/tokenizer.json
+        sha256: d69dcdb2323e124ac4f800cb9863ddccea0d7bb11e16125e8df3bd60f2f8aeac
+    input_shape: [1, 3, 768, 768]
+    input_format: RGB, resized to 768x768 (PIL bicubic, no crop), ImageNet mean/std
+    output: "image features for the language model; captions by greedy decoding with a KV cache"
+
+captioning:
+  encoder_file: encoder_model.onnx
+  embed_file: embed_tokens.onnx
+  decoder_file: decoder_model_merged.onnx
+  tokenizer_file: tokenizer.json
+  image_size: 768
+  prompt: What does the image describe?  # Florence-2's <CAPTION> task prompt (processor task_prompts_without_inputs)
+  max_new_tokens: 40
+
+runtimes:
+  onnxruntime: verified
+
+reported_accuracy:
+  - metric: COCO Caption Karpathy test CIDEr (zero-shot, beam 3)
+    value: 133.0
+    source: https://huggingface.co/microsoft/Florence-2-base/blob/5ca5edf5bd017b9919c05d08aebef5e4c7ac3bac/README.md

@@ -1,0 +1,55 @@
+# Curated metadata. Measured numbers live in benchmarks.yaml / accuracy.yaml (tool-generated).
+name: mobilenetv4_conv_small
+display_name: MobileNetV4-Conv-S
+task: image_classification
+kind: supervised (ImageNet-1k)
+summary: "MobileNetV4 conv small (timm e2400 recipe, 3.8M params, 0.2 GMACs), official onnx-community export."
+
+source:
+  repository: https://github.com/huggingface/pytorch-image-models
+  commit: 92dbd9e3f9b5d61c4d008223410781da983239fc  # HEAD when added (2026-10-02)
+  paper: https://arxiv.org/abs/2404.10518
+  weights_repository: https://huggingface.co/timm/mobilenetv4_conv_small.e2400_r224_in1k
+  weights_revision: 331fb803779522b685cf942e15f914fb6741c1eb
+
+license:
+  code:
+    spdx: Apache-2.0
+    status: explicit
+    evidence: https://github.com/huggingface/pytorch-image-models/blob/92dbd9e3f9b5d61c4d008223410781da983239fc/LICENSE
+  weights:
+    spdx: Apache-2.0
+    status: explicit
+    evidence: https://huggingface.co/timm/mobilenetv4_conv_small.e2400_r224_in1k/blob/331fb803779522b685cf942e15f914fb6741c1eb/README.md
+    note: >-
+      The timm model card declares license: apache-2.0. ONNX from onnx-community (pixel_values -> logits).
+  dataset:
+    name: ImageNet-1k
+    note: >-
+      ImageNet: 'non-commercial research and educational purposes' (terms of access); the timm README notes 'one should assume that the original dataset license applies to the weights' (https://github.com/huggingface/pytorch-image-models/blob/92dbd9e3f9b5d61c4d008223410781da983239fc/README.md#licenses).
+
+artifacts:
+  onnx:
+    file: mobilenetv4_conv_small.onnx
+    fetch: download
+    url: https://huggingface.co/onnx-community/mobilenetv4_conv_small.e2400_r224_in1k/resolve/3ba07f12712fa58fd6b3d661f9909c9e332c5005/onnx/model.onnx
+    sha256: ca5b8dbf490f54e83c5d72f787821565447ea94347935f6b834cf0a4af0e8d37
+    input_shape: [1, 3, 224, 224]
+    input_format: RGB, shorter side resized to size / crop_pct (PIL bicubic), centre crop, ImageNet mean/std
+    output: "logits [B, 1000] (ImageNet-1k class index order)"
+
+classification:
+  size: 224
+  crop_pct: 0.875
+  interpolation: bicubic
+
+runtimes:
+  onnxruntime: verified
+
+reported_accuracy:
+  - metric: ImageNet-1k val top-1 (timm results)
+    value: 73.756
+    source: https://github.com/huggingface/pytorch-image-models/blob/92dbd9e3f9b5d61c4d008223410781da983239fc/results/results-imagenet.csv
+  - metric: ImageNetV2 matched-frequency top-1 (timm results)
+    value: 60.9
+    source: https://github.com/huggingface/pytorch-image-models/blob/92dbd9e3f9b5d61c4d008223410781da983239fc/results/results-imagenetv2-matched-frequency.csv

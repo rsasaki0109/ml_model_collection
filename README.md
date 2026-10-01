@@ -26,6 +26,9 @@ Video: "Road traffic on Stritarjeva street" by Sounds of Changes, [CC BY 3.0](ht
 | [OCR (scene text)](#ocr-scene-text) | 3 | 🟢3 | ICDAR2015 end-to-end H-mean **30.5** — PP-OCRv6-small | PP-OCRv5-mobile-EN — 5.0 ms |
 | [Feature matching](#feature-matching) | 3 | 🟢2 🔴1 | HPatches H-AUC@3px **70.1** — RaCo-ALIKED+LightGlue | SuperPoint+LightGlue — 30.8 ms |
 | [Multi-object tracking](#multi-object-tracking) | 3 | 🟢3 | MOT17-train HOTA **40.6** — ByteTrack | ByteTrack — 6.1 ms |
+| [Image classification](#image-classification) | 4 | 🟢4 | – | – |
+| [Point tracking](#point-tracking) | 2 | 🟢2 | – | – |
+| [Image captioning](#image-captioning) | 2 | 🟢2 | – | – |
 <!-- END:task_index -->
 
 <sub>🟢 permissive · 🟡 copyleft · 🔴 non-commercial / restricted · ⚪ unknown (weights license). Accuracy and latency come from the recorded `accuracy.yaml` / `benchmarks.yaml` files; each task section below has the full table with conditions. Every task has a comparison GIF on the same clip.</sub>
@@ -206,6 +209,47 @@ Sparse keypoints + LightGlue between consecutive frames (each line: previous →
 
 Tracking by detection on D-FINE-S person boxes (Apache-2.0 detector, COCO-only). The three trackers are implemented from scratch in NumPy for this repository (`tools/mlmc/tracking.py`, Apache-2.0) from the papers and published defaults — the popular reference code is MIT but its Kalman filter comes from GPL-3.0 DeepSORT, and the common libraries (boxmot, Ultralytics) are AGPL-3.0. Speed cells: model-only = detector; end-to-end = detector + tracker. MOT17-train numbers use our COCO detector, so they compare trackers here, not with the MOTChallenge leaderboard (MOT-trained detectors). Survey: [docs/sota/tracking.md](docs/sota/tracking.md).
 
+## Image classification
+
+![Image classification comparison on the same clip](assets/image_classification_comparison.gif)
+
+<!-- BEGIN:image_classification_table -->
+| Model | Kind | Code license | Weights license | Training data | Input | ImageNet-1k top-1<br>(reported) | ImageNetV2 top-1<br>(reported) | ImageNetV2 top-1 / top-5<br>(measured, ONNX) | Peak VRAM<br>(measured) |
+|---|---|---|---|---|---|---|---|---|---|
+| [MobileNetV4-Conv-M](image_classification/mobilenetv4_conv_medium) | supervised (ImageNet-1k) | 🟢 Apache-2.0 | 🟢 Apache-2.0 | ImageNet-1k | 256×256 | [79.916](https://github.com/huggingface/pytorch-image-models/blob/92dbd9e3f9b5d61c4d008223410781da983239fc/results/results-imagenet.csv) | [69.0](https://github.com/huggingface/pytorch-image-models/blob/92dbd9e3f9b5d61c4d008223410781da983239fc/results/results-imagenetv2-matched-frequency.csv) | – | not measured |
+| [MobileNetV4-Conv-S](image_classification/mobilenetv4_conv_small) | supervised (ImageNet-1k) | 🟢 Apache-2.0 | 🟢 Apache-2.0 | ImageNet-1k | 224×224 | [73.756](https://github.com/huggingface/pytorch-image-models/blob/92dbd9e3f9b5d61c4d008223410781da983239fc/results/results-imagenet.csv) | [60.9](https://github.com/huggingface/pytorch-image-models/blob/92dbd9e3f9b5d61c4d008223410781da983239fc/results/results-imagenetv2-matched-frequency.csv) | – | not measured |
+| [RepViT-M1.1](image_classification/repvit_m1_1) | supervised (ImageNet-1k) | 🟢 Apache-2.0 | 🟢 Apache-2.0 | ImageNet-1k | 224×224 | [81.314](https://github.com/huggingface/pytorch-image-models/blob/92dbd9e3f9b5d61c4d008223410781da983239fc/results/results-imagenet.csv) | [70.37](https://github.com/huggingface/pytorch-image-models/blob/92dbd9e3f9b5d61c4d008223410781da983239fc/results/results-imagenetv2-matched-frequency.csv) | – | not measured |
+| [SigLIP2-B/16 (zero-shot)](image_classification/siglip2_b16_224) | zero-shot (image-text) | 🟢 Apache-2.0 | 🟢 Apache-2.0 | WebLI (Google, not released) | 224×224 | [78.2](https://arxiv.org/abs/2502.14786) | [71.4](https://arxiv.org/abs/2502.14786) | – | not measured |
+<!-- END:image_classification_table -->
+
+ImageNet-1k classes, top-5 per frame. Supervised models use timm's evaluation transform (shorter side to size / crop_pct, bicubic, centre crop); SigLIP 2 classifies zero-shot by cosine similarity with precomputed text embeddings of the 1000 class prompts. Measured on ImageNetV2 matched-frequency (ImageNet-1k val is gated behind its terms of access). **Every supervised checkpoint is trained on ImageNet-1k, whose terms are non-commercial research** — permissive weight tags do not change that (timm's own README says so); ConvNeXt V2 (CC BY-NC), FastViT and MobileCLIP (Apple research licenses) are not included. Survey: [docs/sota/image_classification.md](docs/sota/image_classification.md).
+
+## Point tracking
+
+![Point tracking comparison on the same clip](assets/point_tracking_comparison.gif)
+
+<!-- BEGIN:point_tracking_table -->
+| Model | Kind | Code license | Weights license | Input | TAP-Vid DAVIS first AJ<br>(reported) | TAP-Vid DAVIS first AJ / δavg / OA<br>(measured, ONNX) | Peak VRAM<br>(measured) |
+|---|---|---|---|---|---|---|---|
+| [BootsTAPIR-online](point_tracking/bootstapir_online) | online (causal) | 🟢 Apache-2.0 | 🟢 Apache-2.0 | 256×256, 256 points | [59.7](https://github.com/google-deepmind/tapnet/blob/730cda1c730877cfedbe01bf87fb1cadb78a565d/README.md) | – | not measured |
+| [BootsTAPIR-online-fast](point_tracking/bootstapir_online_fast) | online (causal) | 🟢 Apache-2.0 | 🟢 Apache-2.0 | 256×256, 256 points | – | – | not measured |
+<!-- END:point_tracking_table -->
+
+Tracking any point (TAP), causally frame by frame: a 16×16 grid of points is placed on the first frame and followed with short trails (occluded points hidden). Online BootsTAPIR (DeepMind, Apache-2.0 code and weights) exported as a query-feature encoder plus a per-frame graph with causal state; the fast variant uses 1 refinement iteration instead of 4. **CoTracker2/3 (Meta) are CC BY-NC 4.0** and TAPTR / DELTA are non-commercial, so they are not included. Survey: [docs/sota/point_tracking.md](docs/sota/point_tracking.md).
+
+## Image captioning
+
+![Image captioning comparison on the same clip](assets/image_captioning_comparison.gif)
+
+<!-- BEGIN:image_captioning_table -->
+| Model | Code license | Weights license | Training data | Input | COCO Karpathy CIDEr<br>(reported) | COCO Karpathy CIDEr / BLEU-4<br>(measured, ONNX, greedy) | Peak VRAM<br>(measured) |
+|---|---|---|---|---|---|---|---|
+| [Florence-2-base](image_captioning/florence2_base) | 🟢 MIT | 🟢 MIT | FLD-5B (Microsoft, not released) | 768×768 | [133.0](https://huggingface.co/microsoft/Florence-2-base/blob/5ca5edf5bd017b9919c05d08aebef5e4c7ac3bac/README.md) | – | not measured |
+| [SmolVLM-256M](image_captioning/smolvlm_256m) | 🟢 Apache-2.0 | 🟢 Apache-2.0 | The Cauldron, Docmatix (and SmolLM2 / SigLIP pre-training) | 512×512 | – | – | not measured |
+<!-- END:image_captioning_table -->
+
+Small vision-language models run from plain ONNX Runtime + `tokenizers` (no transformers at run time): vision encoder, token embeddings and a merged decoder with KV cache, greedy decoding. Speed cells: model-only = vision encoder; end-to-end = the whole caption. Florence-2 is a captioning-trained encoder-decoder (`<CAPTION>` task); SmolVLM is a chat model prompted for one short sentence, so its COCO CIDEr is not comparable with caption-trained models. Excluded for licensing: Qwen2.5-VL-3B (Qwen research license), PaliGemma (Gemma terms), FastVLM / MobileCLIP (Apple research license), LFM2-VL (revenue cap). Survey: [docs/sota/image_captioning.md](docs/sota/image_captioning.md).
+
 ## Find a model
 
 ```console
@@ -296,6 +340,9 @@ ml_model_collection/
 ├── ocr/                     same layout; runner file is ocr.py
 ├── feature_matching/        same layout; runner file is matcher.py
 ├── tracking/                trackers on top of a detector; runner file is tracker.py
+├── image_classification/    same layout; runner file is classifier.py
+├── point_tracking/          same layout; runner file is tracker.py
+├── image_captioning/        same layout; runner file is captioner.py
 ├── object_detection/
 │   └── <model>/
 │       ├── model.yaml       curated metadata: source, licenses, artifacts, reported accuracy

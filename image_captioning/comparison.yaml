@@ -1,0 +1,8 @@
+# Default line-up and layout for tools/make_comparison.py --task image_captioning.
+models:
+  - florence2_base
+  - smolvlm_256m
+cols: 2
+tile_width: 480
+fps: 5
+stride: 5  # one caption per GIF frame
