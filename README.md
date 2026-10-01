@@ -29,6 +29,7 @@ Video: "Road traffic on Stritarjeva street" by Sounds of Changes, [CC BY 3.0](ht
 | [Image classification](#image-classification) | 4 | 🟢4 | – | – |
 | [Point tracking](#point-tracking) | 2 | 🟢2 | – | – |
 | [Image captioning](#image-captioning) | 2 | 🟢2 | – | – |
+| [Whole-body pose](#whole-body-pose) | 3 | 🟢3 | – | – |
 <!-- END:task_index -->
 
 <sub>🟢 permissive · 🟡 copyleft · 🔴 non-commercial / restricted · ⚪ unknown (weights license). Accuracy and latency come from the recorded `accuracy.yaml` / `benchmarks.yaml` files; each task section below has the full table with conditions. Every task has a comparison GIF on the same clip.</sub>
@@ -250,6 +251,20 @@ Tracking any point (TAP), causally frame by frame: a 16×16 grid of points is pl
 
 Small vision-language models run from plain ONNX Runtime + `tokenizers` (no transformers at run time): vision encoder, token embeddings and a merged decoder with KV cache, greedy decoding. Speed cells: model-only = vision encoder; end-to-end = the whole caption. Florence-2 is a captioning-trained encoder-decoder (`<CAPTION>` task); SmolVLM is a chat model prompted for one short sentence, so its COCO CIDEr is not comparable with caption-trained models. Excluded for licensing: Qwen2.5-VL-3B (Qwen research license), PaliGemma (Gemma terms), FastVLM / MobileCLIP (Apple research license), LFM2-VL (revenue cap). Survey: [docs/sota/image_captioning.md](docs/sota/image_captioning.md).
 
+## Whole-body pose
+
+![Whole-body pose comparison on the same clip](assets/wholebody_pose_comparison.gif)
+
+<!-- BEGIN:wholebody_pose_table -->
+| Model | Code license | Weights license | Training data | Input | Whole / body / hand AP<br>(reported, COCO-WholeBody val) | Whole / body / foot / face / hand AP<br>(measured, ONNX, D-FINE-N boxes) | Peak VRAM<br>(measured) |
+|---|---|---|---|---|---|---|---|
+| [DWPose-m](wholebody_pose/dwpose_m) | 🟢 Apache-2.0 | 🟢 Apache-2.0* | COCO-WholeBody + UBody | 256×192 | [60.6 / 68.5 / 52.7](https://github.com/IDEA-Research/DWPose/blob/3dca5db79d9f9ffdd378753ddf6ec66535aace88/README.md) | – | not measured |
+| [DWPose-s](wholebody_pose/dwpose_s) | 🟢 Apache-2.0 | 🟢 Apache-2.0* | COCO-WholeBody + UBody | 256×192 | [53.8 / 63.3 / 42.7](https://github.com/IDEA-Research/DWPose/blob/3dca5db79d9f9ffdd378753ddf6ec66535aace88/README.md) | – | not measured |
+| [RTMW-l-384](wholebody_pose/rtmw_l_384) | 🟢 Apache-2.0 | 🟢 Apache-2.0* | Cocktail14 | 384×288 | [70.1 / 76.1 / 66.3](https://github.com/open-mmlab/mmpose/blob/759b39c13fea6ba094afc1fa932f51dc1b11cbf9/configs/wholebody_2d_keypoint/rtmpose/cocktail14/rtmw_cocktail14.md) | – | not measured |
+<!-- END:wholebody_pose_table -->
+
+COCO-WholeBody 133 keypoints (body, feet, 68 face, 2x21 hand) from official mmpose ONNX files, top-down on D-FINE-N person boxes (same runner as RTMPose-s). **COCO-WholeBody is research / non-commercial only, and RTMW's Cocktail14 adds more non-commercial sets (Human-Art, LaPa, InterHand2.6M)** — the Apache-2.0 code and weights do not lift that. Note: the mmpose README's "RTMW-m" ONNX link points to an s-width model. Survey: [docs/sota/wholebody_pose.md](docs/sota/wholebody_pose.md).
+
 ## Find a model
 
 ```console
@@ -343,6 +358,7 @@ ml_model_collection/
 ├── image_classification/    same layout; runner file is classifier.py
 ├── point_tracking/          same layout; runner file is tracker.py
 ├── image_captioning/        same layout; runner file is captioner.py
+├── wholebody_pose/          same layout; runner file is pose.py
 ├── object_detection/
 │   └── <model>/
 │       ├── model.yaml       curated metadata: source, licenses, artifacts, reported accuracy

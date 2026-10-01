@@ -19,7 +19,7 @@ TASKS = ("object_detection", "segmentation", "depth_estimation",
          "pose_estimation", "optical_flow", "super_resolution", "background_removal",
          "face_detection", "ocr", "feature_matching", "tracking",
          "image_classification", "point_tracking",
-         "image_captioning")
+         "image_captioning", "wholebody_pose")
 
 # task -> (runner module in the model directory, class name)
 RUNNERS = {
@@ -37,6 +37,7 @@ RUNNERS = {
     "image_classification": ("classifier.py", "Classifier"),
     "point_tracking": ("tracker.py", "PointTracker"),
     "image_captioning": ("captioner.py", "Captioner"),
+    "wholebody_pose": ("pose.py", "PoseEstimator"),
 }
 
 

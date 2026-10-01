@@ -41,6 +41,7 @@ from tools.mlmc.pose import render as render_pose  # noqa: E402
 from tools.mlmc.segmentation import render as render_seg  # noqa: E402
 from tools.mlmc.sr import render as render_sr  # noqa: E402
 from tools.mlmc.tracking import TrackRenderer  # noqa: E402
+from tools.mlmc.wholebody import render as render_wholebody  # noqa: E402
 
 
 # task -> render(source frame, runner result) -> BGR frame of the same size
@@ -56,6 +57,7 @@ RENDER = {
     "feature_matching": render_matches,
     "image_classification": render_classes,
     "image_captioning": render_caption,
+    "wholebody_pose": render_wholebody,
 }
 
 

@@ -54,6 +54,9 @@ our pre/post-processing, not the upstream PyTorch model.
 * Image captioning: COCO Karpathy test (5000 val2014 images) CIDEr-D /
   BLEU-4 with pycocoevalcap (needs Java), ``--coco-captions-root`` =
   directory with ``dataset_coco.json`` (Karpathy split) and ``val2014/``.
+* Whole-body pose: COCO-WholeBody v1.0 val body / foot / face / hand /
+  whole AP (xtcocotools, per-part sigmas), ``--coco-root`` (val2017 images)
+  + ``--wholebody-json`` (coco_wholebody_val_v1.0.json, research / NC terms).
 * Semantic segmentation: ADE20K val mIoU (150 classes, label 0 ignored),
   ``--ade-root`` = the extracted ADEChallengeData2016 directory
   (http://data.csail.mit.edu/places/ADEchallenge/ADEChallengeData2016.zip).
@@ -213,6 +216,63 @@ def eval_coco_keypoints(model: Model, coco_root: Path, provider: str,
     if model.meta.get("person_detector"):
         out["settings"]["person_boxes"] = f"from {model.meta['person_detector']}"
     return out
+
+
+def eval_coco_wholebody(model: Model, coco_root: Path, wb_json: Path, provider: str,
+                        limit: int | None) -> dict:
+    """COCO-WholeBody v1.0 val: body / foot / face / hand / whole-body AP with
+    xtcocotools and the per-part sigmas, as mmpose ``CocoWholeBodyMetric``
+    (one COCOeval per part, ``use_area=True``). Person boxes come from the
+    model's detector (end-to-end), not mmpose's AP_H_56 detection file."""
+    from xtcocotools.coco import COCO
+    from xtcocotools.cocoeval import COCOeval
+
+    from tools.mlmc.wholebody import PARTS
+
+    gt = COCO(str(wb_json))
+    img_ids = sorted(gt.getImgIds())[:limit] if limit else sorted(gt.getImgIds())
+    est = model.load_runner(provider=provider, score_thr=SCORE_THR)
+    results, t0 = [], time.perf_counter()
+    for img_id in img_ids:
+        info = gt.loadImgs(img_id)[0]
+        poses = est(cv2.imread(str(coco_root / "val2017" / info["file_name"])))
+        for i in np.argsort(-poses.box_scores)[:20]:
+            kps = np.concatenate([poses.keypoints[i], poses.scores[i][:, None]], 1)
+            conf = poses.scores[i][poses.scores[i] > 0.2]
+            score = float(poses.box_scores[i]) * (float(conf.mean()) if len(conf) else 0.0)
+            r = {"image_id": img_id, "category_id": 1, "score": round(score, 5)}
+            for part, key in (("body", "keypoints"), ("foot", "foot_kpts"), ("face", "face_kpts"),
+                              ("lefthand", "lefthand_kpts"), ("righthand", "righthand_kpts")):
+                a, b = PARTS[part]
+                r[key] = [round(float(v), 2) for v in kps[a:b].reshape(-1)]
+            results.append(r)
+    elapsed = time.perf_counter() - t0
+    # per-part sigmas of COCO-WholeBody (mmpose coco_wholebody.py / COCO-WholeBody myeval_wholebody.py)
+    ns = {}
+    exec(Path(__file__).with_name("data").joinpath("coco_wholebody_sigmas.py").read_text(encoding="utf-8"), ns)
+    sigmas = np.array(ns["SIGMAS"])
+    dt = gt.loadRes(results)
+    metrics = {}
+    for part, iou_type in (("body", "keypoints_body"), ("foot", "keypoints_foot"), ("face", "keypoints_face"),
+                           ("lefthand", "keypoints_lefthand"), ("righthand", "keypoints_righthand"),
+                           ("whole", "keypoints_wholebody")):
+        a, b = PARTS.get(part, (0, 133))
+        ev = COCOeval(gt, dt, iou_type, sigmas[a:b] if part != "whole" else sigmas, use_area=True)
+        ev.params.imgIds = img_ids
+        ev.evaluate(); ev.accumulate(); ev.summarize()
+        metrics[f"{part}_AP"] = round(float(ev.stats[0]) * 100, 1)
+        if part == "whole":
+            metrics["whole_AR"] = round(float(ev.stats[5]) * 100, 1)
+    return {
+        "dataset": "COCO-WholeBody val" + (f" (first {limit} images)" if limit else ""),
+        "images": len(img_ids),
+        "metrics": metrics,
+        "settings": {"score_threshold": SCORE_THR, "max_dets": 20,
+                     "instance_score": "box score x mean keypoint score (> 0.2)",
+                     "person_boxes": f"from {model.meta.get('person_detector')}",
+                     "evaluator": "xtcocotools COCOeval per part (use_area=True), as mmpose CocoWholeBodyMetric"},
+        "wall_time_s": round(elapsed, 1),
+    }
 
 
 def eval_ade20k(model: Model, ade_root: Path, provider: str, limit: int | None) -> dict:
@@ -902,6 +962,7 @@ def main():
     ap.add_argument("--imagenetv2-root", type=Path, help="extracted imagenetv2-matched-frequency-format-val")
     ap.add_argument("--tapvid-root", type=Path, help="directory with tapvid_davis.pkl")
     ap.add_argument("--coco-captions-root", type=Path, help="directory with dataset_coco.json and val2014/")
+    ap.add_argument("--wholebody-json", type=Path, help="coco_wholebody_val_v1.0.json (with --coco-root)")
     ap.add_argument("--provider", default="cuda", choices=list(PROVIDERS))
     ap.add_argument("--limit", type=int, help="evaluate only the first N images (smoke test)")
     args = ap.parse_args()
@@ -922,7 +983,8 @@ def main():
                     (["--nyu-root", str(args.nyu_root)] if args.nyu_root else []) + \
                     (["--imagenetv2-root", str(args.imagenetv2_root)] if args.imagenetv2_root else []) + \
                     (["--tapvid-root", str(args.tapvid_root)] if args.tapvid_root else []) + \
-                    (["--coco-captions-root", str(args.coco_captions_root)] if args.coco_captions_root else [])
+                    (["--coco-captions-root", str(args.coco_captions_root)] if args.coco_captions_root else []) + \
+                    (["--wholebody-json", str(args.wholebody_json)] if args.wholebody_json else [])
                 subprocess.run([sys.executable, __file__, "--model", m.name, *roots,
                                 "--provider", args.provider]
                                + (["--limit", str(args.limit)] if args.limit else []))
@@ -994,6 +1056,11 @@ def main():
             raise SystemExit("--coco-captions-root is required")
         res = eval_coco_karpathy(model, args.coco_captions_root, args.provider, args.limit)
         ds_id = "coco-karpathy-test"
+    elif model.task == "wholebody_pose":
+        if not (args.coco_root and args.wholebody_json):
+            raise SystemExit("--coco-root and --wholebody-json are required")
+        res = eval_coco_wholebody(model, args.coco_root, args.wholebody_json, args.provider, args.limit)
+        ds_id = "coco-wholebody-val"
     elif model.task in ("object_detection", "segmentation"):
         if not args.coco_root:
             raise SystemExit("--coco-root is required")

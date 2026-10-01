@@ -430,6 +430,33 @@ def captioning_table(models: list[Model], start: Path) -> str:
     return "\n".join(lines)
 
 
+def wholebody_table(models: list[Model], start: Path) -> str:
+    cols = bench_columns(models)
+    head = ["Model", "Code license", "Weights license", "Training data", "Input",
+            "Whole / body / hand AP<br>(reported, COCO-WholeBody val)",
+            "Whole / body / foot / face / hand AP<br>(measured, ONNX, D-FINE-N boxes)",
+            "Peak VRAM<br>(measured)"] + bench_head(cols)
+    lines = ["| " + " | ".join(head) + " |", "|" + "---|" * len(head)]
+    for m in models:
+        lic = m.meta.get("license", {})
+        rep = {r["metric"].split()[2]: r for r in m.meta.get("reported_accuracy") or []}
+        rep_cell = (f"[{rep['whole']['value']} / {rep['body']['value']} / {rep['hand']['value']}]({rep['whole']['source']})"
+                    if {"whole", "body", "hand"} <= set(rep) else "–")
+        meas = next((r for r in m.accuracy if r.get("dataset") == "COCO-WholeBody val"), None)
+        if meas:
+            q = meas["metrics"]
+            hand = round((q["lefthand_AP"] + q["righthand_AP"]) / 2, 1)
+            meas_cell = f"**{q['whole_AP']} / {q['body_AP']} / {q['foot_AP']} / {q['face_AP']} / {hand}**"
+        else:
+            meas_cell = "–"
+        shape = m.meta["artifacts"]["onnx"]["input_shape"]
+        row = [f"[{m.display_name}]({rel(m, start)})", licenses.describe(lic.get("code")),
+               licenses.describe(lic.get("weights")), lic.get("dataset", {}).get("name", "?").split(" (")[0],
+               f"{shape[-2]}×{shape[-1]}", rep_cell, meas_cell, vram_cell(m)]
+        lines.append("| " + " | ".join(row + bench_cells(m, cols)) + " |")
+    return "\n".join(lines)
+
+
 # task -> (section title, measured metric: dataset prefix, key, higher is better, label)
 TASK_INDEX = {
     "object_detection": ("Object detection", ("COCO val2017", "AP", True, "COCO AP")),
@@ -446,6 +473,7 @@ TASK_INDEX = {
     "image_classification": ("Image classification", ("ImageNetV2 matched-frequency", "top1", True, "ImageNetV2 top-1")),
     "point_tracking": ("Point tracking", ("TAP-Vid DAVIS (first)", "AJ", True, "TAP-Vid DAVIS AJ")),
     "image_captioning": ("Image captioning", ("COCO Karpathy test", "CIDEr", True, "COCO CIDEr")),
+    "wholebody_pose": ("Whole-body pose", ("COCO-WholeBody val", "whole_AP", True, "COCO-WholeBody whole AP")),
 }
 
 
@@ -536,6 +564,9 @@ TABLES = {
     (REPO_ROOT / "README.md", "image_captioning_table"): ("image_captioning", captioning_table),
     (REPO_ROOT / "image_captioning" / "README.md", "image_captioning_table"): ("image_captioning", captioning_table),
     (REPO_ROOT / "image_captioning" / "README.md", "image_captioning_provenance"): ("image_captioning", provenance_table),
+    (REPO_ROOT / "README.md", "wholebody_pose_table"): ("wholebody_pose", wholebody_table),
+    (REPO_ROOT / "wholebody_pose" / "README.md", "wholebody_pose_table"): ("wholebody_pose", wholebody_table),
+    (REPO_ROOT / "wholebody_pose" / "README.md", "wholebody_pose_provenance"): ("wholebody_pose", provenance_table),
     (REPO_ROOT / "tracking" / "README.md", "tracking_table"): ("tracking", tracking_table),
 }
 

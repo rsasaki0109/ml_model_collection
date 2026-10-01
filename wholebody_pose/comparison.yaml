@@ -1,0 +1,8 @@
+# Default line-up and layout for tools/make_comparison.py --task wholebody_pose.
+models:
+  - dwpose_s
+  - dwpose_m
+  - rtmw_l_384
+cols: 3
+tile_width: 400
+fps: 5
