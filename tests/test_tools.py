@@ -101,3 +101,17 @@ def test_pose_render():
               np.array([0.9], np.float32))
     out = render(np.zeros((30, 30, 3), np.uint8), p)
     assert out.any()
+
+
+def test_flow_render_and_flo(tmp_path):
+    from tools.mlmc.flow import Flow, read_flo, render
+    uv = np.zeros((8, 10, 2), np.float32)
+    uv[..., 0] = 30  # rightwards, beyond saturation
+    out = render(np.full((8, 10, 3), 128, np.uint8), Flow(uv))
+    assert out.shape == (8, 10, 3) and out[..., 2].mean() > out[..., 0].mean()  # red-ish
+    f = tmp_path / "a.flo"
+    with open(f, "wb") as fh:
+        np.array([202021.25], np.float32).tofile(fh)
+        np.array([10, 8], np.int32).tofile(fh)
+        uv.tofile(fh)
+    assert np.array_equal(read_flo(f), uv)

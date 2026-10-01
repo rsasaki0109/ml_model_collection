@@ -199,7 +199,31 @@ def pose_table(models: list[Model], start: Path) -> str:
     return "\n".join(lines)
 
 
-OD, DE, SG, PE = "object_detection", "depth_estimation", "segmentation", "pose_estimation"
+def flow_table(models: list[Model], start: Path) -> str:
+    cols = bench_columns(models)
+    head = ["Model", "Code license", "Weights license", "Training data", "Input",
+            "Sintel train EPE<br>clean / final (reported)", "Sintel train EPE<br>clean / final (measured, ONNX)",
+            "Peak VRAM<br>(measured)"] + bench_head(cols)
+    lines = ["| " + " | ".join(head) + " |", "|" + "---|" * len(head)]
+    for m in models:
+        lic = m.meta.get("license", {})
+        shape = m.meta["artifacts"]["onnx"]["input_shape"]
+        rep = {r["metric"].split(" EPE")[0].rsplit(" ", 1)[-1]: r for r in m.meta.get("reported_accuracy", [])}
+        rep_cell = (f"[{rep['clean']['value']} / {rep['final']['value']}]({rep['clean']['source']})"
+                    if "clean" in rep and "final" in rep else "–")
+        meas = next((r for r in m.accuracy if r.get("dataset") == "MPI-Sintel train"), None)
+        meas_cell = (f"**{meas['metrics']['clean_EPE']:.2f} / {meas['metrics']['final_EPE']:.2f}**"
+                     if meas else "–")
+        row = [f"[{m.display_name}]({rel(m, start)})",
+               licenses.describe(lic.get("code")), licenses.describe(lic.get("weights")),
+               lic.get("dataset", {}).get("name", "?"), f"{shape[-2]}×{shape[-1]}",
+               rep_cell, meas_cell, vram_cell(m)]
+        lines.append("| " + " | ".join(row + bench_cells(m, cols)) + " |")
+    return "\n".join(lines)
+
+
+OD, DE, SG, PE, OF = ("object_detection", "depth_estimation", "segmentation", "pose_estimation",
+                      "optical_flow")
 TABLES = {
     (REPO_ROOT / "README.md", "object_detection_table"): (OD, comparison_table),
     (REPO_ROOT / "README.md", "depth_estimation_table"): (DE, depth_table),
@@ -213,6 +237,9 @@ TABLES = {
     (REPO_ROOT / "README.md", "pose_estimation_table"): (PE, pose_table),
     (REPO_ROOT / PE / "README.md", "pose_estimation_table"): (PE, pose_table),
     (REPO_ROOT / PE / "README.md", "pose_estimation_provenance"): (PE, provenance_table),
+    (REPO_ROOT / "README.md", "optical_flow_table"): (OF, flow_table),
+    (REPO_ROOT / OF / "README.md", "optical_flow_table"): (OF, flow_table),
+    (REPO_ROOT / OF / "README.md", "optical_flow_provenance"): (OF, provenance_table),
 }
 
 

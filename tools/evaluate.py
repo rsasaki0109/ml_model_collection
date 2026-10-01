@@ -15,6 +15,10 @@ our pre/post-processing, not the upstream PyTorch model.
 * Pose estimation: COCO val2017 keypoint AP (OKS, pycocotools, needs
   ``annotations/person_keypoints_val2017.json``). Top-down models use their
   default person detector, so the number covers the whole pipeline.
+* Optical flow: MPI-Sintel training split EPE (clean + final),
+  ``--sintel-root`` = directory with ``training/{clean,final,flow}``
+  (https://files.is.tue.mpg.de/sintel/MPI-Sintel-training_images.zip and
+  MPI-Sintel-training_extras.zip).
 * Semantic segmentation: ADE20K val mIoU (150 classes, label 0 ignored),
   ``--ade-root`` = the extracted ADEChallengeData2016 directory
   (http://data.csail.mit.edu/places/ADEchallenge/ADEChallengeData2016.zip).
@@ -206,6 +210,56 @@ def eval_ade20k(model: Model, ade_root: Path, provider: str, limit: int | None) 
     }
 
 
+def eval_sintel(model: Model, root: Path, provider: str, limit: int | None) -> dict:
+    """MPI-Sintel training split, clean and final passes, end-point error.
+
+    Frames of each scene are fed in order to the (stateful) runner, so every
+    flow is frame t -> t+1 against ``flow/<scene>/frame_<t>.flo``. EPE is the
+    mean over all pixels of all pairs (RAFT convention; Sintel frames all
+    have the same size, so it equals the per-image average).
+    """
+    from tools.mlmc.flow import read_flo
+
+    t0 = time.perf_counter()
+    metrics, pairs = {}, 0
+    for pas in ("clean", "final"):
+        runner = model.load_runner(provider=provider)
+        epe_sum, n_px, outl = 0.0, 0, {1: 0, 3: 0, 5: 0}
+        pairs = 0
+        for scene in sorted((root / "training" / pas).iterdir()):
+            runner.prev = None
+            frames = sorted(scene.glob("frame_*.png"))
+            for k, f in enumerate(frames):
+                flow = runner(cv2.imread(str(f)))
+                if k == 0:
+                    continue
+                gt = read_flo(root / "training" / "flow" / scene.name / f"{frames[k - 1].stem}.flo")
+                epe = np.linalg.norm(flow.uv - gt, axis=-1)
+                epe_sum += float(epe.sum())
+                n_px += epe.size
+                for t in outl:
+                    outl[t] += int((epe > t).sum())
+                pairs += 1
+                if limit and pairs >= limit:
+                    break
+            if limit and pairs >= limit:
+                break
+        metrics[f"{pas}_EPE"] = round(epe_sum / n_px, 3)
+        for t in outl:
+            metrics[f"{pas}_{t}px_pct"] = round(100 * outl[t] / n_px, 2)
+    shape = model.meta["artifacts"]["onnx"]["input_shape"]
+    return {
+        "dataset": "MPI-Sintel train" + (f" (first {limit} pairs)" if limit else ""),
+        "images": pairs,
+        "metrics": metrics,
+        "settings": {"input": f"frames 1024x436 resized to the graph's {shape[-1]}x{shape[-2]}, "
+                              "flow resized back and rescaled",
+                     "evaluator": "end-point error over all pixels (RAFT convention); "
+                                  "Npx = % of pixels with EPE > N"},
+        "wall_time_s": round(time.perf_counter() - t0, 1),
+    }
+
+
 def _runner_cls(model: Model):
     import importlib.util
     from tools.mlmc.catalog import RUNNERS
@@ -243,6 +297,7 @@ def main():
     ap.add_argument("--task", default="object_detection")
     ap.add_argument("--coco-root", type=Path)
     ap.add_argument("--ade-root", type=Path)
+    ap.add_argument("--sintel-root", type=Path, help="extracted MPI-Sintel (contains training/)")
     ap.add_argument("--provider", default="cuda", choices=list(PROVIDERS))
     ap.add_argument("--limit", type=int, help="evaluate only the first N images (smoke test)")
     args = ap.parse_args()
@@ -252,7 +307,8 @@ def main():
             if m.artifact_path("onnx").exists():
                 print(f"== {m.name}", flush=True)
                 roots = (["--coco-root", str(args.coco_root)] if args.coco_root else []) + \
-                    (["--ade-root", str(args.ade_root)] if args.ade_root else [])
+                    (["--ade-root", str(args.ade_root)] if args.ade_root else []) + \
+                    (["--sintel-root", str(args.sintel_root)] if args.sintel_root else [])
                 subprocess.run([sys.executable, __file__, "--model", m.name, *roots,
                                 "--provider", args.provider]
                                + (["--limit", str(args.limit)] if args.limit else []))
@@ -269,6 +325,11 @@ def main():
             raise SystemExit("--coco-root is required")
         res = eval_coco_keypoints(model, args.coco_root, args.provider, args.limit)
         ds_id = "coco-val2017-keypoints"
+    elif model.task == "optical_flow":
+        if not args.sintel_root:
+            raise SystemExit("--sintel-root is required")
+        res = eval_sintel(model, args.sintel_root, args.provider, args.limit)
+        ds_id = "sintel-train"
     elif model.task in ("object_detection", "segmentation"):
         if not args.coco_root:
             raise SystemExit("--coco-root is required")

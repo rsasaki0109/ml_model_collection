@@ -88,6 +88,20 @@ Instance (RF-DETR-Seg) and semantic (ADE20K, 150 classes) models side by side. S
 
 COCO-17 keypoints. Speed cells are model-only ms / FPS plus end-to-end ms per frame (pre/post-processing included; for top-down RTMPose that means D-FINE-N person detection plus one batched pass over every person crop in the demo frame). RTMPose's measured AP also covers the whole pipeline with D-FINE-N boxes; RTMO and YOLO26n-pose are one-stage. The mmpose ONNX files are **Body7** weights (7 datasets, each with its own terms). Survey: [docs/sota/pose_estimation.md](docs/sota/pose_estimation.md).
 
+## Optical flow
+
+![Optical flow comparison on the same clip](assets/optical_flow_comparison.gif)
+
+<!-- BEGIN:optical_flow_table -->
+| Model | Code license | Weights license | Training data | Input | Sintel train EPE<br>clean / final (reported) | Sintel train EPE<br>clean / final (measured, ONNX) | Peak VRAM<br>(measured) |
+|---|---|---|---|---|---|---|---|
+| [NeuFlow-v2](optical_flow/neuflow_v2) | 🟢 Apache-2.0 | 🟢 Apache-2.0* | FlyingThings3D | 432×768 | [1.24 / 2.67](https://arxiv.org/abs/2408.10161) | – | not measured |
+| [SEA-RAFT-M](optical_flow/sea_raft_m) | 🟢 BSD-3-Clause | 🟢 BSD-3-Clause | TartanAir, FlyingChairs, FlyingThings3D | 432×768 | – | – | not measured |
+| [SEA-RAFT-S](optical_flow/sea_raft_s) | 🟢 BSD-3-Clause | 🟢 BSD-3-Clause | TartanAir, FlyingChairs, FlyingThings3D | 432×768 | [1.27 / 3.74](https://arxiv.org/abs/2405.14793) | – | not measured |
+<!-- END:optical_flow_table -->
+
+Dense two-frame flow, previous frame → current frame; colour = direction, saturation = magnitude (≥ 20 px fully saturated), blended over the grayscale frame. All three checkpoints were trained without Sintel, so the Sintel-train EPE is zero-shot; upstream evaluates at the native 1024×436, the measured column runs the deployed fixed 432×768 graph. **Every released flow checkpoint is trained on FlyingChairs / FlyingThings3D, whose terms are research-only** — the code and weights licenses do not change that. Survey: [docs/sota/optical_flow.md](docs/sota/optical_flow.md).
+
 ## Find a model
 
 ```console
@@ -171,6 +185,7 @@ ml_model_collection/
 ├── depth_estimation/        same layout; runner file is estimator.py
 ├── segmentation/            same layout; runner file is segmenter.py
 ├── pose_estimation/         same layout; runner file is pose.py
+├── optical_flow/            same layout; runner file is flow.py
 ├── object_detection/
 │   └── <model>/
 │       ├── model.yaml       curated metadata: source, licenses, artifacts, reported accuracy
@@ -182,7 +197,7 @@ ml_model_collection/
 └── tools/                   fetch, run, compare, benchmark, find, validate, build_readme
 ```
 
-Other tasks (`optical_flow/`, ...) will be added when there are models for them. The inner structure of `object_detection/` is deliberately flat for now and will be revisited once more models show what is actually shared ([docs/metadata.md](docs/metadata.md)).
+Other tasks will be added when there are models for them. The inner structure of `object_detection/` is deliberately flat for now and will be revisited once more models show what is actually shared ([docs/metadata.md](docs/metadata.md)).
 
 ## Contributing
 

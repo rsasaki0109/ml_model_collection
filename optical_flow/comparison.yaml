@@ -1,0 +1,8 @@
+# Default line-up and layout for tools/make_comparison.py --task optical_flow.
+models:
+  - neuflow_v2
+  - sea_raft_s
+  - sea_raft_m
+cols: 3
+tile_width: 400
+fps: 5

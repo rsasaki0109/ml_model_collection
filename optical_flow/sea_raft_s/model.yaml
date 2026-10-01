@@ -1,0 +1,51 @@
+# Curated metadata. Measured numbers live in benchmarks.yaml / accuracy.yaml (tool-generated).
+name: sea_raft_s
+display_name: SEA-RAFT-S
+task: optical_flow
+summary: "SEA-RAFT S (ECCV 2024): simple, efficient, accurate RAFT; TartanAir + Chairs + Things checkpoint."
+
+source:
+  repository: https://github.com/princeton-vl/SEA-RAFT
+  commit: 9137517ba24e628442aec097d3afe71d03503b75  # HEAD when added (2026-10-01)
+  paper: https://arxiv.org/abs/2405.14793
+  weights_repository: https://huggingface.co/MemorySlices/Tartan-C-T432x960-S
+  weights_revision: a8173ddd35833392fae9465606430401a47e64ea
+
+license:
+  code:
+    spdx: BSD-3-Clause
+    status: explicit
+    evidence: https://github.com/princeton-vl/SEA-RAFT/blob/9137517ba24e628442aec097d3afe71d03503b75/LICENSE
+  weights:
+    spdx: BSD-3-Clause
+    status: explicit
+    evidence: https://huggingface.co/MemorySlices/Tartan-C-T432x960-S/blob/a8173ddd35833392fae9465606430401a47e64ea/README.md
+    note: >-
+      The HF model card declares license: bsd-3-clause. The Tartan-C-T checkpoint has not seen Sintel, so Sintel-train evaluation is zero-shot.
+  dataset:
+    name: TartanAir, FlyingChairs, FlyingThings3D
+    note: >-
+      TartanAir is CC BY 4.0 (https://theairlab.org/tartanair-dataset/). FlyingChairs and FlyingThings3D are 'provided for research purposes only ... Any commercial use is prohibited' (https://lmb.informatik.uni-freiburg.de/resources/datasets/FlyingChairs.en.html, https://lmb.informatik.uni-freiburg.de/resources/datasets/SceneFlowDatasets.en.html).
+  export_dependencies:
+    - {name: huggingface_hub, spdx: Apache-2.0}
+    - {name: safetensors, spdx: Apache-2.0}
+
+artifacts:
+  onnx:
+    file: sea_raft_s.onnx
+    fetch: export
+    script: export.py
+    input_shape: [1, 3, 432, 768]  # image1 and image2; fixed
+    input_format: RGB float 0-255 (the graph applies 2*x/255-1 and pads to /8), resized to 432x768
+    output: "flow [1, 2, 432, 768] (u, v) in input pixels, image1 -> image2"
+
+runtimes:
+  onnxruntime: verified
+
+reported_accuracy:
+  - metric: Sintel train clean EPE (Tartan+C+T, zero-shot)
+    value: 1.27
+    source: https://arxiv.org/abs/2405.14793  # Table 2 'Tartan SEA-RAFT(S)'
+  - metric: Sintel train final EPE (Tartan+C+T, zero-shot)
+    value: 3.74
+    source: https://arxiv.org/abs/2405.14793  # Table 2 'Tartan SEA-RAFT(S)'

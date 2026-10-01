@@ -24,6 +24,7 @@ RUNNERS = {
     "depth_estimation": ("estimator.py", "Estimator"),
     "segmentation": ("segmenter.py", "Segmenter"),
     "pose_estimation": ("pose.py", "PoseEstimator"),
+    "optical_flow": ("flow.py", "FlowEstimator"),
 }
 
 
