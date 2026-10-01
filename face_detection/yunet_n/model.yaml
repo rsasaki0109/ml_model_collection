@@ -1,0 +1,54 @@
+# Curated metadata. Measured numbers live in benchmarks.yaml / accuracy.yaml (tool-generated).
+name: yunet_n
+display_name: YuNet-n
+task: face_detection
+landmarks: 5
+summary: "YuNet-n (libfacedetection.train, 2023): 76K-param anchor-free face detector with 5 landmarks."
+
+source:
+  repository: https://github.com/ShiqiYu/libfacedetection.train
+  commit: dca340aa082c71081a68d17db8e58b33a58a914b  # HEAD when added (2026-10-01)
+  paper: https://doi.org/10.1007/s11633-023-1423-y
+
+license:
+  code:
+    spdx: BSD-3-Clause
+    status: explicit
+    evidence: https://github.com/ShiqiYu/libfacedetection.train/blob/dca340aa082c71081a68d17db8e58b33a58a914b/LICENSE
+  weights:
+    spdx: BSD-3-Clause
+    status: repository_license
+    evidence: https://github.com/ShiqiYu/libfacedetection.train/blob/dca340aa082c71081a68d17db8e58b33a58a914b/LICENSE
+    note: >-
+      onnx/yunet_n_dynamic.onnx is committed to the repository; no separate weights license. The repository was MIT at earlier commits (e.g. 02246e79b1e976c83d1e135a85e0628120c93769) and is BSD-3-Clause at this commit.
+  dataset:
+    name: WIDER FACE
+    note: >-
+      WIDER FACE: 'Creative Common License (cc by-nc-nd)' (http://shuoyang1213.me/WIDERFACE/; HF mirror CUHK-CSE/wider_face db171f1b7fedf4d3453e81297ff02f9915356d19 states CC BY-NC-ND 4.0). Whether this constrains the trained weights is a legal question (unverified). Landmark annotations (RetinaFace / SCRFD releases) state no license (unverified).
+
+artifacts:
+  onnx:
+    file: yunet_n.onnx
+    fetch: download
+    url: https://raw.githubusercontent.com/ShiqiYu/libfacedetection.train/dca340aa082c71081a68d17db8e58b33a58a914b/onnx/yunet_n_dynamic.onnx
+    sha256: 104ee26c71d5c270ce79a6b3dced91c91013260d29a6bf18f9296c5b8c4c2b12
+    input_shape: [1, 3, 736, 1280]  # dynamic; source resolution padded to a multiple of 32 (demo: 720p)
+    input_format: BGR float 0-255, no resize, zero-padded bottom/right to a multiple of 32
+    output: "cls/obj/bbox/kps for strides 8, 16, 32 ([1, cells, 1|1|4|10])"
+
+runtimes:
+  onnxruntime: verified
+
+reported_accuracy:
+  - metric: WIDER FACE val AP easy
+    value: 89.2
+    source: https://github.com/ShiqiYu/libfacedetection.train/blob/02246e79b1e976c83d1e135a85e0628120c93769/README.md  # original image size
+  - metric: WIDER FACE val AP medium
+    value: 88.3
+    source: https://github.com/ShiqiYu/libfacedetection.train/blob/02246e79b1e976c83d1e135a85e0628120c93769/README.md  # original image size
+  - metric: WIDER FACE val AP hard
+    value: 81.1
+    source: https://github.com/ShiqiYu/libfacedetection.train/blob/02246e79b1e976c83d1e135a85e0628120c93769/README.md  # original image size
+
+eval_settings:  # WIDER FACE evaluation as upstream (score 0.02, NMS IoU 0.45)
+  nms_iou: 0.45

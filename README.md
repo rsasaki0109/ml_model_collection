@@ -93,11 +93,11 @@ COCO-17 keypoints. Speed cells are model-only ms / FPS plus end-to-end ms per fr
 ![Optical flow comparison on the same clip](assets/optical_flow_comparison.gif)
 
 <!-- BEGIN:optical_flow_table -->
-| Model | Code license | Weights license | Training data | Input | Sintel train EPE<br>clean / final (reported) | Sintel train EPE<br>clean / final (measured, ONNX) | Peak VRAM<br>(measured) |
-|---|---|---|---|---|---|---|---|
-| [NeuFlow-v2](optical_flow/neuflow_v2) | 🟢 Apache-2.0 | 🟢 Apache-2.0* | FlyingThings3D | 432×768 | [1.24 / 2.67](https://arxiv.org/abs/2408.10161) | – | not measured |
-| [SEA-RAFT-M](optical_flow/sea_raft_m) | 🟢 BSD-3-Clause | 🟢 BSD-3-Clause | TartanAir, FlyingChairs, FlyingThings3D | 432×768 | – | – | not measured |
-| [SEA-RAFT-S](optical_flow/sea_raft_s) | 🟢 BSD-3-Clause | 🟢 BSD-3-Clause | TartanAir, FlyingChairs, FlyingThings3D | 432×768 | [1.27 / 3.74](https://arxiv.org/abs/2405.14793) | – | not measured |
+| Model | Code license | Weights license | Training data | Input | Sintel train EPE<br>clean / final (reported) | Sintel train EPE<br>clean / final (measured, ONNX) | Peak VRAM<br>(measured) | Tesla T4 (Colab)<br>onnxruntime-cuda FP32 · ms / FPS | Tesla T4 (Colab)<br>onnxruntime-tensorrt FP16 · ms / FPS |
+|---|---|---|---|---|---|---|---|---|---|
+| [NeuFlow-v2](optical_flow/neuflow_v2) | 🟢 Apache-2.0 | 🟢 Apache-2.0* | FlyingThings3D | 432×768 | [1.24 / 2.67](https://arxiv.org/abs/2408.10161) | **1.28 / 2.78** | 785 MB (Tiny, T4 CUDA FP32)<br>523 MB (Tiny, T4 TRT FP16) | 40.4 / 25 | 16.5 / 60 |
+| [SEA-RAFT-M](optical_flow/sea_raft_m) | 🟢 BSD-3-Clause | 🟢 BSD-3-Clause | TartanAir, FlyingChairs, FlyingThings3D | 432×768 | – | **1.29 / 3.71** | 1053 MB (Tiny, T4 CUDA FP32)<br>603 MB (Tiny, T4 TRT FP16) | 160.5 / 6 | 40.1 / 25 |
+| [SEA-RAFT-S](optical_flow/sea_raft_s) | 🟢 BSD-3-Clause | 🟢 BSD-3-Clause | TartanAir, FlyingChairs, FlyingThings3D | 432×768 | [1.27 / 3.74](https://arxiv.org/abs/2405.14793) | **1.29 / 3.59** | 983 MB (Tiny, T4 CUDA FP32)<br>579 MB (Tiny, T4 TRT FP16) | 103.2 / 10 | 27.8 / 36 |
 <!-- END:optical_flow_table -->
 
 Dense two-frame flow, previous frame → current frame; colour = direction, saturation = magnitude (≥ 20 px fully saturated), blended over the grayscale frame. All three checkpoints were trained without Sintel, so the Sintel-train EPE is zero-shot; upstream evaluates at the native 1024×436, the measured column runs the deployed fixed 432×768 graph. **Every released flow checkpoint is trained on FlyingChairs / FlyingThings3D, whose terms are research-only** — the code and weights licenses do not change that. Survey: [docs/sota/optical_flow.md](docs/sota/optical_flow.md).
@@ -115,6 +115,34 @@ Dense two-frame flow, previous frame → current frame; colour = direction, satu
 <!-- END:super_resolution_table -->
 
 Each tile is a zoomed crop: left half bicubic upscaling of the low-resolution input, right half the model. Video runs and benchmarks downscale every frame to 320×180 (bicubic) and upscale it x4 to 1280×720; the graphs themselves take any size. PSNR-Y follows BasicSR (BT.601 Y, 4 px border). The Real-ESRGAN models are GAN-trained for real-world images, so PSNR is not their target. **DIV2K (in DF2K) is "for academic research purpose only"** — permissive code and weights do not change the training-data terms. Survey: [docs/sota/super_resolution.md](docs/sota/super_resolution.md).
+
+## Background removal / matting
+
+![Background removal comparison on the same clip](assets/background_removal_comparison.gif)
+
+<!-- BEGIN:background_removal_table -->
+| Model | Kind | Code license | Weights license | Training data | Input | DIS-VD S<sub>α</sub> / wF<br>(reported) | DIS-VD S<sub>α</sub> / wF / MAE<br>(measured, ONNX) | Peak VRAM<br>(measured) |
+|---|---|---|---|---|---|---|---|---|
+| [BEN2-Base](background_removal/ben2_base) | image (dichotomous segmentation) | 🟢 MIT | 🟢 MIT | DIS5K + 22K proprietary images | 1024×1024 | – | – | not measured |
+| [BiRefNet-lite](background_removal/birefnet_lite) | image (dichotomous segmentation) | 🟢 MIT | 🟢 MIT | DIS5K, P3M-10k, DUTS, HRSOD, UHRSD, HRS10K and others (general model) | 1024×1024 | [0.882 / 0.83](https://github.com/ZhengPeng7/BiRefNet/blob/ebcc0bc8ec7fe919cec829f2dea656b3078acddc/README.md) | – | not measured |
+| [RVM-MobileNetV3](background_removal/rvm_mobilenetv3) | video (recurrent human matting) | 🟡 GPL-3.0 | 🟡 GPL-3.0* | VideoMatte240K, Distinctions-646, Adobe Image Matting, COCO, YouTubeVIS 2021, Supervisely Person | 720×1280 | – | **0.390 / 0.007 / 0.184** | not measured |
+<!-- END:background_removal_table -->
+
+Predicted alpha composited over a solid green background. BiRefNet-lite and BEN2 are single-image dichotomous-segmentation models (any salient object, 1024×1024 input); RVM is a recurrent *human* video matting model (source resolution, state carried across frames), so DIS-VD — a general-object benchmark — is outside what it was trained for. **DIS5K, used by BiRefNet and BEN2, is non-commercial**; RMBG-2.0 (same architecture as BiRefNet) has CC BY-NC 4.0 weights and is not included. Survey: [docs/sota/background_removal.md](docs/sota/background_removal.md).
+
+## Face detection
+
+![Face detection comparison on the same clip](assets/face_detection_comparison.gif)
+
+<!-- BEGIN:face_detection_table -->
+| Model | Code license | Weights license | Input | WIDER FACE val AP E / M / H<br>(reported) | WIDER FACE val AP E / M / H<br>(measured, ONNX) | Peak VRAM<br>(measured) |
+|---|---|---|---|---|---|---|
+| [RetinaFace-MV2](face_detection/retinaface_mv2) | 🟢 MIT | 🟢 MIT* | source size | [94.0 / 92.3 / 83.6](https://github.com/yakhyo/retinaface-pytorch/blob/4cd6e3471e5bac794637290a530566f463db4762/README.md) | – | not measured |
+| [SCRFD-10G](face_detection/scrfd_10g) | 🟢 MIT | 🔴 InsightFace-NC | 640×640 | [95.4 / 94.0 / 82.8](https://github.com/deepinsight/insightface/blob/1480e705287bc5d59f923b46c260ec6e3e4150f6/detection/scrfd/README.md) | – | not measured |
+| [YuNet-n](face_detection/yunet_n) | 🟢 BSD-3-Clause | 🟢 BSD-3-Clause* | source size | [89.2 / 88.3 / 81.1](https://github.com/ShiqiYu/libfacedetection.train/blob/02246e79b1e976c83d1e135a85e0628120c93769/README.md) | – | not measured |
+<!-- END:face_detection_table -->
+
+Boxes plus five landmarks; the strip at the bottom of each tile enlarges the highest-scoring faces (faces in the demo clip are ~10 px tall). YuNet and RetinaFace run at the source resolution, SCRFD at 640×640 (its graph's outputs are fixed), each as in its upstream WIDER FACE protocol. **WIDER FACE — the training set of all three — is CC BY-NC-ND**, and **InsightFace's pretrained models (SCRFD) are non-commercial research only**; mirrors that relabel SCRFD as MIT contradict upstream. Survey: [docs/sota/face_detection.md](docs/sota/face_detection.md).
 
 ## Find a model
 
@@ -201,6 +229,8 @@ ml_model_collection/
 ├── pose_estimation/         same layout; runner file is pose.py
 ├── optical_flow/            same layout; runner file is flow.py
 ├── super_resolution/        same layout; runner file is upscaler.py
+├── background_removal/      same layout; runner file is remover.py
+├── face_detection/          same layout; runner file is face.py
 ├── object_detection/
 │   └── <model>/
 │       ├── model.yaml       curated metadata: source, licenses, artifacts, reported accuracy

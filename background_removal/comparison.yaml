@@ -1,0 +1,8 @@
+# Default line-up and layout for tools/make_comparison.py --task background_removal.
+models:
+  - birefnet_lite
+  - ben2_base
+  - rvm_mobilenetv3
+cols: 3
+tile_width: 400
+fps: 5

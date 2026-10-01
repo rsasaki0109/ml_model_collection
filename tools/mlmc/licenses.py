@@ -21,12 +21,14 @@ CATEGORIES = {
     "GPL-2.0-only": COPYLEFT,
     "GPL-3.0-only": COPYLEFT,
     "GPL-3.0-or-later": COPYLEFT,
+    "GPL-3.0": COPYLEFT,  # as reported by GitHub when only/or-later is not stated
     "AGPL-3.0-only": COPYLEFT,
     "AGPL-3.0": COPYLEFT,  # as reported by GitHub when only/or-later is not stated
     "CC-BY-SA-4.0": COPYLEFT,
     "CC-BY-NC-4.0": RESTRICTED,
     "CC-BY-NC-SA-4.0": RESTRICTED,
     "LicenseRef-NVIDIA-SCL-NC": RESTRICTED,  # NVIDIA Source Code License (non-commercial)
+    "LicenseRef-InsightFace-NC": RESTRICTED,  # InsightFace models: non-commercial research only
 }
 
 # How the license of a component was established.
@@ -38,7 +40,7 @@ STATUSES = ("explicit", "repository_license", "unknown")
 
 
 # Display names for non-SPDX identifiers.
-SHORT = {"LicenseRef-NVIDIA-SCL-NC": "NVIDIA-NC"}
+SHORT = {"LicenseRef-NVIDIA-SCL-NC": "NVIDIA-NC", "LicenseRef-InsightFace-NC": "InsightFace-NC"}
 
 
 def short(spdx: str | None) -> str:

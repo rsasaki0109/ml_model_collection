@@ -126,3 +126,17 @@ def test_sr_psnr_and_render():
     assert 20 < psnr_y(a, b, crop=4) < 40
     out = render(np.zeros((40, 80, 3), np.uint8), SRImage(np.zeros((40, 80, 3), np.uint8), np.zeros((10, 20, 3), np.uint8)))
     assert out.shape == (40, 80, 3)
+
+
+def test_face_render_and_matte():
+    from tools.mlmc.face import Faces, render
+    from tools.mlmc.matting import AlphaMatte, render as render_matte
+    f = Faces(np.array([[10, 10, 30, 34]], np.float32), np.array([0.9], np.float32),
+              np.full((1, 5, 2), 20, np.float32))
+    out = render(np.zeros((120, 160, 3), np.uint8), f)
+    assert out.shape == (120, 160, 3) and out.any()
+    frame = np.full((4, 4, 3), 200, np.uint8)
+    a = np.zeros((4, 4), np.float32)
+    a[:2] = 1
+    comp = render_matte(frame, AlphaMatte(a))
+    assert (comp[:2] == 200).all() and (comp[2:] != 200).any()

@@ -1,0 +1,51 @@
+# Curated metadata. Measured numbers live in benchmarks.yaml / accuracy.yaml (tool-generated).
+name: retinaface_mv2
+display_name: RetinaFace-MV2
+task: face_detection
+landmarks: 5
+summary: "RetinaFace with a MobileNetV2 backbone (yakhyo/retinaface-pytorch): 3.1M params, 5 landmarks."
+
+source:
+  repository: https://github.com/yakhyo/retinaface-pytorch
+  commit: 4cd6e3471e5bac794637290a530566f463db4762  # HEAD when added (2026-10-01)
+  paper: https://arxiv.org/abs/1905.00641
+
+license:
+  code:
+    spdx: MIT
+    status: explicit
+    evidence: https://github.com/yakhyo/retinaface-pytorch/blob/4cd6e3471e5bac794637290a530566f463db4762/LICENSE
+  weights:
+    spdx: MIT
+    status: repository_license
+    evidence: https://github.com/yakhyo/retinaface-pytorch/blob/4cd6e3471e5bac794637290a530566f463db4762/LICENSE
+    note: >-
+      retinaface_mv2.onnx is a release asset (v0.0.1) of the MIT repository; no separate weights license is stated. ImageNet-pretrained backbone initialisation (unverified).
+  dataset:
+    name: WIDER FACE
+    note: >-
+      WIDER FACE: 'Creative Common License (cc by-nc-nd)' (http://shuoyang1213.me/WIDERFACE/; HF mirror CUHK-CSE/wider_face db171f1b7fedf4d3453e81297ff02f9915356d19 states CC BY-NC-ND 4.0). Whether this constrains the trained weights is a legal question (unverified). Landmark annotations (RetinaFace / SCRFD releases) state no license (unverified).
+
+artifacts:
+  onnx:
+    file: retinaface_mv2.onnx
+    fetch: download
+    url: https://github.com/yakhyo/retinaface-pytorch/releases/download/v0.0.1/retinaface_mv2.onnx
+    sha256: 3ca44c045651cabeed1193a1fae8946ad1f3a55da8fa74b341feab5a8319f757
+    input_shape: [1, 3, 720, 1280]  # dynamic; source resolution (demo: 720p)
+    input_format: BGR float minus (104, 117, 123), no resize
+    output: "loc [1, priors, 4], conf [1, priors, 2] (softmax), landmarks [1, priors, 10]"
+
+runtimes:
+  onnxruntime: verified
+
+reported_accuracy:
+  - metric: WIDER FACE val AP easy
+    value: 94.04
+    source: https://github.com/yakhyo/retinaface-pytorch/blob/4cd6e3471e5bac794637290a530566f463db4762/README.md  # original image size
+  - metric: WIDER FACE val AP medium
+    value: 92.26
+    source: https://github.com/yakhyo/retinaface-pytorch/blob/4cd6e3471e5bac794637290a530566f463db4762/README.md  # original image size
+  - metric: WIDER FACE val AP hard
+    value: 83.59
+    source: https://github.com/yakhyo/retinaface-pytorch/blob/4cd6e3471e5bac794637290a530566f463db4762/README.md  # original image size

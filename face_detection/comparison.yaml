@@ -1,0 +1,8 @@
+# Default line-up and layout for tools/make_comparison.py --task face_detection.
+models:
+  - yunet_n
+  - retinaface_mv2
+  - scrfd_10g
+cols: 3
+tile_width: 400
+fps: 5

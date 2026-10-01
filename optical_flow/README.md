@@ -10,11 +10,11 @@ previous one; the first frame is paired with itself).
 ## Comparison
 
 <!-- BEGIN:optical_flow_table -->
-| Model | Code license | Weights license | Training data | Input | Sintel train EPE<br>clean / final (reported) | Sintel train EPE<br>clean / final (measured, ONNX) | Peak VRAM<br>(measured) |
-|---|---|---|---|---|---|---|---|
-| [NeuFlow-v2](neuflow_v2) | 🟢 Apache-2.0 | 🟢 Apache-2.0* | FlyingThings3D | 432×768 | [1.24 / 2.67](https://arxiv.org/abs/2408.10161) | – | not measured |
-| [SEA-RAFT-M](sea_raft_m) | 🟢 BSD-3-Clause | 🟢 BSD-3-Clause | TartanAir, FlyingChairs, FlyingThings3D | 432×768 | – | – | not measured |
-| [SEA-RAFT-S](sea_raft_s) | 🟢 BSD-3-Clause | 🟢 BSD-3-Clause | TartanAir, FlyingChairs, FlyingThings3D | 432×768 | [1.27 / 3.74](https://arxiv.org/abs/2405.14793) | – | not measured |
+| Model | Code license | Weights license | Training data | Input | Sintel train EPE<br>clean / final (reported) | Sintel train EPE<br>clean / final (measured, ONNX) | Peak VRAM<br>(measured) | Tesla T4 (Colab)<br>onnxruntime-cuda FP32 · ms / FPS | Tesla T4 (Colab)<br>onnxruntime-tensorrt FP16 · ms / FPS |
+|---|---|---|---|---|---|---|---|---|---|
+| [NeuFlow-v2](neuflow_v2) | 🟢 Apache-2.0 | 🟢 Apache-2.0* | FlyingThings3D | 432×768 | [1.24 / 2.67](https://arxiv.org/abs/2408.10161) | **1.28 / 2.78** | 785 MB (Tiny, T4 CUDA FP32)<br>523 MB (Tiny, T4 TRT FP16) | 40.4 / 25 | 16.5 / 60 |
+| [SEA-RAFT-M](sea_raft_m) | 🟢 BSD-3-Clause | 🟢 BSD-3-Clause | TartanAir, FlyingChairs, FlyingThings3D | 432×768 | – | **1.29 / 3.71** | 1053 MB (Tiny, T4 CUDA FP32)<br>603 MB (Tiny, T4 TRT FP16) | 160.5 / 6 | 40.1 / 25 |
+| [SEA-RAFT-S](sea_raft_s) | 🟢 BSD-3-Clause | 🟢 BSD-3-Clause | TartanAir, FlyingChairs, FlyingThings3D | 432×768 | [1.27 / 3.74](https://arxiv.org/abs/2405.14793) | **1.29 / 3.59** | 983 MB (Tiny, T4 CUDA FP32)<br>579 MB (Tiny, T4 TRT FP16) | 103.2 / 10 | 27.8 / 36 |
 <!-- END:optical_flow_table -->
 
 ## Provenance

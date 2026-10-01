@@ -1,0 +1,44 @@
+# Curated metadata. Measured numbers live in benchmarks.yaml / accuracy.yaml (tool-generated).
+name: ben2_base
+display_name: BEN2-Base
+task: background_removal
+kind: image (dichotomous segmentation)
+summary: "BEN2 Base (2025, Prama LLC): background erase network with confidence-guided matting, official ONNX."
+
+source:
+  repository: https://github.com/PramaLLC/BEN2
+  commit: 2c99a5da477b5523585bfa5c893888a6e818a8f6  # HEAD when added (2026-10-01)
+  paper: https://arxiv.org/abs/2501.06230
+  weights_repository: https://huggingface.co/PramaLLC/BEN2
+  weights_revision: e48a20765fb421d19dcdb0bf3cc61e802ca5ec8f
+
+license:
+  code:
+    spdx: MIT
+    status: explicit
+    evidence: https://github.com/PramaLLC/BEN2/blob/2c99a5da477b5523585bfa5c893888a6e818a8f6/LICENSE
+  weights:
+    spdx: MIT
+    status: explicit
+    evidence: https://huggingface.co/PramaLLC/BEN2/blob/e48a20765fb421d19dcdb0bf3cc61e802ca5ec8f/README.md
+    note: >-
+      The Hugging Face card declares license: mit; BEN2_Base.onnx is in that repository.
+  dataset:
+    name: DIS5K + 22K proprietary images
+    note: >-
+      DIS5K terms: non-commercial research / education use only, redistribution prohibited (https://github.com/xuebinqin/DIS/blob/b6764e20381f6f42a70f83fa3324181529ed1403/DIS5K-Dataset-Terms-of-Use.pdf). The proprietary data is described on the model card only.
+
+artifacts:
+  onnx:
+    file: ben2_base.onnx
+    fetch: download
+    url: https://huggingface.co/PramaLLC/BEN2/resolve/e48a20765fb421d19dcdb0bf3cc61e802ca5ec8f/BEN2_Base.onnx
+    sha256: 22cea62108ff53b7ccc20f7a008bf30494228d84b1687f29ecbe76936a998101
+    input_shape: [1, 3, 1024, 1024]
+    input_format: RGB, resized to 1024x1024, /255 (no mean/std)
+    output: "[1, 1, 1024, 1024] float16 alpha (sigmoid inside the graph)"
+
+runtimes:
+  onnxruntime: verified
+
+reported_accuracy: []

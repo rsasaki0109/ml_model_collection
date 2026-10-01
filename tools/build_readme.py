@@ -247,8 +247,53 @@ def sr_table(models: list[Model], start: Path) -> str:
     return "\n".join(lines)
 
 
-OD, DE, SG, PE, OF, SR = ("object_detection", "depth_estimation", "segmentation", "pose_estimation",
-                          "optical_flow", "super_resolution")
+def bg_table(models: list[Model], start: Path) -> str:
+    cols = bench_columns(models)
+    head = ["Model", "Kind", "Code license", "Weights license", "Training data", "Input",
+            "DIS-VD S<sub>α</sub> / wF<br>(reported)", "DIS-VD S<sub>α</sub> / wF / MAE<br>(measured, ONNX)",
+            "Peak VRAM<br>(measured)"] + bench_head(cols)
+    lines = ["| " + " | ".join(head) + " |", "|" + "---|" * len(head)]
+    for m in models:
+        lic = m.meta.get("license", {})
+        shape = m.meta["artifacts"]["onnx"]["input_shape"]
+        rep = m.meta.get("reported_accuracy", [])
+        rep_cell = f"[{' / '.join(str(r['value']) for r in rep)}]({rep[0]['source']})" if rep else "–"
+        meas = next((r for r in m.accuracy if r.get("dataset") == "DIS5K DIS-VD"), None)
+        meas_cell = (f"**{meas['metrics']['S_measure']:.3f} / {meas['metrics']['weighted_F']:.3f}"
+                     f" / {meas['metrics']['MAE']:.3f}**" if meas else "–")
+        row = [f"[{m.display_name}]({rel(m, start)})", m.meta.get("kind", "?"),
+               licenses.describe(lic.get("code")), licenses.describe(lic.get("weights")),
+               lic.get("dataset", {}).get("name", "?"), f"{shape[-2]}×{shape[-1]}",
+               rep_cell, meas_cell, vram_cell(m)]
+        lines.append("| " + " | ".join(row + bench_cells(m, cols)) + " |")
+    return "\n".join(lines)
+
+
+def face_table(models: list[Model], start: Path) -> str:
+    cols = bench_columns(models)
+    head = ["Model", "Code license", "Weights license", "Input",
+            "WIDER FACE val AP E / M / H<br>(reported)", "WIDER FACE val AP E / M / H<br>(measured, ONNX)",
+            "Peak VRAM<br>(measured)"] + bench_head(cols)
+    lines = ["| " + " | ".join(head) + " |", "|" + "---|" * len(head)]
+    for m in models:
+        lic = m.meta.get("license", {})
+        art = m.meta["artifacts"]["onnx"]
+        rep = m.meta.get("reported_accuracy", [])
+        rep_cell = f"[{' / '.join(f'{r['value']:.1f}' for r in rep)}]({rep[0]['source']})" if rep else "–"
+        meas = next((r for r in m.accuracy if r.get("dataset") == "WIDER FACE val"), None)
+        meas_cell = (" / ".join(f"**{meas['metrics'][f'AP_{s}']:.1f}**" for s in ("easy", "medium", "hard"))
+                     if meas else "–")
+        inp = "640×640" if art["input_shape"][-1] == 640 else "source size"
+        row = [f"[{m.display_name}]({rel(m, start)})",
+               licenses.describe(lic.get("code")), licenses.describe(lic.get("weights")),
+               inp, rep_cell, meas_cell, vram_cell(m)]
+        lines.append("| " + " | ".join(row + bench_cells(m, cols)) + " |")
+    return "\n".join(lines)
+
+
+OD, DE, SG, PE, OF, SR, BG = ("object_detection", "depth_estimation", "segmentation",
+                              "pose_estimation", "optical_flow", "super_resolution",
+                              "background_removal")
 TABLES = {
     (REPO_ROOT / "README.md", "object_detection_table"): (OD, comparison_table),
     (REPO_ROOT / "README.md", "depth_estimation_table"): (DE, depth_table),
@@ -268,6 +313,13 @@ TABLES = {
     (REPO_ROOT / "README.md", "super_resolution_table"): (SR, sr_table),
     (REPO_ROOT / SR / "README.md", "super_resolution_table"): (SR, sr_table),
     (REPO_ROOT / SR / "README.md", "super_resolution_provenance"): (SR, provenance_table),
+    (REPO_ROOT / "README.md", "background_removal_table"): (BG, bg_table),
+    (REPO_ROOT / BG / "README.md", "background_removal_table"): (BG, bg_table),
+    (REPO_ROOT / BG / "README.md", "background_removal_provenance"): (BG, provenance_table),
+    (REPO_ROOT / "README.md", "face_detection_table"): ("face_detection", face_table),
+    (REPO_ROOT / "face_detection" / "README.md", "face_detection_table"): ("face_detection", face_table),
+    (REPO_ROOT / "face_detection" / "README.md", "face_detection_provenance"):
+        ("face_detection", provenance_table),
 }
 
 

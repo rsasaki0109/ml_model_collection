@@ -30,7 +30,9 @@ from tools.mlmc import REPO_ROOT  # noqa: E402
 from tools.mlmc.catalog import Model, get_model  # noqa: E402
 from tools.mlmc.depth import colorize  # noqa: E402
 from tools.mlmc.detection import draw  # noqa: E402
+from tools.mlmc.face import render as render_faces  # noqa: E402
 from tools.mlmc.flow import render as render_flow  # noqa: E402
+from tools.mlmc.matting import render as render_matte  # noqa: E402
 from tools.mlmc.pose import render as render_pose  # noqa: E402
 from tools.mlmc.segmentation import render as render_seg  # noqa: E402
 from tools.mlmc.sr import render as render_sr  # noqa: E402
@@ -43,6 +45,8 @@ RENDER = {
     "pose_estimation": render_pose,
     "optical_flow": render_flow,
     "super_resolution": render_sr,
+    "background_removal": render_matte,
+    "face_detection": render_faces,
 }
 
 
