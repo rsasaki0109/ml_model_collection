@@ -8,7 +8,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - run: pip install pyyaml numpy opencv-python-headless pytest
+      - run: pip install pyyaml numpy scipy opencv-python-headless pytest
       - run: python -m pytest -q tests
       - run: python tools/validate.py
       - run: python tools/build_readme.py --check
