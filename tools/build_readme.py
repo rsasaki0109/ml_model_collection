@@ -503,6 +503,57 @@ def _anchor(title: str) -> str:
     return "#" + "".join(c for c in title.lower().replace(" ", "-") if c.isalnum() or c == "-")
 
 
+def measured_metric(m: Model, spec) -> float | None:
+    """The task's headline metric from the model's accuracy.yaml (fp32 record first)."""
+    ds, key = spec[0], spec[1]
+    recs = [r for r in m.accuracy if key in r.get("metrics", {})
+            and (r.get("dataset") == ds or r.get("dataset", "").startswith(ds + " ("))]
+    recs.sort(key=lambda r: r.get("precision") != "fp32")
+    return recs[0]["metrics"][key] if recs else None
+
+
+def t4_bench(m: Model, runtime: str):
+    return next((b for b in m.benchmarks if b.get("hardware", {}).get("gpu") == "Tesla T4"
+                 and b.get("runtime") == runtime), None)
+
+
+def summary_table(task: str):
+    """Compact table for the top-level README: license, headline accuracy, T4 latency and
+    VRAM. The task's own README has the full table (reported numbers, inputs, all runs)."""
+    _, spec = TASK_INDEX[task]
+
+    def table(models: list[Model], start: Path) -> str:
+        ds, key, higher, label = spec
+        head = ["Model", "License<br>code / weights", f"{label}{'' if higher else ' ↓'}<br>(measured)",
+                "T4 TensorRT FP16<br>ms", "T4 CUDA FP32<br>ms", "Peak VRAM<br>(T4, lowest)"]
+        lines = ["| " + " | ".join(head) + " |", "|---|---|--:|--:|--:|--:|"]
+        def order(m):
+            v = measured_metric(m, spec)
+            return (v is None, -(v or 0) if higher else (v or 0), m.display_name)
+        for m in sorted(models, key=order):
+            lic = m.meta.get("license", {})
+            name = f"[{m.display_name}]({rel(m, start)})"
+            if m.meta.get("open_vocabulary"):
+                name += " 🔤"
+            if m.meta.get("known_issue"):
+                name += " ⚠️"
+            code, weights = (licenses.describe(lic.get(k)) for k in ("code", "weights"))
+            v = measured_metric(m, spec)
+            trt, cuda = t4_bench(m, "onnxruntime-tensorrt"), t4_bench(m, "onnxruntime-cuda")
+            vram = [b for b in (trt, cuda) if b and b.get("peak_vram_mb") is not None]
+            low = min(vram, key=lambda b: b["peak_vram_mb"]) if vram else None
+            row = [name, f"{code} / {weights}", f"**{v}**" if v is not None else "–",
+                   f"{trt['latency_ms']['mean']:.1f}" if trt else "–",
+                   f"{cuda['latency_ms']['mean']:.1f}" if cuda else "–",
+                   f"{low['peak_vram_mb']} MB ({low['vram_tier']})" if low else "–"]
+            lines.append("| " + " | ".join(row) + " |")
+        task_dir = os.path.relpath(models[0].dir.parent, start).replace("\\", "/")
+        lines += ["", "<sub>Full table (reported numbers, inputs, every measured run) and per-model notes: "
+                      f"[{task_dir}/README.md]({task_dir}/README.md)</sub>"]
+        return "\n".join(lines)
+    return table
+
+
 def task_index(models: list[Model], start: Path) -> str:
     """One row per task: model count, weights-license mix, best measured
     accuracy and lowest T4 TensorRT FP16 latency (each from recorded files)."""
@@ -553,60 +604,47 @@ OD, DE, SG, PE, OF, SR, BG = ("object_detection", "depth_estimation", "segmentat
                               "pose_estimation", "optical_flow", "super_resolution",
                               "background_removal")
 TABLES = {
-    (REPO_ROOT / "README.md", "object_detection_table"): (OD, comparison_table),
-    (REPO_ROOT / "README.md", "depth_estimation_table"): (DE, depth_table),
     (REPO_ROOT / OD / "README.md", "object_detection_table"): (OD, comparison_table),
     (REPO_ROOT / OD / "README.md", "object_detection_provenance"): (OD, provenance_table),
     (REPO_ROOT / DE / "README.md", "depth_estimation_table"): (DE, depth_table),
     (REPO_ROOT / DE / "README.md", "depth_estimation_provenance"): (DE, provenance_table),
-    (REPO_ROOT / "README.md", "segmentation_table"): (SG, segmentation_table),
     (REPO_ROOT / SG / "README.md", "segmentation_table"): (SG, segmentation_table),
     (REPO_ROOT / SG / "README.md", "segmentation_provenance"): (SG, provenance_table),
     (REPO_ROOT / "README.md", "task_index"): (None, task_index),
     (REPO_ROOT / "README.md", "toc"): (None, toc),
-    (REPO_ROOT / "README.md", "pose_estimation_table"): (PE, pose_table),
     (REPO_ROOT / PE / "README.md", "pose_estimation_table"): (PE, pose_table),
     (REPO_ROOT / PE / "README.md", "pose_estimation_provenance"): (PE, provenance_table),
-    (REPO_ROOT / "README.md", "optical_flow_table"): (OF, flow_table),
     (REPO_ROOT / OF / "README.md", "optical_flow_table"): (OF, flow_table),
     (REPO_ROOT / OF / "README.md", "optical_flow_provenance"): (OF, provenance_table),
-    (REPO_ROOT / "README.md", "super_resolution_table"): (SR, sr_table),
     (REPO_ROOT / SR / "README.md", "super_resolution_table"): (SR, sr_table),
     (REPO_ROOT / SR / "README.md", "super_resolution_provenance"): (SR, provenance_table),
-    (REPO_ROOT / "README.md", "background_removal_table"): (BG, bg_table),
     (REPO_ROOT / BG / "README.md", "background_removal_table"): (BG, bg_table),
     (REPO_ROOT / BG / "README.md", "background_removal_provenance"): (BG, provenance_table),
-    (REPO_ROOT / "README.md", "face_detection_table"): ("face_detection", face_table),
     (REPO_ROOT / "face_detection" / "README.md", "face_detection_table"): ("face_detection", face_table),
     (REPO_ROOT / "face_detection" / "README.md", "face_detection_provenance"):
         ("face_detection", provenance_table),
-    (REPO_ROOT / "README.md", "ocr_table"): ("ocr", ocr_table),
     (REPO_ROOT / "ocr" / "README.md", "ocr_table"): ("ocr", ocr_table),
     (REPO_ROOT / "ocr" / "README.md", "ocr_provenance"): ("ocr", provenance_table),
-    (REPO_ROOT / "README.md", "feature_matching_table"): ("feature_matching", matching_table),
     (REPO_ROOT / "feature_matching" / "README.md", "feature_matching_table"): ("feature_matching", matching_table),
     (REPO_ROOT / "feature_matching" / "README.md", "feature_matching_provenance"):
         ("feature_matching", provenance_table),
-    (REPO_ROOT / "README.md", "tracking_table"): ("tracking", tracking_table),
-    (REPO_ROOT / "README.md", "image_classification_table"): ("image_classification", classification_table),
     (REPO_ROOT / "image_classification" / "README.md", "image_classification_table"):
         ("image_classification", classification_table),
     (REPO_ROOT / "image_classification" / "README.md", "image_classification_provenance"):
         ("image_classification", provenance_table),
-    (REPO_ROOT / "README.md", "point_tracking_table"): ("point_tracking", point_tracking_table),
     (REPO_ROOT / "point_tracking" / "README.md", "point_tracking_table"): ("point_tracking", point_tracking_table),
     (REPO_ROOT / "point_tracking" / "README.md", "point_tracking_provenance"): ("point_tracking", provenance_table),
-    (REPO_ROOT / "README.md", "image_captioning_table"): ("image_captioning", captioning_table),
     (REPO_ROOT / "image_captioning" / "README.md", "image_captioning_table"): ("image_captioning", captioning_table),
     (REPO_ROOT / "image_captioning" / "README.md", "image_captioning_provenance"): ("image_captioning", provenance_table),
-    (REPO_ROOT / "README.md", "wholebody_pose_table"): ("wholebody_pose", wholebody_table),
     (REPO_ROOT / "wholebody_pose" / "README.md", "wholebody_pose_table"): ("wholebody_pose", wholebody_table),
     (REPO_ROOT / "wholebody_pose" / "README.md", "wholebody_pose_provenance"): ("wholebody_pose", provenance_table),
-    (REPO_ROOT / "README.md", "place_recognition_table"): ("place_recognition", vpr_table),
     (REPO_ROOT / "place_recognition" / "README.md", "place_recognition_table"): ("place_recognition", vpr_table),
     (REPO_ROOT / "place_recognition" / "README.md", "place_recognition_provenance"): ("place_recognition", provenance_table),
     (REPO_ROOT / "tracking" / "README.md", "tracking_table"): ("tracking", tracking_table),
 }
+# the top-level README shows a compact summary per task; the task READMEs keep the full tables
+for _task in TASK_INDEX:
+    TABLES[(REPO_ROOT / "README.md", f"{_task}_summary")] = (_task, summary_table(_task))
 
 
 def render(text: str, name: str, body: str) -> str:
