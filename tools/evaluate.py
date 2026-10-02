@@ -845,7 +845,8 @@ def eval_coco_karpathy(model: Model, root: Path, provider: str, limit: int | Non
     return {
         "dataset": "COCO Karpathy test" + (f" (first {limit} images)" if limit else ""),
         "images": len(imgs),
-        "metrics": {"CIDEr": round(cider * 100, 1), "BLEU4": round(bleu[3] * 100, 1),
+        # pycocoevalcap returns numpy scalars, which yaml.safe_dump cannot write
+        "metrics": {"CIDEr": round(float(cider) * 100, 1), "BLEU4": round(float(bleu[3]) * 100, 1),
                     "mean_words": round(mean_tokens, 1)},
         "settings": {"decoding": f"greedy, max {runner.max_new} new tokens",
                      "prompt": model.meta["captioning"]["prompt"],
