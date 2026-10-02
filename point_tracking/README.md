@@ -42,6 +42,17 @@ at 256 points (evaluation pads / chunks query sets). Against the PyTorch
 port on the demo clip the ONNX tracks differ by 0.1-0.2 px median at
 256x256 (p95 < 0.8 px); visibility agrees on > 99 % of points.
 
+## Known issues
+
+- **CUDA EP on a Colab T4 (2026-10-02):** with ONNX Runtime 1.22 the
+  per-frame graph's CUDA session builds in about 1 s (cuDNN 9.10), but
+  inference then stays at 100 % CPU with the GPU idle for more than 30
+  minutes, with both cuDNN 9.27 (Colab default) and 9.10. The T4 benchmark
+  and the TAP-Vid evaluation are therefore missing; the cause is not yet
+  known. The CPU EP runs the graph (parity numbers above).
+- **TensorRT EP:** not yet measured (the attempt was lost with the Colab
+  runtime).
+
 ## Evaluation
 
 TAP-Vid DAVIS (30 videos), 'first' query mode at 256x256 as tapnet's

@@ -41,6 +41,9 @@ Runtime and the `tokenizers` package.
   image features substituted for the `<image>` embeddings, merged decoder
   with position ids. A chat model: its captions are longer and phrased
   differently from COCO references.
+  On a Colab T4 the TensorRT EP failed to build an engine for its vision
+  encoder (2026-10-02), so it has a CUDA record only. COCO accuracy is not
+  measured yet (the runs were lost with the Colab runtime).
 
 ## Evaluation
 
