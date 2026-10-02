@@ -32,7 +32,7 @@ Video: "Road traffic on Stritarjeva street" by Sounds of Changes, [CC BY 3.0](ht
 | [Feature matching](#feature-matching) | 3 | 🟢2 🔴1 | HPatches H-AUC@3px **70.1** — RaCo-ALIKED+LightGlue | SuperPoint+LightGlue — 30.8 ms |
 | [Multi-object tracking](#multi-object-tracking) | 3 | 🟢3 | MOT17-train HOTA **40.6** — ByteTrack | ByteTrack — 6.1 ms |
 | [Image classification](#image-classification) | 4 | 🟢4 | ImageNetV2 top-1 **70.51** — SigLIP2-B/16 (zero-shot) | MobileNetV4-Conv-S — 1.0 ms |
-| [Point tracking](#point-tracking) | 2 | 🟢2 | – | BootsTAPIR-online-fast — 51.8 ms |
+| [Point tracking](#point-tracking) | 2 | 🟢2 | TAP-Vid DAVIS AJ **59.3** — BootsTAPIR-online | BootsTAPIR-online-fast — 51.8 ms |
 | [Image captioning](#image-captioning) | 2 | 🟢2 | COCO CIDEr **123.6** — Florence-2-base | Florence-2-base — 40.5 ms |
 | [Whole-body pose](#whole-body-pose) | 3 | 🟢3 | COCO-WholeBody whole AP **68.8** — RTMW-l-384 | DWPose-s — 7.7 ms |
 | [Visual place recognition](#visual-place-recognition) | 3 | 🟢3 | SPED R@1 **90.3** — MegaLoc | EigenPlaces-R50 — 3.7 ms |
@@ -238,8 +238,8 @@ ImageNet-1k classes, top-5 per frame. Supervised models use timm's evaluation tr
 <!-- BEGIN:point_tracking_table -->
 | Model | Kind | Code license | Weights license | Input | TAP-Vid DAVIS first AJ<br>(reported) | TAP-Vid DAVIS first AJ / δavg / OA<br>(measured, ONNX) | Peak VRAM<br>(measured) | Tesla T4 (Colab)<br>onnxruntime-tensorrt FP16 · ms / FPS |
 |---|---|---|---|---|---|---|---|---|
-| [BootsTAPIR-online](point_tracking/bootstapir_online) | online (causal) | 🟢 Apache-2.0 | 🟢 Apache-2.0 | 256×256, 256 points | [59.7](https://github.com/google-deepmind/tapnet/blob/730cda1c730877cfedbe01bf87fb1cadb78a565d/README.md) | – | 1975 MB (Tiny, T4 TRT FP16) | 200.9 / 5 |
-| [BootsTAPIR-online-fast](point_tracking/bootstapir_online_fast) | online (causal) | 🟢 Apache-2.0 | 🟢 Apache-2.0 | 256×256, 256 points | – | – | 881 MB (Tiny, T4 TRT FP16) | 51.8 / 19 |
+| [BootsTAPIR-online](point_tracking/bootstapir_online) | online (causal) | 🟢 Apache-2.0 | 🟢 Apache-2.0 | 256×256, 256 points | [59.7](https://github.com/google-deepmind/tapnet/blob/730cda1c730877cfedbe01bf87fb1cadb78a565d/README.md) | **59.3 / 71.6 / 87.2** | 1975 MB (Tiny, T4 TRT FP16) | 200.9 / 5 |
+| [BootsTAPIR-online-fast](point_tracking/bootstapir_online_fast) | online (causal) | 🟢 Apache-2.0 | 🟢 Apache-2.0 | 256×256, 256 points | – | **53.9 / 66.1 / 80.9** | 881 MB (Tiny, T4 TRT FP16) | 51.8 / 19 |
 <!-- END:point_tracking_table -->
 
 Tracking any point (TAP), causally frame by frame: a 16×16 grid of points is placed on the first frame and followed with short trails (occluded points hidden). Online BootsTAPIR (DeepMind, Apache-2.0 code and weights) exported as a query-feature encoder plus a per-frame graph with causal state; the fast variant uses 1 refinement iteration instead of 4. **CoTracker2/3 (Meta) are CC BY-NC 4.0** and TAPTR / DELTA are non-commercial, so they are not included. Survey: [docs/sota/point_tracking.md](docs/sota/point_tracking.md).

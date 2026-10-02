@@ -12,8 +12,8 @@ grid of points.
 <!-- BEGIN:point_tracking_table -->
 | Model | Kind | Code license | Weights license | Input | TAP-Vid DAVIS first AJ<br>(reported) | TAP-Vid DAVIS first AJ / δavg / OA<br>(measured, ONNX) | Peak VRAM<br>(measured) | Tesla T4 (Colab)<br>onnxruntime-tensorrt FP16 · ms / FPS |
 |---|---|---|---|---|---|---|---|---|
-| [BootsTAPIR-online](bootstapir_online) | online (causal) | 🟢 Apache-2.0 | 🟢 Apache-2.0 | 256×256, 256 points | [59.7](https://github.com/google-deepmind/tapnet/blob/730cda1c730877cfedbe01bf87fb1cadb78a565d/README.md) | – | 1975 MB (Tiny, T4 TRT FP16) | 200.9 / 5 |
-| [BootsTAPIR-online-fast](bootstapir_online_fast) | online (causal) | 🟢 Apache-2.0 | 🟢 Apache-2.0 | 256×256, 256 points | – | – | 881 MB (Tiny, T4 TRT FP16) | 51.8 / 19 |
+| [BootsTAPIR-online](bootstapir_online) | online (causal) | 🟢 Apache-2.0 | 🟢 Apache-2.0 | 256×256, 256 points | [59.7](https://github.com/google-deepmind/tapnet/blob/730cda1c730877cfedbe01bf87fb1cadb78a565d/README.md) | **59.3 / 71.6 / 87.2** | 1975 MB (Tiny, T4 TRT FP16) | 200.9 / 5 |
+| [BootsTAPIR-online-fast](bootstapir_online_fast) | online (causal) | 🟢 Apache-2.0 | 🟢 Apache-2.0 | 256×256, 256 points | – | **53.9 / 66.1 / 80.9** | 881 MB (Tiny, T4 TRT FP16) | 51.8 / 19 |
 <!-- END:point_tracking_table -->
 
 ## Provenance
@@ -50,10 +50,9 @@ port on the demo clip the ONNX tracks differ by 0.1-0.2 px median at
   minutes, with both cuDNN 9.27 (Colab default) and 9.10. The T4 benchmark
   and the TAP-Vid evaluation are therefore missing; the cause is not yet
   known. The CPU EP runs the graph (parity numbers above).
-- **TensorRT EP:** the engine builds and runs (FP16, T4), at about 200 ms
-  per frame for BootsTAPIR-online and 52 ms for -fast; TAP-Vid accuracy
-  through TensorRT is not
-  measured yet.
+- **TensorRT EP:** the engine builds and runs (FP16, T4): about 200 ms per
+  frame for BootsTAPIR-online and 52 ms for -fast. The TAP-Vid numbers are
+  therefore measured through TensorRT FP16 (AJ 59.3 vs 59.7 reported).
 
 ## Evaluation
 
