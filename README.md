@@ -32,7 +32,7 @@ Video: "Road traffic on Stritarjeva street" by Sounds of Changes, [CC BY 3.0](ht
 | [Feature matching](#feature-matching) | 3 | 🟢2 🔴1 | HPatches H-AUC@3px **70.1** — RaCo-ALIKED+LightGlue | SuperPoint+LightGlue — 30.8 ms |
 | [Multi-object tracking](#multi-object-tracking) | 3 | 🟢3 | MOT17-train HOTA **40.6** — ByteTrack | ByteTrack — 6.1 ms |
 | [Image classification](#image-classification) | 4 | 🟢4 | ImageNetV2 top-1 **70.51** — SigLIP2-B/16 (zero-shot) | MobileNetV4-Conv-S — 1.0 ms |
-| [Point tracking](#point-tracking) | 2 | 🟢2 | – | – |
+| [Point tracking](#point-tracking) | 2 | 🟢2 | – | BootsTAPIR-online-fast — 51.8 ms |
 | [Image captioning](#image-captioning) | 2 | 🟢2 | COCO CIDEr **123.6** — Florence-2-base | Florence-2-base — 40.5 ms |
 | [Whole-body pose](#whole-body-pose) | 3 | 🟢3 | COCO-WholeBody whole AP **68.8** — RTMW-l-384 | DWPose-s — 7.7 ms |
 | [Visual place recognition](#visual-place-recognition) | 3 | 🟢3 | SPED R@1 **90.3** — MegaLoc | EigenPlaces-R50 — 3.7 ms |
@@ -236,10 +236,10 @@ ImageNet-1k classes, top-5 per frame. Supervised models use timm's evaluation tr
 ![Point tracking comparison on the same clip](assets/point_tracking_comparison.gif)
 
 <!-- BEGIN:point_tracking_table -->
-| Model | Kind | Code license | Weights license | Input | TAP-Vid DAVIS first AJ<br>(reported) | TAP-Vid DAVIS first AJ / δavg / OA<br>(measured, ONNX) | Peak VRAM<br>(measured) |
-|---|---|---|---|---|---|---|---|
-| [BootsTAPIR-online](point_tracking/bootstapir_online) | online (causal) | 🟢 Apache-2.0 | 🟢 Apache-2.0 | 256×256, 256 points | [59.7](https://github.com/google-deepmind/tapnet/blob/730cda1c730877cfedbe01bf87fb1cadb78a565d/README.md) | – | not measured |
-| [BootsTAPIR-online-fast](point_tracking/bootstapir_online_fast) | online (causal) | 🟢 Apache-2.0 | 🟢 Apache-2.0 | 256×256, 256 points | – | – | not measured |
+| Model | Kind | Code license | Weights license | Input | TAP-Vid DAVIS first AJ<br>(reported) | TAP-Vid DAVIS first AJ / δavg / OA<br>(measured, ONNX) | Peak VRAM<br>(measured) | Tesla T4 (Colab)<br>onnxruntime-tensorrt FP16 · ms / FPS |
+|---|---|---|---|---|---|---|---|---|
+| [BootsTAPIR-online](point_tracking/bootstapir_online) | online (causal) | 🟢 Apache-2.0 | 🟢 Apache-2.0 | 256×256, 256 points | [59.7](https://github.com/google-deepmind/tapnet/blob/730cda1c730877cfedbe01bf87fb1cadb78a565d/README.md) | – | 1975 MB (Tiny, T4 TRT FP16) | 200.9 / 5 |
+| [BootsTAPIR-online-fast](point_tracking/bootstapir_online_fast) | online (causal) | 🟢 Apache-2.0 | 🟢 Apache-2.0 | 256×256, 256 points | – | – | 881 MB (Tiny, T4 TRT FP16) | 51.8 / 19 |
 <!-- END:point_tracking_table -->
 
 Tracking any point (TAP), causally frame by frame: a 16×16 grid of points is placed on the first frame and followed with short trails (occluded points hidden). Online BootsTAPIR (DeepMind, Apache-2.0 code and weights) exported as a query-feature encoder plus a per-frame graph with causal state; the fast variant uses 1 refinement iteration instead of 4. **CoTracker2/3 (Meta) are CC BY-NC 4.0** and TAPTR / DELTA are non-commercial, so they are not included. Survey: [docs/sota/point_tracking.md](docs/sota/point_tracking.md).
@@ -252,7 +252,7 @@ Tracking any point (TAP), causally frame by frame: a 16×16 grid of points is pl
 | Model | Code license | Weights license | Training data | Input | COCO Karpathy CIDEr<br>(reported) | COCO Karpathy CIDEr / BLEU-4<br>(measured, ONNX, greedy) | Peak VRAM<br>(measured) | Tesla T4 (Colab)<br>onnxruntime-cuda FP32 · ms / FPS | Tesla T4 (Colab)<br>onnxruntime-tensorrt FP16 · ms / FPS |
 |---|---|---|---|---|---|---|---|---|---|
 | [Florence-2-base](image_captioning/florence2_base) | 🟢 MIT | 🟢 MIT | FLD-5B (Microsoft, not released) | 768×768 | [133.0](https://huggingface.co/microsoft/Florence-2-base/blob/5ca5edf5bd017b9919c05d08aebef5e4c7ac3bac/README.md) | **123.6 / 35.1** | 2357 MB (Light, T4 CUDA FP32)<br>1617 MB (Tiny, T4 TRT FP16) | 154.0 / 6 | 40.5 / 25 |
-| [SmolVLM-256M](image_captioning/smolvlm_256m) | 🟢 Apache-2.0 | 🟢 Apache-2.0 | The Cauldron, Docmatix (and SmolLM2 / SigLIP pre-training) | 512×512 | – | – | 1707 MB (Tiny, T4 CUDA FP32) | 83.2 / 12 | – |
+| [SmolVLM-256M](image_captioning/smolvlm_256m) | 🟢 Apache-2.0 | 🟢 Apache-2.0 | The Cauldron, Docmatix (and SmolLM2 / SigLIP pre-training) | 512×512 | – | **45.5 / 10.9** | 1707 MB (Tiny, T4 CUDA FP32) | 83.2 / 12 | – |
 <!-- END:image_captioning_table -->
 
 Small vision-language models run from plain ONNX Runtime + `tokenizers` (no transformers at run time): vision encoder, token embeddings and a merged decoder with KV cache, greedy decoding. Speed cells: model-only = vision encoder; end-to-end = the whole caption. Florence-2 is a captioning-trained encoder-decoder (`<CAPTION>` task); SmolVLM is a chat model prompted for one short sentence, so its COCO CIDEr is not comparable with caption-trained models. Excluded for licensing: Qwen2.5-VL-3B (Qwen research license), PaliGemma (Gemma terms), FastVLM / MobileCLIP (Apple research license), LFM2-VL (revenue cap). Survey: [docs/sota/image_captioning.md](docs/sota/image_captioning.md).
