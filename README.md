@@ -31,11 +31,11 @@ Video: "Road traffic on Stritarjeva street" by Sounds of Changes, [CC BY 3.0](ht
 | [OCR (scene text)](#ocr-scene-text) | 3 | 🟢3 | ICDAR2015 end-to-end H-mean **30.5** — PP-OCRv6-small | PP-OCRv5-mobile-EN — 5.0 ms |
 | [Feature matching](#feature-matching) | 3 | 🟢2 🔴1 | HPatches H-AUC@3px **70.1** — RaCo-ALIKED+LightGlue | SuperPoint+LightGlue — 30.8 ms |
 | [Multi-object tracking](#multi-object-tracking) | 3 | 🟢3 | MOT17-train HOTA **40.6** — ByteTrack | ByteTrack — 6.1 ms |
-| [Image classification](#image-classification) | 4 | 🟢4 | – | – |
+| [Image classification](#image-classification) | 4 | 🟢4 | – | MobileNetV4-Conv-S — 1.0 ms |
 | [Point tracking](#point-tracking) | 2 | 🟢2 | – | – |
-| [Image captioning](#image-captioning) | 2 | 🟢2 | – | – |
-| [Whole-body pose](#whole-body-pose) | 3 | 🟢3 | – | – |
-| [Visual place recognition](#visual-place-recognition) | 3 | 🟢3 | – | – |
+| [Image captioning](#image-captioning) | 2 | 🟢2 | – | Florence-2-base — 40.5 ms |
+| [Whole-body pose](#whole-body-pose) | 3 | 🟢3 | – | DWPose-s — 7.7 ms |
+| [Visual place recognition](#visual-place-recognition) | 3 | 🟢3 | – | EigenPlaces-R50 — 3.7 ms |
 <!-- END:task_index -->
 
 <sub>🟢 permissive · 🟡 copyleft · 🔴 non-commercial / restricted · ⚪ unknown (weights license). Accuracy and latency come from the recorded `accuracy.yaml` / `benchmarks.yaml` files; each task section below has the full table with conditions. Every task has a comparison GIF on the same clip.</sub>
@@ -221,12 +221,12 @@ Tracking by detection on D-FINE-S person boxes (Apache-2.0 detector, COCO-only).
 ![Image classification comparison on the same clip](assets/image_classification_comparison.gif)
 
 <!-- BEGIN:image_classification_table -->
-| Model | Kind | Code license | Weights license | Training data | Input | ImageNet-1k top-1<br>(reported) | ImageNetV2 top-1<br>(reported) | ImageNetV2 top-1 / top-5<br>(measured, ONNX) | Peak VRAM<br>(measured) |
-|---|---|---|---|---|---|---|---|---|---|
-| [MobileNetV4-Conv-M](image_classification/mobilenetv4_conv_medium) | supervised (ImageNet-1k) | 🟢 Apache-2.0 | 🟢 Apache-2.0 | ImageNet-1k | 256×256 | [79.916](https://github.com/huggingface/pytorch-image-models/blob/92dbd9e3f9b5d61c4d008223410781da983239fc/results/results-imagenet.csv) | [69.0](https://github.com/huggingface/pytorch-image-models/blob/92dbd9e3f9b5d61c4d008223410781da983239fc/results/results-imagenetv2-matched-frequency.csv) | – | not measured |
-| [MobileNetV4-Conv-S](image_classification/mobilenetv4_conv_small) | supervised (ImageNet-1k) | 🟢 Apache-2.0 | 🟢 Apache-2.0 | ImageNet-1k | 224×224 | [73.756](https://github.com/huggingface/pytorch-image-models/blob/92dbd9e3f9b5d61c4d008223410781da983239fc/results/results-imagenet.csv) | [60.9](https://github.com/huggingface/pytorch-image-models/blob/92dbd9e3f9b5d61c4d008223410781da983239fc/results/results-imagenetv2-matched-frequency.csv) | – | not measured |
-| [RepViT-M1.1](image_classification/repvit_m1_1) | supervised (ImageNet-1k) | 🟢 Apache-2.0 | 🟢 Apache-2.0 | ImageNet-1k | 224×224 | [81.314](https://github.com/huggingface/pytorch-image-models/blob/92dbd9e3f9b5d61c4d008223410781da983239fc/results/results-imagenet.csv) | [70.37](https://github.com/huggingface/pytorch-image-models/blob/92dbd9e3f9b5d61c4d008223410781da983239fc/results/results-imagenetv2-matched-frequency.csv) | – | not measured |
-| [SigLIP2-B/16 (zero-shot)](image_classification/siglip2_b16_224) | zero-shot (image-text) | 🟢 Apache-2.0 | 🟢 Apache-2.0 | WebLI (Google, not released) | 224×224 | [78.2](https://arxiv.org/abs/2502.14786) | [71.4](https://arxiv.org/abs/2502.14786) | – | not measured |
+| Model | Kind | Code license | Weights license | Training data | Input | ImageNet-1k top-1<br>(reported) | ImageNetV2 top-1<br>(reported) | ImageNetV2 top-1 / top-5<br>(measured, ONNX) | Peak VRAM<br>(measured) | Tesla T4 (Colab)<br>onnxruntime-cuda FP32 · ms / FPS | Tesla T4 (Colab)<br>onnxruntime-tensorrt FP16 · ms / FPS |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| [MobileNetV4-Conv-M](image_classification/mobilenetv4_conv_medium) | supervised (ImageNet-1k) | 🟢 Apache-2.0 | 🟢 Apache-2.0 | ImageNet-1k | 256×256 | [79.916](https://github.com/huggingface/pytorch-image-models/blob/92dbd9e3f9b5d61c4d008223410781da983239fc/results/results-imagenet.csv) | [69.0](https://github.com/huggingface/pytorch-image-models/blob/92dbd9e3f9b5d61c4d008223410781da983239fc/results/results-imagenetv2-matched-frequency.csv) | – | 183 MB (Tiny, T4 CUDA FP32)<br>379 MB (Tiny, T4 TRT FP16) | 2.3 / 431 | 1.4 / 700 |
+| [MobileNetV4-Conv-S](image_classification/mobilenetv4_conv_small) | supervised (ImageNet-1k) | 🟢 Apache-2.0 | 🟢 Apache-2.0 | ImageNet-1k | 224×224 | [73.756](https://github.com/huggingface/pytorch-image-models/blob/92dbd9e3f9b5d61c4d008223410781da983239fc/results/results-imagenet.csv) | [60.9](https://github.com/huggingface/pytorch-image-models/blob/92dbd9e3f9b5d61c4d008223410781da983239fc/results/results-imagenetv2-matched-frequency.csv) | – | 149 MB (Tiny, T4 CUDA FP32)<br>363 MB (Tiny, T4 TRT FP16) | 1.5 / 677 | 1.0 / 1008 |
+| [RepViT-M1.1](image_classification/repvit_m1_1) | supervised (ImageNet-1k) | 🟢 Apache-2.0 | 🟢 Apache-2.0 | ImageNet-1k | 224×224 | [81.314](https://github.com/huggingface/pytorch-image-models/blob/92dbd9e3f9b5d61c4d008223410781da983239fc/results/results-imagenet.csv) | [70.37](https://github.com/huggingface/pytorch-image-models/blob/92dbd9e3f9b5d61c4d008223410781da983239fc/results/results-imagenetv2-matched-frequency.csv) | – | 175 MB (Tiny, T4 CUDA FP32)<br>373 MB (Tiny, T4 TRT FP16) | 2.6 / 377 | 1.7 / 591 |
+| [SigLIP2-B/16 (zero-shot)](image_classification/siglip2_b16_224) | zero-shot (image-text) | 🟢 Apache-2.0 | 🟢 Apache-2.0 | WebLI (Google, not released) | 224×224 | [78.2](https://arxiv.org/abs/2502.14786) | [71.4](https://arxiv.org/abs/2502.14786) | – | not measured | – | – |
 <!-- END:image_classification_table -->
 
 ImageNet-1k classes, top-5 per frame. Supervised models use timm's evaluation transform (shorter side to size / crop_pct, bicubic, centre crop); SigLIP 2 classifies zero-shot by cosine similarity with precomputed text embeddings of the 1000 class prompts. Measured on ImageNetV2 matched-frequency (ImageNet-1k val is gated behind its terms of access). **Every supervised checkpoint is trained on ImageNet-1k, whose terms are non-commercial research** — permissive weight tags do not change that (timm's own README says so); ConvNeXt V2 (CC BY-NC), FastViT and MobileCLIP (Apple research licenses) are not included. Survey: [docs/sota/image_classification.md](docs/sota/image_classification.md).
@@ -249,10 +249,10 @@ Tracking any point (TAP), causally frame by frame: a 16×16 grid of points is pl
 ![Image captioning comparison on the same clip](assets/image_captioning_comparison.gif)
 
 <!-- BEGIN:image_captioning_table -->
-| Model | Code license | Weights license | Training data | Input | COCO Karpathy CIDEr<br>(reported) | COCO Karpathy CIDEr / BLEU-4<br>(measured, ONNX, greedy) | Peak VRAM<br>(measured) |
-|---|---|---|---|---|---|---|---|
-| [Florence-2-base](image_captioning/florence2_base) | 🟢 MIT | 🟢 MIT | FLD-5B (Microsoft, not released) | 768×768 | [133.0](https://huggingface.co/microsoft/Florence-2-base/blob/5ca5edf5bd017b9919c05d08aebef5e4c7ac3bac/README.md) | – | not measured |
-| [SmolVLM-256M](image_captioning/smolvlm_256m) | 🟢 Apache-2.0 | 🟢 Apache-2.0 | The Cauldron, Docmatix (and SmolLM2 / SigLIP pre-training) | 512×512 | – | – | not measured |
+| Model | Code license | Weights license | Training data | Input | COCO Karpathy CIDEr<br>(reported) | COCO Karpathy CIDEr / BLEU-4<br>(measured, ONNX, greedy) | Peak VRAM<br>(measured) | Tesla T4 (Colab)<br>onnxruntime-cuda FP32 · ms / FPS | Tesla T4 (Colab)<br>onnxruntime-tensorrt FP16 · ms / FPS |
+|---|---|---|---|---|---|---|---|---|---|
+| [Florence-2-base](image_captioning/florence2_base) | 🟢 MIT | 🟢 MIT | FLD-5B (Microsoft, not released) | 768×768 | [133.0](https://huggingface.co/microsoft/Florence-2-base/blob/5ca5edf5bd017b9919c05d08aebef5e4c7ac3bac/README.md) | – | 2357 MB (Light, T4 CUDA FP32)<br>1617 MB (Tiny, T4 TRT FP16) | 154.0 / 6 | 40.5 / 25 |
+| [SmolVLM-256M](image_captioning/smolvlm_256m) | 🟢 Apache-2.0 | 🟢 Apache-2.0 | The Cauldron, Docmatix (and SmolLM2 / SigLIP pre-training) | 512×512 | – | – | 1707 MB (Tiny, T4 CUDA FP32) | 83.2 / 12 | – |
 <!-- END:image_captioning_table -->
 
 Small vision-language models run from plain ONNX Runtime + `tokenizers` (no transformers at run time): vision encoder, token embeddings and a merged decoder with KV cache, greedy decoding. Speed cells: model-only = vision encoder; end-to-end = the whole caption. Florence-2 is a captioning-trained encoder-decoder (`<CAPTION>` task); SmolVLM is a chat model prompted for one short sentence, so its COCO CIDEr is not comparable with caption-trained models. Excluded for licensing: Qwen2.5-VL-3B (Qwen research license), PaliGemma (Gemma terms), FastVLM / MobileCLIP (Apple research license), LFM2-VL (revenue cap). Survey: [docs/sota/image_captioning.md](docs/sota/image_captioning.md).
@@ -262,11 +262,11 @@ Small vision-language models run from plain ONNX Runtime + `tokenizers` (no tran
 ![Whole-body pose comparison on the same clip](assets/wholebody_pose_comparison.gif)
 
 <!-- BEGIN:wholebody_pose_table -->
-| Model | Code license | Weights license | Training data | Input | Whole / body / hand AP<br>(reported, COCO-WholeBody val) | Whole / body / foot / face / hand AP<br>(measured, ONNX, D-FINE-N boxes) | Peak VRAM<br>(measured) |
-|---|---|---|---|---|---|---|---|
-| [DWPose-m](wholebody_pose/dwpose_m) | 🟢 Apache-2.0 | 🟢 Apache-2.0* | COCO-WholeBody + UBody | 256×192 | [60.6 / 68.5 / 52.7](https://github.com/IDEA-Research/DWPose/blob/3dca5db79d9f9ffdd378753ddf6ec66535aace88/README.md) | – | not measured |
-| [DWPose-s](wholebody_pose/dwpose_s) | 🟢 Apache-2.0 | 🟢 Apache-2.0* | COCO-WholeBody + UBody | 256×192 | [53.8 / 63.3 / 42.7](https://github.com/IDEA-Research/DWPose/blob/3dca5db79d9f9ffdd378753ddf6ec66535aace88/README.md) | – | not measured |
-| [RTMW-l-384](wholebody_pose/rtmw_l_384) | 🟢 Apache-2.0 | 🟢 Apache-2.0* | Cocktail14 | 384×288 | [70.1 / 76.1 / 66.3](https://github.com/open-mmlab/mmpose/blob/759b39c13fea6ba094afc1fa932f51dc1b11cbf9/configs/wholebody_2d_keypoint/rtmpose/cocktail14/rtmw_cocktail14.md) | – | not measured |
+| Model | Code license | Weights license | Training data | Input | Whole / body / hand AP<br>(reported, COCO-WholeBody val) | Whole / body / foot / face / hand AP<br>(measured, ONNX, D-FINE-N boxes) | Peak VRAM<br>(measured) | Tesla T4 (Colab)<br>onnxruntime-cuda FP32 · ms / FPS | Tesla T4 (Colab)<br>onnxruntime-tensorrt FP16 · ms / FPS |
+|---|---|---|---|---|---|---|---|---|---|
+| [DWPose-m](wholebody_pose/dwpose_m) | 🟢 Apache-2.0 | 🟢 Apache-2.0* | COCO-WholeBody + UBody | 256×192 | [60.6 / 68.5 / 52.7](https://github.com/IDEA-Research/DWPose/blob/3dca5db79d9f9ffdd378753ddf6ec66535aace88/README.md) | – | 497 MB (Tiny, T4 CUDA FP32)<br>511 MB (Tiny, T4 TRT FP16) | 36.5 / 27 | 10.3 / 97 |
+| [DWPose-s](wholebody_pose/dwpose_s) | 🟢 Apache-2.0 | 🟢 Apache-2.0* | COCO-WholeBody + UBody | 256×192 | [53.8 / 63.3 / 42.7](https://github.com/IDEA-Research/DWPose/blob/3dca5db79d9f9ffdd378753ddf6ec66535aace88/README.md) | – | 371 MB (Tiny, T4 CUDA FP32)<br>483 MB (Tiny, T4 TRT FP16) | 18.8 / 53 | 7.7 / 129 |
+| [RTMW-l-384](wholebody_pose/rtmw_l_384) | 🟢 Apache-2.0 | 🟢 Apache-2.0* | Cocktail14 | 384×288 | [70.1 / 76.1 / 66.3](https://github.com/open-mmlab/mmpose/blob/759b39c13fea6ba094afc1fa932f51dc1b11cbf9/configs/wholebody_2d_keypoint/rtmpose/cocktail14/rtmw_cocktail14.md) | – | 2323 MB (Light, T4 CUDA FP32)<br>703 MB (Tiny, T4 TRT FP16) | 175.4 / 6 | 42.8 / 23 |
 <!-- END:wholebody_pose_table -->
 
 COCO-WholeBody 133 keypoints (body, feet, 68 face, 2x21 hand) from official mmpose ONNX files, top-down on D-FINE-N person boxes (same runner as RTMPose-s). **COCO-WholeBody is research / non-commercial only, and RTMW's Cocktail14 adds more non-commercial sets (Human-Art, LaPa, InterHand2.6M)** — the Apache-2.0 code and weights do not lift that. Note: the mmpose README's "RTMW-m" ONNX link points to an s-width model. Survey: [docs/sota/wholebody_pose.md](docs/sota/wholebody_pose.md).
@@ -276,11 +276,11 @@ COCO-WholeBody 133 keypoints (body, feet, 68 face, 2x21 hand) from official mmpo
 ![Place recognition comparison on the same clip](assets/place_recognition_comparison.gif)
 
 <!-- BEGIN:place_recognition_table -->
-| Model | Code license | Weights license | Training data | Descriptor | Input | Pitts30k / Tokyo24/7 R@1<br>(reported) | SPED R@1 / R@5<br>(measured, ONNX) | Peak VRAM<br>(measured) |
-|---|---|---|---|---|---|---|---|---|
-| [CosPlace-R50](place_recognition/cosplace_r50) | 🟢 MIT | 🟢 MIT* | SF-XL (San Francisco eXtra Large) | 2048-D | native | [90.9 / 87.3](https://arxiv.org/abs/2502.17237) | – | not measured |
-| [EigenPlaces-R50](place_recognition/eigenplaces_r50) | 🟢 MIT | 🟢 MIT* | SF-XL (San Francisco eXtra Large) | 2048-D | native | [92.5 / 93.0](https://arxiv.org/abs/2502.17237) | – | not measured |
-| [MegaLoc](place_recognition/megaloc) | 🟢 MIT | 🟢 MIT | SF-XL, GSV-Cities, MSLS, MegaScenes, ScanNet | 8448-D | 322×322 | [94.1 / 96.5](https://arxiv.org/abs/2502.17237) | – | not measured |
+| Model | Code license | Weights license | Training data | Descriptor | Input | Pitts30k / Tokyo24/7 R@1<br>(reported) | SPED R@1 / R@5<br>(measured, ONNX) | Peak VRAM<br>(measured) | Tesla T4 (Colab)<br>onnxruntime-cuda FP32 · ms / FPS | Tesla T4 (Colab)<br>onnxruntime-tensorrt FP16 · ms / FPS |
+|---|---|---|---|---|---|---|---|---|---|---|
+| [CosPlace-R50](place_recognition/cosplace_r50) | 🟢 MIT | 🟢 MIT* | SF-XL (San Francisco eXtra Large) | 2048-D | native | [90.9 / 87.3](https://arxiv.org/abs/2502.17237) | – | 349 MB (Tiny, T4 CUDA FP32)<br>427 MB (Tiny, T4 TRT FP16) | 22.4 / 45 | 3.7 / 271 |
+| [EigenPlaces-R50](place_recognition/eigenplaces_r50) | 🟢 MIT | 🟢 MIT* | SF-XL (San Francisco eXtra Large) | 2048-D | native | [92.5 / 93.0](https://arxiv.org/abs/2502.17237) | – | 349 MB (Tiny, T4 CUDA FP32)<br>427 MB (Tiny, T4 TRT FP16) | 21.9 / 46 | 3.7 / 272 |
+| [MegaLoc](place_recognition/megaloc) | 🟢 MIT | 🟢 MIT | SF-XL, GSV-Cities, MSLS, MegaScenes, ScanNet | 8448-D | 322×322 | [94.1 / 96.5](https://arxiv.org/abs/2502.17237) | – | 1229 MB (Tiny, T4 CUDA FP32)<br>793 MB (Tiny, T4 TRT FP16) | 43.3 / 23 | 9.1 / 110 |
 <!-- END:place_recognition_table -->
 
 Global image descriptors for retrieval / SLAM loop closure; the GIF insets the most similar frame at least 1 s earlier. CosPlace and EigenPlaces are exported from the official code (the ONNX accepts any input size; evaluation at native resolution); MegaLoc is the official ONNX. **Every released VPR model is trained on research-only or non-commercial data** (SF-XL research form, GSV-Cities CC BY-NC-ND, MSLS, ScanNet terms) — MIT code and weights notwithstanding; SALAD / CliqueMining are GPL-3.0 and MixVPR has no license. Survey: [docs/sota/place_recognition.md](docs/sota/place_recognition.md).
