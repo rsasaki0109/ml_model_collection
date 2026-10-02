@@ -12,7 +12,7 @@ feet 17-22, face 23-90, left hand 91-111, right hand 112-132).
 | Model | Code license | Weights license | Training data | Input | Whole / body / hand AP<br>(reported, COCO-WholeBody val) | Whole / body / foot / face / hand AP<br>(measured, ONNX, D-FINE-N boxes) | Peak VRAM<br>(measured) | Tesla T4 (Colab)<br>onnxruntime-cuda FP32 · ms / FPS | Tesla T4 (Colab)<br>onnxruntime-tensorrt FP16 · ms / FPS |
 |---|---|---|---|---|---|---|---|---|---|
 | [DWPose-m](dwpose_m) | 🟢 Apache-2.0 | 🟢 Apache-2.0* | COCO-WholeBody + UBody | 256×192 | [60.6 / 68.5 / 52.7](https://github.com/IDEA-Research/DWPose/blob/3dca5db79d9f9ffdd378753ddf6ec66535aace88/README.md) | – | 497 MB (Tiny, T4 CUDA FP32)<br>511 MB (Tiny, T4 TRT FP16) | 36.5 / 27 | 10.3 / 97 |
-| [DWPose-s](dwpose_s) | 🟢 Apache-2.0 | 🟢 Apache-2.0* | COCO-WholeBody + UBody | 256×192 | [53.8 / 63.3 / 42.7](https://github.com/IDEA-Research/DWPose/blob/3dca5db79d9f9ffdd378753ddf6ec66535aace88/README.md) | – | 371 MB (Tiny, T4 CUDA FP32)<br>483 MB (Tiny, T4 TRT FP16) | 18.8 / 53 | 7.7 / 129 |
+| [DWPose-s](dwpose_s) | 🟢 Apache-2.0 | 🟢 Apache-2.0* | COCO-WholeBody + UBody | 256×192 | [53.8 / 63.3 / 42.7](https://github.com/IDEA-Research/DWPose/blob/3dca5db79d9f9ffdd378753ddf6ec66535aace88/README.md) | **52.0 / 62.5 / 53.1 / 76.9 / 40.5** | 371 MB (Tiny, T4 CUDA FP32)<br>483 MB (Tiny, T4 TRT FP16) | 18.8 / 53 | 7.7 / 129 |
 | [RTMW-l-384](rtmw_l_384) | 🟢 Apache-2.0 | 🟢 Apache-2.0* | Cocktail14 | 384×288 | [70.1 / 76.1 / 66.3](https://github.com/open-mmlab/mmpose/blob/759b39c13fea6ba094afc1fa932f51dc1b11cbf9/configs/wholebody_2d_keypoint/rtmpose/cocktail14/rtmw_cocktail14.md) | – | 2323 MB (Light, T4 CUDA FP32)<br>703 MB (Tiny, T4 TRT FP16) | 175.4 / 6 | 42.8 / 23 |
 <!-- END:wholebody_pose_table -->
 
