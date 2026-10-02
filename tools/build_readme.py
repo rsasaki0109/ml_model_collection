@@ -537,6 +537,18 @@ def task_index(models: list[Model], start: Path) -> str:
     return "\n".join(lines)
 
 
+def toc(models: list[Model], start: Path) -> str:
+    """Contents line for the top of the README: every task section, then the
+    remaining ``## `` sections (read from the README itself)."""
+    heads = [ln[3:].strip() for ln in (REPO_ROOT / "README.md").read_text(encoding="utf-8").splitlines()
+             if ln.startswith("## ")]
+    titles = {t for t, _ in TASK_INDEX.values()}
+    link = lambda t: f"[{t}]({_anchor(t)})"  # noqa: E731
+    tasks = [link(h) for h in heads if h in titles]
+    other = [f"[Task overview]({_anchor(h)})" if h == "Tasks" else link(h) for h in heads if h not in titles]
+    return "- **Tasks:** " + " · ".join(tasks) + "\n- **This repo:** " + " · ".join(other)
+
+
 OD, DE, SG, PE, OF, SR, BG = ("object_detection", "depth_estimation", "segmentation",
                               "pose_estimation", "optical_flow", "super_resolution",
                               "background_removal")
@@ -551,6 +563,7 @@ TABLES = {
     (REPO_ROOT / SG / "README.md", "segmentation_table"): (SG, segmentation_table),
     (REPO_ROOT / SG / "README.md", "segmentation_provenance"): (SG, provenance_table),
     (REPO_ROOT / "README.md", "task_index"): (None, task_index),
+    (REPO_ROOT / "README.md", "toc"): (None, toc),
     (REPO_ROOT / "README.md", "pose_estimation_table"): (PE, pose_table),
     (REPO_ROOT / PE / "README.md", "pose_estimation_table"): (PE, pose_table),
     (REPO_ROOT / PE / "README.md", "pose_estimation_provenance"): (PE, provenance_table),

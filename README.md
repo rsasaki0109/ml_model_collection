@@ -5,6 +5,11 @@
 Pick a model by **Task × License × Hardware requirements × Runtime** — not by scrolling through hundreds of files.
 Every number below was measured by a script in this repo, under the conditions recorded next to it.
 
+<!-- BEGIN:toc -->
+- **Tasks:** [Object detection](#object-detection) · [Depth estimation](#depth-estimation) · [Segmentation](#segmentation) · [Pose estimation](#pose-estimation) · [Optical flow](#optical-flow) · [Super-resolution (x4)](#super-resolution-x4) · [Background removal / matting](#background-removal--matting) · [Face detection](#face-detection) · [OCR (scene text)](#ocr-scene-text) · [Feature matching](#feature-matching) · [Multi-object tracking](#multi-object-tracking) · [Image classification](#image-classification) · [Point tracking](#point-tracking) · [Image captioning](#image-captioning) · [Whole-body pose](#whole-body-pose) · [Visual place recognition](#visual-place-recognition)
+- **This repo:** [Task overview](#tasks) · [Find a model](#find-a-model) · [Principles](#principles) · [Quick start](#quick-start) · [Layout](#layout) · [Contributing](#contributing) · [License](#license)
+<!-- END:toc -->
+
 ![Object detection comparison: D-FINE-N, D-FINE-S, DEIM-D-FINE-S, RT-DETRv4-S, RF-DETR-S, YOLO26n on the same clip](assets/object_detection_comparison.gif)
 
 <sub>Current real-time SOTA, small sizes: same frames, same tile size, six models ([line-up](object_detection/comparison.yaml), [why these](docs/sota/object_detection.md)). Regenerate with `python tools/make_comparison.py --task object_detection --input assets/demo.mp4`.
