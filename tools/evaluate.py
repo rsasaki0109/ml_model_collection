@@ -251,7 +251,7 @@ def eval_coco_wholebody(model: Model, coco_root: Path, wb_json: Path, provider: 
     elapsed = time.perf_counter() - t0
     # per-part sigmas of COCO-WholeBody (mmpose coco_wholebody.py / COCO-WholeBody myeval_wholebody.py)
     ns = {}
-    exec(Path(__file__).with_name("data").joinpath("coco_wholebody_sigmas.py").read_text(encoding="utf-8"), ns)
+    exec((Path(__file__).parent / "mlmc" / "data" / "coco_wholebody_sigmas.py").read_text(encoding="utf-8"), ns)
     sigmas = np.array(ns["SIGMAS"])
     dt = gt.loadRes(results)
     metrics = {}
