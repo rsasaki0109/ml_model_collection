@@ -34,7 +34,7 @@ Video: "Road traffic on Stritarjeva street" by Sounds of Changes, [CC BY 3.0](ht
 | [Image classification](#image-classification) | 4 | 🟢4 | ImageNetV2 top-1 **70.29** — RepViT-M1.1 | MobileNetV4-Conv-S — 1.0 ms |
 | [Point tracking](#point-tracking) | 2 | 🟢2 | – | – |
 | [Image captioning](#image-captioning) | 2 | 🟢2 | – | Florence-2-base — 40.5 ms |
-| [Whole-body pose](#whole-body-pose) | 3 | 🟢3 | COCO-WholeBody whole AP **59.3** — DWPose-m | DWPose-s — 7.7 ms |
+| [Whole-body pose](#whole-body-pose) | 3 | 🟢3 | COCO-WholeBody whole AP **68.8** — RTMW-l-384 | DWPose-s — 7.7 ms |
 | [Visual place recognition](#visual-place-recognition) | 3 | 🟢3 | SPED R@1 **90.3** — MegaLoc | EigenPlaces-R50 — 3.7 ms |
 <!-- END:task_index -->
 
@@ -266,7 +266,7 @@ Small vision-language models run from plain ONNX Runtime + `tokenizers` (no tran
 |---|---|---|---|---|---|---|---|---|---|
 | [DWPose-m](wholebody_pose/dwpose_m) | 🟢 Apache-2.0 | 🟢 Apache-2.0* | COCO-WholeBody + UBody | 256×192 | [60.6 / 68.5 / 52.7](https://github.com/IDEA-Research/DWPose/blob/3dca5db79d9f9ffdd378753ddf6ec66535aace88/README.md) | **59.3 / 68.2 / 63.5 / 82.8 / 50.4** | 497 MB (Tiny, T4 CUDA FP32)<br>511 MB (Tiny, T4 TRT FP16) | 36.5 / 27 | 10.3 / 97 |
 | [DWPose-s](wholebody_pose/dwpose_s) | 🟢 Apache-2.0 | 🟢 Apache-2.0* | COCO-WholeBody + UBody | 256×192 | [53.8 / 63.3 / 42.7](https://github.com/IDEA-Research/DWPose/blob/3dca5db79d9f9ffdd378753ddf6ec66535aace88/README.md) | **52.0 / 62.5 / 53.1 / 76.9 / 40.5** | 371 MB (Tiny, T4 CUDA FP32)<br>483 MB (Tiny, T4 TRT FP16) | 18.8 / 53 | 7.7 / 129 |
-| [RTMW-l-384](wholebody_pose/rtmw_l_384) | 🟢 Apache-2.0 | 🟢 Apache-2.0* | Cocktail14 | 384×288 | [70.1 / 76.1 / 66.3](https://github.com/open-mmlab/mmpose/blob/759b39c13fea6ba094afc1fa932f51dc1b11cbf9/configs/wholebody_2d_keypoint/rtmpose/cocktail14/rtmw_cocktail14.md) | – | 2323 MB (Light, T4 CUDA FP32)<br>703 MB (Tiny, T4 TRT FP16) | 175.4 / 6 | 42.8 / 23 |
+| [RTMW-l-384](wholebody_pose/rtmw_l_384) | 🟢 Apache-2.0 | 🟢 Apache-2.0* | Cocktail14 | 384×288 | [70.1 / 76.1 / 66.3](https://github.com/open-mmlab/mmpose/blob/759b39c13fea6ba094afc1fa932f51dc1b11cbf9/configs/wholebody_2d_keypoint/rtmpose/cocktail14/rtmw_cocktail14.md) | **68.8 / 74.9 / 78.0 / 89.2 / 64.6** | 2323 MB (Light, T4 CUDA FP32)<br>703 MB (Tiny, T4 TRT FP16) | 175.4 / 6 | 42.8 / 23 |
 <!-- END:wholebody_pose_table -->
 
 COCO-WholeBody 133 keypoints (body, feet, 68 face, 2x21 hand) from official mmpose ONNX files, top-down on D-FINE-N person boxes (same runner as RTMPose-s). **COCO-WholeBody is research / non-commercial only, and RTMW's Cocktail14 adds more non-commercial sets (Human-Art, LaPa, InterHand2.6M)** — the Apache-2.0 code and weights do not lift that. Note: the mmpose README's "RTMW-m" ONNX link points to an s-width model. Survey: [docs/sota/wholebody_pose.md](docs/sota/wholebody_pose.md).
