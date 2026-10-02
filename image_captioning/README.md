@@ -11,7 +11,7 @@ Runtime and the `tokenizers` package.
 <!-- BEGIN:image_captioning_table -->
 | Model | Code license | Weights license | Training data | Input | COCO Karpathy CIDEr<br>(reported) | COCO Karpathy CIDEr / BLEU-4<br>(measured, ONNX, greedy) | Peak VRAM<br>(measured) | Tesla T4 (Colab)<br>onnxruntime-cuda FP32 · ms / FPS | Tesla T4 (Colab)<br>onnxruntime-tensorrt FP16 · ms / FPS |
 |---|---|---|---|---|---|---|---|---|---|
-| [Florence-2-base](florence2_base) | 🟢 MIT | 🟢 MIT | FLD-5B (Microsoft, not released) | 768×768 | [133.0](https://huggingface.co/microsoft/Florence-2-base/blob/5ca5edf5bd017b9919c05d08aebef5e4c7ac3bac/README.md) | – | 2357 MB (Light, T4 CUDA FP32)<br>1617 MB (Tiny, T4 TRT FP16) | 154.0 / 6 | 40.5 / 25 |
+| [Florence-2-base](florence2_base) | 🟢 MIT | 🟢 MIT | FLD-5B (Microsoft, not released) | 768×768 | [133.0](https://huggingface.co/microsoft/Florence-2-base/blob/5ca5edf5bd017b9919c05d08aebef5e4c7ac3bac/README.md) | **123.6 / 35.1** | 2357 MB (Light, T4 CUDA FP32)<br>1617 MB (Tiny, T4 TRT FP16) | 154.0 / 6 | 40.5 / 25 |
 | [SmolVLM-256M](smolvlm_256m) | 🟢 Apache-2.0 | 🟢 Apache-2.0 | The Cauldron, Docmatix (and SmolLM2 / SigLIP pre-training) | 512×512 | – | – | 1707 MB (Tiny, T4 CUDA FP32) | 83.2 / 12 | – |
 <!-- END:image_captioning_table -->
 

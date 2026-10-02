@@ -33,7 +33,7 @@ Video: "Road traffic on Stritarjeva street" by Sounds of Changes, [CC BY 3.0](ht
 | [Multi-object tracking](#multi-object-tracking) | 3 | 🟢3 | MOT17-train HOTA **40.6** — ByteTrack | ByteTrack — 6.1 ms |
 | [Image classification](#image-classification) | 4 | 🟢4 | ImageNetV2 top-1 **70.51** — SigLIP2-B/16 (zero-shot) | MobileNetV4-Conv-S — 1.0 ms |
 | [Point tracking](#point-tracking) | 2 | 🟢2 | – | – |
-| [Image captioning](#image-captioning) | 2 | 🟢2 | – | Florence-2-base — 40.5 ms |
+| [Image captioning](#image-captioning) | 2 | 🟢2 | COCO CIDEr **123.6** — Florence-2-base | Florence-2-base — 40.5 ms |
 | [Whole-body pose](#whole-body-pose) | 3 | 🟢3 | COCO-WholeBody whole AP **68.8** — RTMW-l-384 | DWPose-s — 7.7 ms |
 | [Visual place recognition](#visual-place-recognition) | 3 | 🟢3 | SPED R@1 **90.3** — MegaLoc | EigenPlaces-R50 — 3.7 ms |
 <!-- END:task_index -->
@@ -251,7 +251,7 @@ Tracking any point (TAP), causally frame by frame: a 16×16 grid of points is pl
 <!-- BEGIN:image_captioning_table -->
 | Model | Code license | Weights license | Training data | Input | COCO Karpathy CIDEr<br>(reported) | COCO Karpathy CIDEr / BLEU-4<br>(measured, ONNX, greedy) | Peak VRAM<br>(measured) | Tesla T4 (Colab)<br>onnxruntime-cuda FP32 · ms / FPS | Tesla T4 (Colab)<br>onnxruntime-tensorrt FP16 · ms / FPS |
 |---|---|---|---|---|---|---|---|---|---|
-| [Florence-2-base](image_captioning/florence2_base) | 🟢 MIT | 🟢 MIT | FLD-5B (Microsoft, not released) | 768×768 | [133.0](https://huggingface.co/microsoft/Florence-2-base/blob/5ca5edf5bd017b9919c05d08aebef5e4c7ac3bac/README.md) | – | 2357 MB (Light, T4 CUDA FP32)<br>1617 MB (Tiny, T4 TRT FP16) | 154.0 / 6 | 40.5 / 25 |
+| [Florence-2-base](image_captioning/florence2_base) | 🟢 MIT | 🟢 MIT | FLD-5B (Microsoft, not released) | 768×768 | [133.0](https://huggingface.co/microsoft/Florence-2-base/blob/5ca5edf5bd017b9919c05d08aebef5e4c7ac3bac/README.md) | **123.6 / 35.1** | 2357 MB (Light, T4 CUDA FP32)<br>1617 MB (Tiny, T4 TRT FP16) | 154.0 / 6 | 40.5 / 25 |
 | [SmolVLM-256M](image_captioning/smolvlm_256m) | 🟢 Apache-2.0 | 🟢 Apache-2.0 | The Cauldron, Docmatix (and SmolLM2 / SigLIP pre-training) | 512×512 | – | – | 1707 MB (Tiny, T4 CUDA FP32) | 83.2 / 12 | – |
 <!-- END:image_captioning_table -->
 
