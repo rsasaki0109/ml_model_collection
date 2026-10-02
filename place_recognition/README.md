@@ -11,9 +11,9 @@ similarity.
 <!-- BEGIN:place_recognition_table -->
 | Model | Code license | Weights license | Training data | Descriptor | Input | Pitts30k / Tokyo24/7 R@1<br>(reported) | SPED R@1 / R@5<br>(measured, ONNX) | Peak VRAM<br>(measured) | Tesla T4 (Colab)<br>onnxruntime-cuda FP32 · ms / FPS | Tesla T4 (Colab)<br>onnxruntime-tensorrt FP16 · ms / FPS |
 |---|---|---|---|---|---|---|---|---|---|---|
-| [CosPlace-R50](cosplace_r50) | 🟢 MIT | 🟢 MIT* | SF-XL (San Francisco eXtra Large) | 2048-D | native | [90.9 / 87.3](https://arxiv.org/abs/2502.17237) | – | 349 MB (Tiny, T4 CUDA FP32)<br>427 MB (Tiny, T4 TRT FP16) | 22.4 / 45 | 3.7 / 271 |
-| [EigenPlaces-R50](eigenplaces_r50) | 🟢 MIT | 🟢 MIT* | SF-XL (San Francisco eXtra Large) | 2048-D | native | [92.5 / 93.0](https://arxiv.org/abs/2502.17237) | – | 349 MB (Tiny, T4 CUDA FP32)<br>427 MB (Tiny, T4 TRT FP16) | 21.9 / 46 | 3.7 / 272 |
-| [MegaLoc](megaloc) | 🟢 MIT | 🟢 MIT | SF-XL, GSV-Cities, MSLS, MegaScenes, ScanNet | 8448-D | 322×322 | [94.1 / 96.5](https://arxiv.org/abs/2502.17237) | – | 1229 MB (Tiny, T4 CUDA FP32)<br>793 MB (Tiny, T4 TRT FP16) | 43.3 / 23 | 9.1 / 110 |
+| [CosPlace-R50](cosplace_r50) | 🟢 MIT | 🟢 MIT* | SF-XL (San Francisco eXtra Large) | 2048-D | native | [90.9 / 87.3](https://arxiv.org/abs/2502.17237) | **71.8 / 85.3** | 349 MB (Tiny, T4 CUDA FP32)<br>427 MB (Tiny, T4 TRT FP16) | 22.4 / 45 | 3.7 / 271 |
+| [EigenPlaces-R50](eigenplaces_r50) | 🟢 MIT | 🟢 MIT* | SF-XL (San Francisco eXtra Large) | 2048-D | native | [92.5 / 93.0](https://arxiv.org/abs/2502.17237) | **70.2 / 83.4** | 349 MB (Tiny, T4 CUDA FP32)<br>427 MB (Tiny, T4 TRT FP16) | 21.9 / 46 | 3.7 / 272 |
+| [MegaLoc](megaloc) | 🟢 MIT | 🟢 MIT | SF-XL, GSV-Cities, MSLS, MegaScenes, ScanNet | 8448-D | 322×322 | [94.1 / 96.5](https://arxiv.org/abs/2502.17237) | **90.3 / 95.2** | 1229 MB (Tiny, T4 CUDA FP32)<br>793 MB (Tiny, T4 TRT FP16) | 43.3 / 23 | 9.1 / 110 |
 <!-- END:place_recognition_table -->
 
 ## Provenance
