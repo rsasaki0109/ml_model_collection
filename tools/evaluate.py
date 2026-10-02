@@ -837,8 +837,16 @@ def eval_coco_karpathy(model: Model, root: Path, provider: str, limit: int | Non
         cap = runner(cv2.imread(str(root / im["filepath"] / im["filename"])))
         gts[im["cocoid"]] = [{"caption": s["raw"]} for s in im["sentences"]]
         res[im["cocoid"]] = [{"caption": cap.text}]
+    # PTBTokenizer reads the JVM's stdout line by line; JVM log lines (e.g. the cgroup
+    # warnings printed on Colab) would be taken as captions and shift every image after
+    # them. Silence JVM logging, then check that predictions still line up.
+    os.environ["JAVA_TOOL_OPTIONS"] = "-Xlog:disable -Xlog:all=error:stderr"
     tok = PTBTokenizer()
     gts_t, res_t = tok.tokenize(gts), tok.tokenize(res)
+    words = lambda s: set("".join(c if c.isalnum() else " " for c in s.lower()).split())  # noqa: E731
+    off = sum(1 for k, v in res.items() if v[0]["caption"].strip() and not set(res_t[k][0].split()) & words(v[0]["caption"]))
+    if off > len(res) // 100:
+        raise SystemExit(f"PTB tokenizer output is misaligned for {off} / {len(res)} predictions; not recording")
     cider, _ = Cider().compute_score(gts_t, res_t)
     bleu, _ = Bleu(4).compute_score(gts_t, res_t)
     mean_tokens = float(np.mean([len(r[0]["caption"].split()) for r in res.values()]))
